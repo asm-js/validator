@@ -58,7 +58,7 @@
 
 \begin{document}
 
-\title{\texttt{machine.js}}
+\title{\texttt{asm.js}}
 \author{Dave Herman}
 \maketitle
 
@@ -91,7 +91,7 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \dowhile{s}{e} \\
   &  |  & \for{e}{e}{e}{s} \\
   &  |  & \switch{e}{\seq{c}} \\
-  &  |  & \switchdef{e}{\seq{c}}{\mathit{ss}} \\
+  &  |  & \switch{e}{\seq{c}\ d} \\
   &  |  & \brk \\
   &  |  & \brkl{\mathit{lab}} \\
   &  |  & \cont \\
@@ -101,6 +101,8 @@ s & ::= & \block{\mathit{ss}} \\
 \mathit{ss} & ::= & \seq{s} \\
 \\
 c & ::= & \mathjs{case }e\mathjs{:}\,\mathit{ss} \\
+d & ::= & \mathjs{default:}\,\mathit{ss} \\
+\mathit{cd} & ::= & c ~|~ d \\
 \end{array}
 \]
 
