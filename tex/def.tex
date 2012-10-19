@@ -305,13 +305,14 @@ L        \cup \mustret & = & L \\
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\contl{\mathit{lab}}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-Label}]
-  {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \mathit{lab} \}}{s}{\tau}{\varepsilon}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon}}
+  {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \mathit{lab} \}}{s}{\tau}{\varepsilon} \\\\
+   \varepsilon' = \varepsilon - (L \cup \{ \mathit{lab} \})}
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-Switch}]
   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \varepsilon = \bigcup_i \varepsilon_i}
+   \varepsilon = (\bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}}}{\tau}{\varepsilon}}
 \\ \\
 \inferrule* [lab=\rel{T-SwitchDefault}]
@@ -319,7 +320,7 @@ L        \cup \mustret & = & L \\
    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{ss}{\tau}{\varepsilon} \\\\
    \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
-   \varepsilon' = \varepsilon \cup \bigcup_i \varepsilon_i}
+   \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switchdef{e}{\seq{c}}{\mathit{ss}}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-SwitchReturn}]
@@ -327,7 +328,7 @@ L        \cup \mustret & = & L \\
    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
    \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{ss}{\tau}{\mustret}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switchdef{e}{\seq{c}}{\mathit{ss}}}{\tau}{\varepsilon}}
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switchdef{e}{\seq{c}}{\mathit{ss}}}{\tau}{\mustret}}
 \end{array}
 }
 \\ \\
