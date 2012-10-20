@@ -116,7 +116,7 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
          &  |  & \mathjs{+}X \\
          &  |  & X \mathjs{ + ''} \\
          &  |  & X \mathjs{ + ""} \\
-         &  |  & \mathjs{!!}X \\
+%         &  |  & \mathjs{!!}X \\
 \end{array}
 \]
 
@@ -142,7 +142,6 @@ e & ::= & v \\
                &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
                &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
-               &  |  & \mathjs{||} ~|~ \mathjs{\&\&} \\
 \\
 \mathit{lval} & ::= & x \\
               &  |  & \getprop{x}{e} \\
@@ -153,12 +152,12 @@ e & ::= & v \\
 
 \[
 \begin{array}{rcl}
-\sigma, \tau & ::= & \boolean \\
+\sigma, \tau & ::= & \mathtt{int} \\
              &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
              &  |  & \intone ~|~ \inttwo ~|~ \intfour \\
              &  |  & \float ~|~ \double \\
-             &  |  & \arr{\tau} ~|~ \Fun \\
-             &  |  & \any ~|~ \undef ~|~ \nul ~|~ \str ~|~ \num ~|~ \obj \\
+             &  |  & \arr{\tau} \\
+             &  |  & \any ~|~ \undef ~|~ \nul ~|~ \str ~|~ \boolean ~|~ \num ~|~ \obj ~|~ \mathtt{function} \\
 \end{array}
 \]
 
@@ -199,14 +198,25 @@ L        \cup \mustret & = & L \\
 \type(\mathjs{+}X) & = & \double \\
 \type(X \mathjs{ + ''}) & = & \str \\
 \type(X \mathjs{ + ""}) & = & \str \\
-\type(\mathjs{!!}X) & = & \boolean \\
+%\type(\mathjs{!!}X) & = & \boolean \\
 \end{array}
 \]
+
+%% NOTE: pure pointers will not be any
 
 \[
 \begin{array}{rcl}
 \uintone, \uinttwo, \uintfour & <: & \mathtt{int} \\
 \intone, \inttwo, \intfour    & <: & \mathtt{int} \\
+\mathtt{int}                  & <: & \num \\
+\float                        & <: & \num \\
+\double                       & <: & \num \\
+\undef                        & <: & \any \\
+\nul                          & <: & \any \\
+\boolean                      & <: & \any \\
+\num                          & <: & \any \\
+\obj                          & <: & \any \\
+\mathtt{function}             & <: & \any \\
 \end{array}
 \]
 
@@ -252,13 +262,13 @@ L        \cup \mustret & = & L \\
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolean} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon \cup \emptyset}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolean} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
@@ -269,14 +279,14 @@ L        \cup \mustret & = & L \\
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\return{v}}{\type(v)}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolean} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
   {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\boolean} \\\\
+   \ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
@@ -397,7 +407,7 @@ L        \cup \mustret & = & L \\
 \inferrule* [lab=\rel{T-FFI}]
   {f \not\in\dom(\Delta) \\
    f \not\in\dom(\Gamma) \\\\
-   \type(\rho(f)) = \Fun \\\\
+   \type(\rho(f)) = \mathtt{function} \\\\
    \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
 \\ \\
@@ -412,13 +422,18 @@ L        \cup \mustret & = & L \\
   {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e_1}{\boolean} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e_1}{\mathtt{int}} \\\\
    \forall i \in \{2,3\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Paren}]
   {\forall i \leq n . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau_i}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\paren{\seq{e}}}{\tau_n}}
+\\ \\
+\inferrule* [lab=\rel{T-Sub}]
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\
+   \sigma <: \tau}
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\tau}}
 \end{array}
 }
 \end{array}
