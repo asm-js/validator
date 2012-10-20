@@ -13,6 +13,7 @@
 \newcommand{\mathjs}[1]{\mbox{\texttt{{#1}}}}
 \newcommand{\return}[1]{\mathjs{return }{#1}\mathjs{;}}
 \newcommand{\fun}[3]{\mathjs{function }{#1}\mathjs{(}{#2}\mathjs{) \{ }{#3}\mathjs{ \}}}
+\newcommand{\afun}[2]{\mathjs{function}\mathjs{(}{#1}\mathjs{) \{ }{#2}\mathjs{ \}}}
 \newcommand{\var}[1]{\mathjs{var }{#1}\mathjs{;}}
 \newcommand{\rel}[1]{\scriptsize [\textsc{#1}]}
 \newcommand\defeq{\stackrel{\mbox{\tiny def}}{=}}
@@ -74,8 +75,8 @@
 
 \[
 \begin{array}{rcl}
-\mathit{capsule} & ::= & \fun{f}{\seq{x}}{\seq{\mathit{fn}}\ \return{f}} \\
-                 &  |  & \fun{f}{\seq{x}}{\seq{\mathit{fn}}\ \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}} \\
+\mathit{program} & ::= & \seq{\mathit{fn}}\ \return{f} \\
+                 &  |  & \seq{\mathit{fn}}\ \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
 \mathit{fn} & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
 \end{array}
 \]
@@ -226,8 +227,13 @@ L        \cup \mustret & = & L \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
+\inferrule* [lab=\rel{T-NoStatements}]
+  { }
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\epsilon}{\tau}{\emptyset}}
+\qquad
 \inferrule* [lab=\rel{T-Statements}]
-  {\forall i . \sjudge{\rho}{\Delta}{\Gamma}{L}{s_i}{\tau}{\varepsilon_i} \\
+  {\forall i . \sjudge{\rho}{\Delta}{\Gamma}{L}{s_i}{\tau}{\varepsilon_i} \\\\
+   n > 0 \\
    \varepsilon = \varepsilon_1 \seqcomp \ldots \seqcomp \varepsilon_n}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\seq{s}}{\tau}{\varepsilon}}
 \end{array}
@@ -311,30 +317,30 @@ L        \cup \mustret & = & L \\
    \varepsilon' = \varepsilon - (L \cup \{ \mathit{lab} \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
 \\ \\
+%% \inferrule* [lab=\rel{T-Switch}]
+%%   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
+%%    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
+%%    \varepsilon = (\bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
+%%   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}}}{\tau}{\varepsilon}}
+%% \\ \\
 \inferrule* [lab=\rel{T-Switch}]
   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \varepsilon = (\bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}}}{\tau}{\varepsilon}}
-\\ \\
-\inferrule* [lab=\rel{T-SwitchDefault}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{ss}{\tau}{\varepsilon} \\\\
+   \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
    \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
    \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switchdef{e}{\seq{c}}{\mathit{ss}}}{\tau}{\varepsilon'}}
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-SwitchReturn}]
   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
    \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
    \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{ss}{\tau}{\mustret}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switchdef{e}{\seq{c}}{\mathit{ss}}}{\tau}{\mustret}}
+   \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
 \end{array}
 }
 \\ \\
-\mbox{Case checking} & \hfil \fbox{$\cjudge{\rho}{\Delta}{\Gamma}{L}{c}{\sigma}{\tau}{\varepsilon}$}
+\mbox{Case checking} & \hfil \fbox{$\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -342,6 +348,10 @@ L        \cup \mustret & = & L \\
   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
   {\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+\qquad
+\inferrule* [lab=\rel{T-Default}]
+  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
+  {\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
 \end{array}
 }
 \end{array}
