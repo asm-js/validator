@@ -11,6 +11,7 @@
 \newcommand{\funty}[2]{({#1}) \rightarrow {#2}}
 \newcommand{\seq}[1]{\overline{{#1}}}
 \newcommand{\mathjs}[1]{\mbox{\texttt{{#1}}}}
+\newcommand{\mathjssm}[1]{\mbox{\texttt{\scriptsize {#1}}}}
 \newcommand{\return}[1]{\mathjs{return }{#1}\mathjs{;}}
 \newcommand{\fun}[3]{\mathjs{function }{#1}\mathjs{(}{#2}\mathjs{) \{ }{#3}\mathjs{ \}}}
 \newcommand{\afun}[2]{\mathjs{function}\mathjs{(}{#1}\mathjs{) \{ }{#2}\mathjs{ \}}}
@@ -32,22 +33,25 @@
 \newcommand{\block}[1]{\mathjs{\{ }{#1}\mathjs{ \}}}
 \newcommand{\ok}{\mathrm{\mathbf{ok}}}
 \newcommand{\rulebreak}{\vspace{.1in}\\}
+\newcommand{\pjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\fjudge}[3]{{#1};{#2} \vdash {#3}\ \ok}
 \newcommand{\ejudge}[5]{{#1};{#2};{#3} \vdash {#4} : {#5}}
 \newcommand{\sjudge}[7]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6} / {#7}}
 \newcommand{\cjudge}[8]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6}, {#7} / {#8}}
-\newcommand{\boolean}{\mathtt{boolean}}
+\newcommand{\boolean}{\mathtt{bits1}}
 \newcommand{\uintone}{\mathtt{uint8}}
 \newcommand{\uinttwo}{\mathtt{uint16}}
 \newcommand{\uintfour}{\mathtt{uint32}}
+\newcommand{\uinteight}{\mathtt{uint64}}
 \newcommand{\intone}{\mathtt{int8}}
 \newcommand{\inttwo}{\mathtt{int16}}
 \newcommand{\intfour}{\mathtt{int32}}
+\newcommand{\inteight}{\mathtt{int64}}
 \newcommand{\float}{\mathtt{float32}}
 \newcommand{\double}{\mathtt{float64}}
 \newcommand{\arr}[1]{\mathtt{array}_{#1}}
 \newcommand{\Fun}{\mathtt{Function}}
-\newcommand{\any}{\mathtt{any}}
+\newcommand{\any}{\mathtt{jsval}}
 \newcommand{\str}{\mathtt{string}}
 \newcommand{\undef}{\mathtt{undefined}}
 \newcommand{\nul}{\mathtt{null}}
@@ -56,6 +60,14 @@
 \newcommand{\mustret}{\mathsf{return}}
 \newcommand{\seqcomp}{\mathrel{;}}
 \newcommand{\getprop}[2]{{#1}\mathjs{[}{#2}\mathjs{]}}
+\newcommand{\getpropsm}[2]{{#1}\mathjssm{[}{#2}\mathjssm{]}}
+\newcommand{\longlong}[2]{\mathjs{[}{#1},{#2}\mathjs{]}}
+\newcommand{\toint}[1]{{#1}\mathjs{ | 0}}
+\newcommand{\touint}[1]{{#1}\mathjs{ >>> 0}}
+\newcommand{\word}{\mathtt{bits32}}
+\newcommand{\function}{\mathtt{function}}
+\newcommand{\union}[2]{{#1}\mathrel{|}{#2}}
+\newcommand{\boolish}{\mathtt{boolish}}
 
 \begin{document}
 
@@ -75,9 +87,9 @@
 
 \[
 \begin{array}{rcl}
-\mathit{program} & ::= & \seq{\mathit{fn}}\ \return{f} \\
-                 &  |  & \seq{\mathit{fn}}\ \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
-\mathit{fn} & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
+\mathit{P}    & ::= & \seq{\mathit{fn}_f}\ \return{f} \\
+              &  |  & \seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
+\mathit{fn}_f & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
 \end{array}
 \]
 
@@ -109,13 +121,15 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 
 \[
 \begin{array}{rcl}
-\kappa_X & ::= & X \mathjs{ | 0} \\
-         &  |  & X \mathjs{ \& 0xff} \\
-         &  |  & X \mathjs{ \& 0xffff} \\
-         &  |  & X \mathjs{ >>> 0} \\
+\kappa_X & ::= & \toint{X} \\
+         %% &  |  & X \mathjs{ \& 0xff} \\
+         %% &  |  & X \mathjs{ \& 0xffff} \\
+         &  |  & \touint{X} \\
          &  |  & \mathjs{+}X \\
-         &  |  & X \mathjs{ + ''} \\
-         &  |  & X \mathjs{ + ""} \\
+         &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}} \\
+         &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}} \\
+         %% &  |  & X \mathjs{ + ''} \\
+         %% &  |  & X \mathjs{ + ""} \\
 %         &  |  & \mathjs{!!}X \\
 \end{array}
 \]
@@ -123,22 +137,28 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \[
 \begin{array}{rcl}
 v & ::= & \kappa_{\mathit{num}} \\
-  &  |  & \mathit{bool} \\
-  &  |  & \mathit{str} \\
-  &  |  & \mathjs{null} \\
+  &  |  & \longlong{\kappa_{\mathit{num}}}{\kappa_{\mathit{num}}} \\
+  %% &  |  & \mathit{bool} \\
+  %% &  |  & \mathit{str} \\
+  %% &  |  & \mathjs{null} \\
 \\
-e & ::= & v \\
-  &  |  & \mathit{lval} \\
+e & ::= & \kappa_{\mathit{num}} \\
+  &  |  & \kappa_e \\
+  &  |  & \kappa_{\getpropsm{x}{e}} \\
+  &  |  & x \\
   &  |  & \mathit{lval}\mathjs{ = }e \\
   &  |  & \funcall{f}{\seq{e}} \\
   &  |  & \mathit{unop}\ e \\
   &  |  & e\ \mathit{binop}\ e \\
   &  |  & \ternary{e}{e}{e} \\
   &  |  & \paren{\seq{e}} \\
+  &  |  & \longlong{e}{e} \\
+  &  |  & \getprop{e}{\mathjs{0}} \\
+  &  |  & \getprop{e}{\mathjs{1}} \\
 \\
-\mathit{unop} & ::= & \mathjs{void} ~|~ \mathjs{\~{}} ~|~ \mathjs{-} ~|~ \mathjs{!} \\
+\mathit{unop} & ::= & \mathjs{\~{}} ~|~ \mathjs{-} ~|~ \mathjs{!} \\
 \\
-\mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{==} \\
+\mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
                &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
                &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
@@ -152,12 +172,20 @@ e & ::= & v \\
 
 \[
 \begin{array}{rcl}
-\sigma, \tau & ::= & \mathtt{int} \\
-             &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
-             &  |  & \intone ~|~ \inttwo ~|~ \intfour \\
-             &  |  & \float ~|~ \double \\
+\sigma, \tau & ::= & \boolean ~|~ \word ~|~ \boolish \\
+             &  |  & \intfour ~|~ \uintfour \\
+             &  |  & \inteight ~|~ \uinteight \\
+             &  |  & \double \\
              &  |  & \arr{\tau} \\
-             &  |  & \any ~|~ \undef ~|~ \nul ~|~ \str ~|~ \boolean ~|~ \num ~|~ \obj ~|~ \mathtt{function} \\
+             &  |  & \function \\
+             &  |  & \any \\
+             %% &  |  & (\union{\sigma}{\tau}) \\
+%% \sigma, \tau & ::= & \mathtt{int} \\
+%%              &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
+%%              &  |  & \intone ~|~ \inttwo ~|~ \intfour \\
+%%              &  |  & \float ~|~ \double \\
+%%              &  |  & \arr{\tau} \\
+%%              &  |  & \any ~|~ \undef ~|~ \nul ~|~ \str ~|~ \boolean ~|~ \num ~|~ \obj ~|~ \mathtt{function} \\
 \end{array}
 \]
 
@@ -188,16 +216,18 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-\type(\mathit{bool}) & = & \boolean \\
-\type(\mathit{str}) & = & \str \\
-\type(\mathit{null}) & = & \nul \\
-\type(X \mathjs{ \& 0xff}) & = & \intone \\
-\type(X \mathjs{ \& 0xffff}) & = & \inttwo \\
-\type(X \mathjs{ | 0}) & = & \intfour \\
-\type(X \mathjs{ >>> 0}) & = & \uintfour \\
+%\type(\mathit{bool}) & = & \boolean \\
+%\type(\mathit{str}) & = & \str \\
+%\type(\mathit{null}) & = & \nul \\
+%\type(X \mathjs{ \& 0xff}) & = & \intone \\
+%\type(X \mathjs{ \& 0xffff}) & = & \inttwo \\
+\type(\toint{X}) & = & \intfour \\
+\type(\touint{X}) & = & \uintfour \\
 \type(\mathjs{+}X) & = & \double \\
-\type(X \mathjs{ + ''}) & = & \str \\
-\type(X \mathjs{ + ""}) & = & \str \\
+\type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}}) & = & \inteight \\
+\type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}}) & = & \uinteight \\
+%\type(X \mathjs{ + ''}) & = & \str \\
+%\type(X \mathjs{ + ""}) & = & \str \\
 %\type(\mathjs{!!}X) & = & \boolean \\
 \end{array}
 \]
@@ -206,22 +236,53 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-\uintone, \uinttwo, \uintfour & <: & \mathtt{int} \\
-\intone, \inttwo, \intfour    & <: & \mathtt{int} \\
-\mathtt{int}                  & <: & \num \\
-\float                        & <: & \num \\
-\double                       & <: & \num \\
-\undef                        & <: & \any \\
-\nul                          & <: & \any \\
-\boolean                      & <: & \any \\
-\num                          & <: & \any \\
-\obj                          & <: & \any \\
-\mathtt{function}             & <: & \any \\
+\intfour, \uintfour & <: & \word \\
+\boolean            & <: & \boolish \\
+\word               & <: & \boolish \\
+\word               & <: & \double \\
+\double             & <: & \any \\
+\function           & <: & \any \\
+\arr{\tau}          & <: & \any \\
+%% \sigma              & <: & \union{\sigma}{\tau} \\
+%% \tau                & <: & \union{\sigma}{\tau} \\
+%% \uintone, \uinttwo, \uintfour & <: & \word \\
+%% \intone, \inttwo, \intfour    & <: & \word \\
+%% \word                         & <: & \num \\
+%% \float                        & <: & \num \\
+%% \double                       & <: & \num \\
+%% \undef                        & <: & \any \\
+%% \nul                          & <: & \any \\
+%% \boolean                      & <: & \any \\
+%% \num                          & <: & \any \\
+%% \obj                          & <: & \any \\
+%% \mathtt{function}             & <: & \any \\
 \end{array}
 \]
 
+%% \[
+%% \boolish \defeq \union{\boolean}{\word}
+%% \]
+
 \[
 \begin{array}{lr}
+\mbox{Program checking} & \hfil \fbox{$\pjudge{\rho}{P}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-Singleton}]
+  {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
+   f \in \{\seq{f}\} \\\\
+   \Delta(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+  {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{f}}}
+\qquad
+\inferrule* [lab=\rel{T-Module}]
+  {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
+   \{\seq{g}\} \subseteq \{\seq{f}\} \\\\
+   \forall g . \Delta(g) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+  {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} g} \mathjs{ \}}}}}
+\end{array}
+}
+\\ \\
 \mbox{Function checking} & \hfil \fbox{$\fjudge{\rho}{\Delta}{\mathit{fn}}$}
 \rulebreak
 \multicolumn{2}{c}{
@@ -232,7 +293,11 @@ L        \cup \mustret & = & L \\
   {\fjudge{\rho}{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
 \end{array}
 }
-\\ \\
+\end{array}
+\]
+
+\[
+\begin{array}{lr}
 \mbox{Statement list checking} & \hfil \fbox{$\sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
@@ -262,13 +327,13 @@ L        \cup \mustret & = & L \\
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon \cup \emptyset}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
    \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
@@ -279,14 +344,14 @@ L        \cup \mustret & = & L \\
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\return{v}}{\type(v)}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
    \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
   {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\mathtt{int}} \\\\
+   \ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
@@ -373,9 +438,14 @@ L        \cup \mustret & = & L \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Value}]
+\inferrule* [lab=\rel{T-Number}]
   { }
-  {\ejudge{\rho}{\Delta}{\Gamma}{v}{\type(v)}}
+  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_{\mathit{num}}}{\type(\kappa_{\mathit{num}})}}
+\qquad
+\inferrule* [lab=\rel{T-Cast}]
+  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\tau} \\\\
+   e = \funcall{f}{\seq{e}} \Rightarrow f \in \dom(\Delta)}
+  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_e}{\type(\kappa_e)}}
 \\ \\
 \inferrule* [lab=\rel{T-VarRef}]
   {\Gamma(x) = \tau}
@@ -389,13 +459,14 @@ L        \cup \mustret & = & L \\
 \inferrule* [lab=\rel{T-Load}]
   {\type(\rho(x)) = \arr{\tau} \\\\
    \ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \mathtt{int}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\getprop{x}{e}}{\tau}}
+   \sigma <: \word \\\\
+   \type(\kappa_{\getpropsm{x}{e}}) = \tau}
+  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_{\getpropsm{x}{e}}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Store}]
   {\type(\rho(x)) = \arr{\tau} \\\\
    \ejudge{\rho}{\Delta}{\Gamma}{e_1}{\sigma} \\
-   \sigma <: \mathtt{int} \\\\
+   \sigma <: \word \\\\
    \ejudge{\rho}{\Delta}{\Gamma}{e_2}{\tau}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
 \\ \\
@@ -404,32 +475,41 @@ L        \cup \mustret & = & L \\
    \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
 \qquad
+\inferrule* [lab=\rel{T-StdLib}]
+  {e = {\funcall{f}{\seq{e}}} \\\\
+   f \not\in\dom(\Delta) \\
+   f \not\in\dom(\Gamma) \\\\
+   \rho(f) = \funty{\seq{\sigma}}{\tau} \\\\
+   \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i} \\
+   \type(\kappa_e) = \tau}
+  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_e}{\tau}}
+\qquad
 \inferrule* [lab=\rel{T-FFI}]
   {f \not\in\dom(\Delta) \\
    f \not\in\dom(\Gamma) \\\\
-   \type(\rho(f)) = \mathtt{function} \\\\
+   \rho(f) = \mathtt{function} \\\\
    \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
-\\ \\
-\inferrule* [lab=\rel{T-UnaryOp}]
-  {\type(\mathit{unop}) = \sigma \rightarrow \tau \\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\mathit{unop}\ e}{\tau}}
-\\ \\
-\inferrule* [lab=\rel{T-BinaryOp}]
-  {\forall i \in \{1,2\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i} \\
-   \type(\mathit{binop}) = \sigma_1 \times \sigma_2 \rightarrow \tau}
-  {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-UnaryOp}]
+%%   {\type(\mathit{unop}) = \sigma \rightarrow \tau \\
+%%    \ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma}}
+%%   {\ejudge{\rho}{\Delta}{\Gamma}{\mathit{unop}\ e}{\tau}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-BinaryOp}]
+%%   {\forall i \in \{1,2\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i} \\
+%%    \type(\mathit{binop}) = \sigma_1 \times \sigma_2 \rightarrow \tau}
+%%   {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e_1}{\mathtt{int}} \\\\
+  {\ejudge{\rho}{\Delta}{\Gamma}{e_1}{\boolish} \\\\
    \forall i \in \{2,3\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-Paren}]
   {\forall i \leq n . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau_i}}
   {\ejudge{\rho}{\Delta}{\Gamma}{\paren{\seq{e}}}{\tau_n}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-Sub}]
   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\
    \sigma <: \tau}
