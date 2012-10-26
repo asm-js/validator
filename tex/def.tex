@@ -68,28 +68,29 @@
 \newcommand{\function}{\mathtt{function}}
 \newcommand{\union}[2]{{#1}\mathrel{|}{#2}}
 \newcommand{\boolish}{\mathtt{boolish}}
+\newcommand{\floor}{\mathtt{floor}}
 
 \begin{document}
 
 \title{\texttt{asm.js}}
-\author{Dave Herman}
+\author{Dave Herman, Luke Wagner, and Alon Zakai}
 \maketitle
 
 \section{Abstract syntax}
 
 \[
-\begin{array}{rcl}
-\rho & ::= & \mbox{\textit{runtime lexical environment}} \\
-\Delta & ::= & \{ \seq{f : \funty{\seq{\sigma}}{\tau} } \} \\
-\Gamma & ::= & \{ \seq{x : \tau} \} \\
-\end{array}
+a, b, c, d, e, f, g, x, y, z \in \mathit{Identifier}
 \]
 
 \[
 \begin{array}{rcl}
-\mathit{P}    & ::= & \seq{\mathit{fn}_f}\ \return{f} \\
-              &  |  & \seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
-\mathit{fn}_f & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
+P               & ::= & \function(b, e)\mathjs{ \{ } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}} \\
+\mathit{imp}_x  & ::= & \var{x \mathjs{ = } e\mathjs{.}y} \\
+                &  |  & \var{x \mathjs{ = } e\mathjs{.}y(b)} \\
+                &  |  & \var{x \mathjs{ = } \mathjs{new }e\mathjs{.}y(b)} \\
+\mathit{exp}    & ::= & \return{f} \\
+                &  |  & \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
+\mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
 \end{array}
 \]
 
@@ -144,12 +145,15 @@ v & ::= & \kappa_{\mathit{num}} \\
 \\
 e & ::= & \kappa_{\mathit{num}} \\
   &  |  & \kappa_e \\
-  &  |  & \kappa_{\getpropsm{x}{e}} \\
-  &  |  & x \\
+  &  |  & \mathit{lval} \\
   &  |  & \mathit{lval}\mathjs{ = }e \\
   &  |  & \funcall{f}{\seq{e}} \\
   &  |  & \mathit{unop}\ e \\
-  &  |  & e\ \mathit{binop}\ e \\
+  &  |  & e\ \mathit{aop}\ e \\
+  &  |  & e\ \mathjs{/}\ e \\
+  &  |  & e\ \mathjs{\%}\ e \\
+  &  |  & e\ \mathit{bop}\ e \\
+  &  |  & e\ \mathit{relop}\ e \\
   &  |  & \ternary{e}{e}{e} \\
   &  |  & \paren{\seq{e}} \\
   &  |  & \longlong{e}{e} \\
@@ -158,10 +162,14 @@ e & ::= & \kappa_{\mathit{num}} \\
 \\
 \mathit{unop} & ::= & \mathjs{\~{}} ~|~ \mathjs{-} ~|~ \mathjs{!} \\
 \\
-\mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
-               &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
-               &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
-               &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
+\mathit{aop} & ::= & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} \\
+\mathit{bop} & ::= & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} ~|~ \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
+\\
+\mathit{relop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
+%% \mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
+%%                &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
+%%                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
+%%                &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
 \\
 \mathit{lval} & ::= & x \\
               &  |  & \getprop{x}{e} \\
@@ -176,9 +184,9 @@ e & ::= & \kappa_{\mathit{num}} \\
              &  |  & \intfour ~|~ \uintfour \\
              &  |  & \inteight ~|~ \uinteight \\
              &  |  & \double \\
-             &  |  & \arr{\tau} \\
-             &  |  & \function \\
-             &  |  & \any \\
+             &  |  & \arr{\tau} ~|~ \function ~|~ \any \\
+             &  |  & \floor \\
+             &  |  & \funty{\seq{\sigma}}{\tau} \\
              %% &  |  & (\union{\sigma}{\tau}) \\
 %% \sigma, \tau & ::= & \mathtt{int} \\
 %%              &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
@@ -236,13 +244,15 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-\intfour, \uintfour & <: & \word \\
-\boolean            & <: & \boolish \\
-\word               & <: & \boolish \\
-\word               & <: & \double \\
-\double             & <: & \any \\
-\function           & <: & \any \\
-\arr{\tau}          & <: & \any \\
+\intfour, \uintfour  & <: & \word \\
+\boolean             & <: & \boolish \\
+\word                & <: & \boolish \\
+\word                & <: & \double \\
+\double              & <: & \any \\
+\function            & <: & \any \\
+\arr{\tau}           & <: & \any \\
+\floor               & <: & \funty{\double}{\double} \\
+\funty{\sigma}{\tau} & <: & \function \\
 %% \sigma              & <: & \union{\sigma}{\tau} \\
 %% \tau                & <: & \union{\sigma}{\tau} \\
 %% \uintone, \uinttwo, \uintfour & <: & \word \\
@@ -263,34 +273,131 @@ L        \cup \mustret & = & L \\
 %% \boolish \defeq \union{\boolean}{\word}
 %% \]
 
+%% \[
+%% \begin{array}{rcl}
+%% \rho   & ::= & \{ \seq{x : \tau} \} \\
+%% \Delta & ::= & \{ \seq{f : \funty{\seq{\sigma}}{\tau} } \} \\
+%% \Gamma & ::= & \{ \seq{x : \tau} \} \\
+%% \end{array}
+%% \]
+
+\[
+\Gamma ::= \{ \seq{x : \tau} \} ~|~ \Gamma, \{ \seq{x : \tau} \}
+\]
+
+\[
+\begin{array}{rcl}
+M(\floor) & = & \floor \\
+M(\mathtt{ceil}) & = & \funty{\double}{\double} \\
+M(\mathtt{sin}) & = & \funty{\double}{\double} \\
+M(\mathtt{cos}) & = & \funty{\double}{\double} \\
+& \ldots \\
+\end{array}
+\]
+
+\[
+\begin{array}{rcl}
+A(\mathtt{Uint8Array}) & = & \uintfour \\
+A(\mathtt{Uint16Array}) & = & \uintfour \\
+A(\mathtt{Uint32Array}) & = & \uintfour \\
+A(\mathtt{Int8Array}) & = & \intfour \\
+A(\mathtt{Int16Array}) & = & \intfour \\
+A(\mathtt{Int32Array}) & = & \intfour \\
+A(\mathtt{Float32Array}) & = & \double \\
+A(\mathtt{Float64Array}) & = & \double \\
+\end{array}
+\]
+
+%% \newcommand{\fjudge}[3]{{#1};{#2} \vdash {#3}\ \ok}
+\newcommand{\Pjudge}[1]{\vdash {#1}\ \ok}
+\newcommand{\impjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
+\newcommand{\fnjudge}[2]{{#1} \vdash {#2}\ \ok}
+\newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
+\newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
+\newcommand{\exprjudge}[3]{{#1} \vdash {#2} : {#3}}
+\newcommand{\casejudge}[6]{{#1};{#2} \vdash {#3} : {#4}, {#5} / {#6}}
+
 \[
 \begin{array}{lr}
-\mbox{Program checking} & \hfil \fbox{$\pjudge{\rho}{P}$}
+\mbox{Program checking} & \hfil \fbox{$\Pjudge{P}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Singleton}]
-  {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
-   f \in \{\seq{f}\} \\\\
-   \Delta(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
-  {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{f}}}
-\qquad
-\inferrule* [lab=\rel{T-Module}]
-  {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
-   \{\seq{g}\} \subseteq \{\seq{f}\} \\\\
-   \forall g . \Delta(g) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
-  {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} g} \mathjs{ \}}}}}
+\inferrule* [lab=\rel{T-Program}]
+  {\{ \seq{x} \} \cap \{ \seq{f} \} = \emptyset \\
+   \{ \seq{x} \} \cap \{ b, e \} = \emptyset \\
+   \{ \seq{f} \} \cap \{ b, e \} = \emptyset \\\\
+   \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\\\
+   \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\\\
+   \forall i . \expjudge{\Gamma_0, \Gamma_1}{r}}
+  {\Pjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
 \end{array}
 }
 \\ \\
-\mbox{Function checking} & \hfil \fbox{$\fjudge{\rho}{\Delta}{\mathit{fn}}$}
+\mbox{Import checking} & \hfil \fbox{$\impjudge{b}{e}{\Gamma}{\mathit{imp}}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-ImportStd}]
+  {\Gamma(x) = M(y)}
+  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
+\qquad
+\inferrule* [lab=\rel{T-ImportFFI}]
+  {y \not\in\dom(M)}
+  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
+\\ \\
+\inferrule* [lab=\rel{T-View}]
+  {\Gamma(x) = \arr{A(y)}}
+  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y(b)}}}
+\qquad
+\inferrule* [lab=\rel{T-NewView}]
+  {\Gamma(x) = \arr{A(y)}}
+  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-Singleton}]
+%%   {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
+%%    f \in \{\seq{f}\} \\\\
+%%    \Delta(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+%%   {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{f}}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-Module}]
+%%   {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
+%%    \{\seq{g}\} \subseteq \{\seq{f}\} \\\\
+%%    \forall g . \Delta(g) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+%%   {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} g} \mathjs{ \}}}}}
+\end{array}
+}
+\\ \\
+\mbox{Function checking} & \hfil \fbox{$\fnjudge{\Gamma}{\mathit{fn}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Function}]
-  {\forall i . \type(\kappa_{x_i}) = \sigma_i \\\\
-   \sjudge{\rho}{\Delta}{\{\seq{x:\sigma},\seq{y:\type(v)}\}}{\emptyset}{\mathit{ss}}{\Delta(f)}{\mustret}}
-  {\fjudge{\rho}{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+  {\{ \seq{x} \} \cap \{ \seq{y} \} = \emptyset \\
+   \Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
+   \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
+   \stmtjudge{\Gamma, \{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\emptyset}{\mathit{ss}}{\tau}{\mustret}}
+  {\fnjudge{\Gamma}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-Function}]
+%%   {\forall i . \type(\kappa_{x_i}) = \sigma_i \\\\
+%%    \sjudge{\rho}{\Delta}{\{\seq{x:\sigma},\seq{y:\type(v)}\}}{\emptyset}{\mathit{ss}}{\Delta(f)}{\mustret}}
+%%   {\fjudge{\rho}{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+\end{array}
+}
+\\ \\
+\mbox{Export checking} & \hfil \fbox{$\expjudge{\Gamma}{\mathit{exp}}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-Singleton}]
+  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
+   \tau <: \any }
+  {\expjudge{\Gamma}{\return{f}}}
+\qquad
+\inferrule* [lab=\rel{T-Module}]
+  {\forall f . \Gamma(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+  {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
 \end{array}
 }
 \end{array}
@@ -298,68 +405,72 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{lr}
-\mbox{Statement list checking} & \hfil \fbox{$\sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}$}
+\mbox{Statement list checking} & \hfil \fbox{$\stmtjudge{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-NoStatements}]
   { }
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\epsilon}{\tau}{\emptyset}}
+  {\stmtjudge{\Gamma}{L}{\epsilon}{\tau}{\emptyset}}
 \qquad
 \inferrule* [lab=\rel{T-Statements}]
-  {\forall i . \sjudge{\rho}{\Delta}{\Gamma}{L}{s_i}{\tau}{\varepsilon_i} \\\\
+  {\forall i . \stmtjudge{\Gamma}{L}{s_i}{\tau}{\varepsilon_i} \\\\
    n > 0 \\
    \varepsilon = \varepsilon_1 \seqcomp \ldots \seqcomp \varepsilon_n}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\seq{s}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\seq{s}}{\tau}{\varepsilon}}
 \end{array}
 }
 \\ \\
-\mbox{Statement checking} & \hfil \fbox{$\sjudge{\rho}{\Delta}{\Gamma}{L}{s}{\tau}{\varepsilon}$}
+\mbox{Statement checking} & \hfil \fbox{$\stmtjudge{\Gamma}{L}{s}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Block}]
-  {\sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\block{\mathit{ss}}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{\emptyset}{\mathit{ss}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\block{\mathit{ss}}}{\tau}{\varepsilon}}
 \qquad
 \inferrule* [lab=\rel{T-ExprStmt}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
+  {\exprjudge{\Gamma}{e}{\sigma}}
+  {\stmtjudge{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \sigma <: \boolish \\\\
+   \stmtjudge{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon \cup \emptyset}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
-   \sjudge{\rho}{\Delta}{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \sigma <: \boolish \\\\
+   \stmtjudge{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
+   \stmtjudge{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\ifthenelse{e}{s_1}{s_2}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\ifthenelse{e}{s_1}{s_2}}{\tau}{\varepsilon}}
 \\ \\
 \inferrule* [lab=\rel{T-Return}]
-  { }
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\return{v}}{\type(v)}{\mustret}}
+  {\exprjudge{\Gamma}{e}{\tau}}
+  {\stmtjudge{\Gamma}{L}{\return{e}}{\tau}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \sigma <: \boolish \\\\
+   \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
-  {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\boolish} \\\\
+  {\stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
+   \exprjudge{\Gamma}{e}{\sigma} \\\\
+   \sigma <: \boolish \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-For}]
-  {\forall i \in \{1,2,3\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
+  {\forall i \in \{1,2,3\} . \exprjudge{\Gamma}{e_i}{\sigma_i} \\\\
+   \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\for{e_1}{e_2}{e_3}{s}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\for{e_1}{e_2}{e_3}{s}}{\tau}{\varepsilon'}}
 \end{array}
 }
 \end{array}
@@ -367,30 +478,30 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{lr}
-\mbox{Statement checking (cont'd)} & \hfil \fbox{$\sjudge{\rho}{\Delta}{\Gamma}{L}{s}{\tau}{\varepsilon}$}
+\mbox{Statement checking (cont'd)} & \hfil \fbox{$\stmtjudge{\Gamma}{L}{s}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Break}]
   {\varepsilon = \{ \epsilon \}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\brk}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\brk}{\tau}{\varepsilon}}
 \qquad
 \inferrule* [lab=\rel{T-BreakLabel}]
   {\varepsilon = \{ \mathit{lab} \}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\brkl{\mathit{lab}}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\brkl{\mathit{lab}}}{\tau}{\varepsilon}}
 \\ \\
 \inferrule* [lab=\rel{T-Continue}]
   { }
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\cont}{\tau}{\emptyset}}
+  {\stmtjudge{\Gamma}{L}{\cont}{\tau}{\emptyset}}
 \qquad
 \inferrule* [lab=\rel{T-ContinueLabel}]
   { }
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\contl{\mathit{lab}}}{\tau}{\emptyset}}
+  {\stmtjudge{\Gamma}{L}{\contl{\mathit{lab}}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-Label}]
-  {\sjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \mathit{lab} \}}{s}{\tau}{\varepsilon} \\\\
+  {\stmtjudge{\Gamma}{L \cup \{ \mathit{lab} \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \mathit{lab} \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
 \\ \\
 %% \inferrule* [lab=\rel{T-Switch}]
 %%   {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
@@ -399,34 +510,34 @@ L        \cup \mustret & = & L \\
 %%   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}}}{\tau}{\varepsilon}}
 %% \\ \\
 \inferrule* [lab=\rel{T-Switch}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
+   \casejudge{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
    \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
    \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-SwitchReturn}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
    \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
-   \cjudge{\rho}{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
+   \casejudge{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
+  {\stmtjudge{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
 \end{array}
 }
 \\ \\
-\mbox{Case checking} & \hfil \fbox{$\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
+\mbox{Case checking} & \hfil \fbox{$\casejudge{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Case}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\exprjudge{\Gamma}{e}{\sigma} \\\\
+   \stmtjudge{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
+  {\casejudge{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
 \qquad
 \inferrule* [lab=\rel{T-Default}]
-  {\sjudge{\rho}{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\cjudge{\rho}{\Delta}{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\stmtjudge{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
+  {\casejudge{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
 \end{array}
 }
 \end{array}
@@ -434,62 +545,76 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{lr}
-\mbox{Expression checking} & \hfil \fbox{$\ejudge{\rho}{\Delta}{\Gamma}{e}{\tau}$}
+\mbox{Expression checking} & \hfil \fbox{$\exprjudge{\Gamma}{e}{\tau}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Number}]
   { }
-  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_{\mathit{num}}}{\type(\kappa_{\mathit{num}})}}
+  {\exprjudge{\Gamma}{\kappa_{\mathit{num}}}{\type(\kappa_{\mathit{num}})}}
 \qquad
 \inferrule* [lab=\rel{T-Cast}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\tau} \\\\
-   e = \funcall{f}{\seq{e}} \Rightarrow f \in \dom(\Delta)}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_e}{\type(\kappa_e)}}
+  {\exprjudge{\Gamma}{e}{\tau}}
+  {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
+%% \inferrule* [lab=\rel{T-Cast}]
+%%   {\exprjudge{\Gamma}{e}{\tau} \\\\
+%%    e = \funcall{f}{\seq{e}} \Rightarrow f \in \dom(\Delta)}
+%%   {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
 \\ \\
 \inferrule* [lab=\rel{T-VarRef}]
   {\Gamma(x) = \tau}
-  {\ejudge{\rho}{\Delta}{\Gamma}{x}{\tau}}
+  {\exprjudge{\Gamma}{x}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Assign}]
   {\Gamma(x) = \tau \\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\tau}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{x\mathjs{ = }e}{\tau}}
+   \exprjudge{\Gamma}{e}{\tau}}
+  {\exprjudge{\Gamma}{x\mathjs{ = }e}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Load}]
-  {\type(\rho(x)) = \arr{\tau} \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \word \\\\
-   \type(\kappa_{\getpropsm{x}{e}}) = \tau}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_{\getpropsm{x}{e}}}{\tau}}
+  {\Gamma(x) = \arr{\tau} \\
+   \exprjudge{\Gamma}{e}{\uintfour}}
+  {\exprjudge{\Gamma}{\getprop{x}{e}}{\tau}}
+  %% {\type(\rho(x)) = \arr{\tau} \\\\
+  %%  \exprjudge{\Gamma}{e}{\sigma} \\
+  %%  \sigma <: \word \\\\
+  %%  \type(\kappa_{\getpropsm{x}{e}}) = \tau}
+  %% {\exprjudge{\Gamma}{\kappa_{\getpropsm{x}{e}}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Store}]
-  {\type(\rho(x)) = \arr{\tau} \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e_1}{\sigma} \\
-   \sigma <: \word \\\\
-   \ejudge{\rho}{\Delta}{\Gamma}{e_2}{\tau}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
+  {\exprjudge{\Gamma}{e_1}{\uintfour} \\
+   \exprjudge{\Gamma}{e_2}{\tau} \\
+   \tau <: \Gamma(x)}
+  {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
+  %% {\type(\rho(x)) = \arr{\tau} \\\\
+  %%  \exprjudge{\Gamma}{e_1}{\sigma} \\
+  %%  \sigma <: \word \\\\
+  %%  \exprjudge{\Gamma}{e_2}{\tau}}
+  %% {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-FunCall}]
-  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
-   \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
-\qquad
-\inferrule* [lab=\rel{T-StdLib}]
-  {e = {\funcall{f}{\seq{e}}} \\\\
-   f \not\in\dom(\Delta) \\
-   f \not\in\dom(\Gamma) \\\\
-   \rho(f) = \funty{\seq{\sigma}}{\tau} \\\\
-   \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i} \\
-   \type(\kappa_e) = \tau}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\kappa_e}{\tau}}
+  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
+   \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i}}
+  {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-StdLib}]
+%%   {e = {\funcall{f}{\seq{e}}} \\\\
+%%    f \not\in\dom(\Delta) \\
+%%    f \not\in\dom(\Gamma) \\\\
+%%    \rho(f) = \funty{\seq{\sigma}}{\tau} \\\\
+%%    \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \\
+%%    \type(\kappa_e) = \tau}
+%%   {\exprjudge{\Gamma}{\kappa_e}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-FFI}]
-  {f \not\in\dom(\Delta) \\
-   f \not\in\dom(\Gamma) \\\\
-   \rho(f) = \mathtt{function} \\\\
-   \forall i . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\sigma_i}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
+  {\Gamma(f) = \function \\\\
+   \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \land \sigma_i <: \any}
+  {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
+%% \inferrule* [lab=\rel{T-FFI}]
+%%   {f \not\in\dom(\Delta) \\
+%%    f \not\in\dom(\Gamma) \\\\
+%%    \rho(f) = \mathtt{function} \\\\
+%%    \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i}}
+%%   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
 %% \\ \\
 %% \inferrule* [lab=\rel{T-UnaryOp}]
 %%   {\type(\mathit{unop}) = \sigma \rightarrow \tau \\
@@ -502,21 +627,101 @@ L        \cup \mustret & = & L \\
 %%   {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e_1}{\boolish} \\\\
-   \forall i \in \{2,3\} . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
+  {\exprjudge{\Gamma}{e_1}{\sigma} \\
+   \sigma <: \boolish \\\\
+   \forall i \in \{2,3\} . \exprjudge{\Gamma}{e_i}{\tau}}
+  {\exprjudge{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Paren}]
-  {\forall i \leq n . \ejudge{\rho}{\Delta}{\Gamma}{e_i}{\tau_i}}
-  {\ejudge{\rho}{\Delta}{\Gamma}{\paren{\seq{e}}}{\tau_n}}
+  {\forall i \leq n . \exprjudge{\Gamma}{e_i}{\tau_i}}
+  {\exprjudge{\Gamma}{\paren{\seq{e}}}{\tau_n}}
+\\ \\
+\inferrule* [lab=\rel{T-IArith}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
+   \tau <: \word}
+  {\exprjudge{\Gamma}{\toint{(e_1\ \mathit{aop}\ e_2)}}{\intfour}}
 \qquad
-\inferrule* [lab=\rel{T-Sub}]
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \tau}
-  {\ejudge{\rho}{\Delta}{\Gamma}{e}{\tau}}
+\inferrule* [lab=\rel{T-UArith}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
+   \tau <: \word}
+  {\exprjudge{\Gamma}{\touint{(e_1\ \mathit{aop}\ e_2)}}{\uintfour}}
+\\ \\
+\inferrule* [lab=\rel{T-FArith}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
+   \forall i . \tau_i <: \double}
+  {\exprjudge{\Gamma}{e_1\ \mathit{aop}\ e_2}{\double}}
 \end{array}
 }
 \end{array}
 \]
+
+\[
+\begin{array}{lr}
+\mbox{Expression checking (cont'd)} & \hfil \fbox{$\exprjudge{\Gamma}{e}{\tau}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-IDiv}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\intfour}}
+  {\exprjudge{\Gamma}{\toint{(e_1\ \mathjs{/}\ e_2)}}{\intfour}}
+\qquad
+\inferrule* [lab=\rel{T-UDiv}]
+  {\Gamma(f) = \floor \\\\
+   \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
+  {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
+%% \inferrule* [lab=\rel{T-UDiv}]
+%%   {f \not\in \Gamma \\
+%%    f \not\in \Delta \\
+%%    \rho(f) = \floor \\\\
+%%    \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
+%%   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
+\\ \\
+\inferrule* [lab=\rel{T-FDiv}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
+   \forall i . \tau_i <: \double}
+  {\exprjudge{\Gamma}{e_1\ \mathjs{/}\ e_2}{\double}}
+\\ \\
+\inferrule* [lab=\rel{T-IMod}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\intfour}}
+  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\intfour}}
+\qquad
+\inferrule* [lab=\rel{T-UMod}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
+  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\uintfour}}
+\\ \\
+\inferrule* [lab=\rel{T-FMod}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
+   \forall i . \tau_i <: \double}
+  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\double}}
+\\ \\
+\inferrule* [lab=\rel{T-Rel}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
+   \tau <: \double}
+  {\exprjudge{\Gamma}{e_1\ \mathit{relop}\ e_2}{\boolean}}
+\qquad
+\inferrule* [lab=\rel{T-Bitwise}]
+  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
+   \forall i . \tau_i <: \word}
+  {\exprjudge{\Gamma}{e_1\ \mathit{bop}\ e_2}{\intfour}}
+\\ \\
+\inferrule* [lab=\rel{T-BitwiseNot}]
+  {\exprjudge{\Gamma}{e}{\tau} \\\\
+   \tau <: \word}
+  {\exprjudge{\Gamma}{\mathjs{\~{}}e}{\intfour}}
+\qquad
+\inferrule* [lab=\rel{T-Not}]
+  {\exprjudge{\Gamma}{e}{\tau} \\\\
+   \tau <: \boolish}
+  {\exprjudge{\Gamma}{\mathjs{!}e}{\boolean}}
+\qquad
+\inferrule* [lab=\rel{T-Negate}]
+  {\exprjudge{\Gamma}{e}{\tau} \\\\
+   \tau <: \word}
+  {\exprjudge{\Gamma}{\mathjs{-}e}{\intfour}}
+\end{array}
+}
+\end{array}
+\]
+
 
 \end{document}
