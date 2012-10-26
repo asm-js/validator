@@ -54,6 +54,7 @@
 \newcommand{\any}{\mathtt{jsval}}
 \newcommand{\str}{\mathtt{string}}
 \newcommand{\undef}{\mathtt{undefined}}
+\newcommand{\void}{\mathtt{void}}
 \newcommand{\nul}{\mathtt{null}}
 \newcommand{\num}{\mathtt{number}}
 \newcommand{\obj}{\mathtt{object}}
@@ -194,6 +195,7 @@ e & ::= & \kappa_{\mathit{num}} \\
              &  |  & \arr{\tau} ~|~ \function ~|~ \any \\
              &  |  & \floor \\
              &  |  & \funty{\seq{\sigma}}{\tau} \\
+             &  |  & \void \\
              %% &  |  & (\union{\sigma}{\tau}) \\
 %% \sigma, \tau & ::= & \mathtt{int} \\
 %%              &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
@@ -259,6 +261,7 @@ L        \cup \mustret & = & L \\
 \double               & <: & \any \\
 \function             & <: & \any \\
 \arr{\tau}            & <: & \any \\
+\void                 & <: & \any \\
 \floor                & <: & \funty{\double}{\double} \\
 \funty{\sigma}{\tau}  & <: & \function \\
 %% \sigma              & <: & \union{\sigma}{\tau} \\
@@ -336,8 +339,8 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\{ \seq{x} \} \cap \{ \seq{f} \} = \emptyset \\
    \{ \seq{x} \} \cap \{ b, e \} = \emptyset \\
    \{ \seq{f} \} \cap \{ b, e \} = \emptyset \\\\
-   \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\\\
-   \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\\\
+   \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\
+   \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Gamma_0, \Gamma_1}{r}}
   {\Pjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
 \end{array}
@@ -384,8 +387,16 @@ A(\mathtt{Float64Array}) & = & \double \\
 \inferrule* [lab=\rel{T-Function}]
   {\{ \seq{x} \} \cap \{ \seq{y} \} = \emptyset \\
    \Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
-   \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
+   \seq{\sigma} = \seq{\type(\kappa_x)} \\
+   \tau \not= \void \\\\
    \stmtjudge{\Gamma, \{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\emptyset}{\mathit{ss}}{\tau}{\mustret}}
+  {\fnjudge{\Gamma}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+\\ \\
+\inferrule* [lab=\rel{T-VoidFunction}]
+  {\{ \seq{x} \} \cap \{ \seq{y} \} = \emptyset \\
+   \Gamma(f) = \funty{\seq{\sigma}}{\void} \\
+   \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
+   \stmtjudge{\Gamma, \{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\emptyset}{\mathit{ss}}{\void}{\varepsilon}}
   {\fnjudge{\Gamma}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
 %% \\ \\
 %% \inferrule* [lab=\rel{T-Function}]
@@ -455,9 +466,13 @@ A(\mathtt{Float64Array}) & = & \double \\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
   {\stmtjudge{\Gamma}{L}{\ifthenelse{e}{s_1}{s_2}}{\tau}{\varepsilon}}
 \\ \\
-\inferrule* [lab=\rel{T-Return}]
+\inferrule* [lab=\rel{T-ReturnExpr}]
   {\exprjudge{\Gamma}{e}{\tau}}
   {\stmtjudge{\Gamma}{L}{\return{e}}{\tau}{\mustret}}
+\qquad
+\inferrule* [lab=\rel{T-ReturnVoid}]
+  { }
+  {\stmtjudge{\Gamma}{L}{\mathtt{return;}}{\void}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
   {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
@@ -488,12 +503,12 @@ A(\mathtt{Float64Array}) & = & \double \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Break}]
-  {\varepsilon = \{ \epsilon \}}
-  {\stmtjudge{\Gamma}{L}{\brk}{\tau}{\varepsilon}}
+  { }
+  {\stmtjudge{\Gamma}{L}{\brk}{\tau}{\{ \epsilon \}}}
 \qquad
 \inferrule* [lab=\rel{T-BreakLabel}]
-  {\varepsilon = \{ \mathit{lab} \}}
-  {\stmtjudge{\Gamma}{L}{\brkl{\mathit{lab}}}{\tau}{\varepsilon}}
+  { }
+  {\stmtjudge{\Gamma}{L}{\brkl{\mathit{lab}}}{\tau}{\{ \mathit{lab} \}}}
 \\ \\
 \inferrule* [lab=\rel{T-Continue}]
   { }
