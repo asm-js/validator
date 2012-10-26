@@ -65,6 +65,7 @@
 \newcommand{\toint}[1]{{#1}\mathjs{ | 0}}
 \newcommand{\touint}[1]{{#1}\mathjs{ >>> 0}}
 \newcommand{\word}{\mathtt{bits32}}
+\newcommand{\dword}{\mathtt{bits64}}
 \newcommand{\function}{\mathtt{function}}
 \newcommand{\union}[2]{{#1}\mathrel{|}{#2}}
 \newcommand{\boolish}{\mathtt{boolish}}
@@ -177,6 +178,8 @@ e & ::= & \kappa_{\mathit{num}} \\
 \\
 \mathit{lval} & ::= & x \\
               &  |  & \getprop{x}{e} \\
+              &  |  & \getprop{x}{\mathjs{0}} \\
+              &  |  & \getprop{x}{\mathjs{1}} \\
 \end{array}
 \]
 
@@ -184,7 +187,7 @@ e & ::= & \kappa_{\mathit{num}} \\
 
 \[
 \begin{array}{rcl}
-\sigma, \tau & ::= & \boolean ~|~ \word ~|~ \boolish \\
+\sigma, \tau & ::= & \boolean ~|~ \word ~|~ \dword ~|~ \boolish \\
              &  |  & \intfour ~|~ \uintfour \\
              &  |  & \inteight ~|~ \uinteight \\
              &  |  & \double \\
@@ -248,15 +251,16 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-\intfour, \uintfour  & <: & \word \\
-\boolean             & <: & \boolish \\
-\word                & <: & \boolish \\
-\word                & <: & \double \\
-\double              & <: & \any \\
-\function            & <: & \any \\
-\arr{\tau}           & <: & \any \\
-\floor               & <: & \funty{\double}{\double} \\
-\funty{\sigma}{\tau} & <: & \function \\
+\intfour, \uintfour   & <: & \word \\
+\inteight, \uinteight & <: & \dword \\
+\boolean              & <: & \boolish \\
+\word                 & <: & \boolish \\
+\word                 & <: & \double \\
+\double               & <: & \any \\
+\function             & <: & \any \\
+\arr{\tau}            & <: & \any \\
+\floor                & <: & \funty{\double}{\double} \\
+\funty{\sigma}{\tau}  & <: & \function \\
 %% \sigma              & <: & \union{\sigma}{\tau} \\
 %% \tau                & <: & \union{\sigma}{\tau} \\
 %% \uintone, \uinttwo, \uintfour & <: & \word \\
@@ -319,6 +323,7 @@ A(\mathtt{Float64Array}) & = & \double \\
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
 \newcommand{\exprjudge}[3]{{#1} \vdash {#2} : {#3}}
+\newcommand{\notexprjudge}[3]{{#1} \not\vdash {#2} : {#3}}
 \newcommand{\casejudge}[6]{{#1};{#2} \vdash {#3} : {#4}, {#5} / {#6}}
 
 \[
@@ -438,15 +443,13 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\stmtjudge{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
-  {\exprjudge{\Gamma}{e}{\sigma} \\\\
-   \sigma <: \boolish \\\\
+  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
    \stmtjudge{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon \cup \emptyset}
   {\stmtjudge{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
-  {\exprjudge{\Gamma}{e}{\sigma} \\\\
-   \sigma <: \boolish \\\\
+  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
    \stmtjudge{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
    \stmtjudge{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
@@ -457,21 +460,19 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\stmtjudge{\Gamma}{L}{\return{e}}{\tau}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\exprjudge{\Gamma}{e}{\sigma} \\\\
-   \sigma <: \boolish \\\\
+  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
    \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
   {\stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
-   \exprjudge{\Gamma}{e}{\sigma} \\\\
-   \sigma <: \boolish \\\\
+   \exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-For}]
-  {\forall i \in \{1,2,3\} . \exprjudge{\Gamma}{e_i}{\sigma_i} \\\\
+  {\forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \\\\
    \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\for{e_1}{e_2}{e_3}{s}}{\tau}{\varepsilon'}}
@@ -520,7 +521,7 @@ A(\mathtt{Float64Array}) & = & \double \\
    \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
    \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-SwitchReturn}]
   {\exprjudge{\Gamma}{e}{\sigma} \\\\
    \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
@@ -558,7 +559,9 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\exprjudge{\Gamma}{\kappa_{\mathit{num}}}{\type(\kappa_{\mathit{num}})}}
 \qquad
 \inferrule* [lab=\rel{T-Cast}]
-  {\exprjudge{\Gamma}{e}{\tau}}
+  {\kappa_e = \toint{(e_1\ \mathjs{/}\ e_2)} \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\intfour} \\\\
+   e = e_1\ \mathit{aop}\ e_2 \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\tau <: \word} \\\\
+   \exprjudge{\Gamma}{e}{\tau}}
   {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
 %% \inferrule* [lab=\rel{T-Cast}]
 %%   {\exprjudge{\Gamma}{e}{\tau} \\\\
@@ -586,14 +589,25 @@ A(\mathtt{Float64Array}) & = & \double \\
 \qquad
 \inferrule* [lab=\rel{T-Store}]
   {\exprjudge{\Gamma}{e_1}{\uintfour} \\
-   \exprjudge{\Gamma}{e_2}{\tau} \\
-   \tau <: \Gamma(x)}
+   \exprjudge{\Gamma}{e_2}{\Gamma(x)}}
   {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
   %% {\type(\rho(x)) = \arr{\tau} \\\\
   %%  \exprjudge{\Gamma}{e_1}{\sigma} \\
   %%  \sigma <: \word \\\\
   %%  \exprjudge{\Gamma}{e_2}{\tau}}
   %% {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
+\\ \\
+\inferrule* [lab=\rel{T-LowUint}]
+  {\exprjudge{\Gamma}{e}{\uinteight}}
+  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\uintfour}}
+\qquad
+\inferrule* [lab=\rel{T-LowInt}]
+  {\exprjudge{\Gamma}{e}{\inteight}}
+  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\intfour}}
+\qquad
+\inferrule* [lab=\rel{T-HighUint}]
+  {\exprjudge{\Gamma}{e}{\tau <: \dword}}
+  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{1}}}{\uintfour}}
 \\ \\
 \inferrule* [lab=\rel{T-FunCall}]
   {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
@@ -611,7 +625,7 @@ A(\mathtt{Float64Array}) & = & \double \\
 \qquad
 \inferrule* [lab=\rel{T-FFI}]
   {\Gamma(f) = \function \\\\
-   \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \land \sigma_i <: \any}
+   \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i <: \any}}
   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
 %% \inferrule* [lab=\rel{T-FFI}]
 %%   {f \not\in\dom(\Delta) \\
@@ -631,9 +645,8 @@ A(\mathtt{Float64Array}) & = & \double \\
 %%   {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
-  {\exprjudge{\Gamma}{e_1}{\sigma} \\
-   \sigma <: \boolish \\\\
-   \forall i \in \{2,3\} . \exprjudge{\Gamma}{e_i}{\tau}}
+  {\exprjudge{\Gamma}{e_1}{\sigma <: \boolish} \\
+   \forall i . \exprjudge{\Gamma}{e_i}{\tau}}
   {\exprjudge{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Paren}]
@@ -641,18 +654,15 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\exprjudge{\Gamma}{\paren{\seq{e}}}{\tau_n}}
 \\ \\
 \inferrule* [lab=\rel{T-IArith}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
-   \tau <: \word}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \word}}
   {\exprjudge{\Gamma}{\toint{(e_1\ \mathit{aop}\ e_2)}}{\intfour}}
 \qquad
 \inferrule* [lab=\rel{T-UArith}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
-   \tau <: \word}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \word}}
   {\exprjudge{\Gamma}{\touint{(e_1\ \mathit{aop}\ e_2)}}{\uintfour}}
 \\ \\
 \inferrule* [lab=\rel{T-FArith}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
-   \forall i . \tau_i <: \double}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
   {\exprjudge{\Gamma}{e_1\ \mathit{aop}\ e_2}{\double}}
 \end{array}
 }
@@ -666,12 +676,12 @@ A(\mathtt{Float64Array}) & = & \double \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-IDiv}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\intfour}}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\intfour}}
   {\exprjudge{\Gamma}{\toint{(e_1\ \mathjs{/}\ e_2)}}{\intfour}}
 \qquad
 \inferrule* [lab=\rel{T-UDiv}]
   {\Gamma(f) = \floor \\\\
-   \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
+   \forall i . \exprjudge{\Gamma}{e_i}{\uintfour}}
   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
 %% \inferrule* [lab=\rel{T-UDiv}]
 %%   {f \not\in \Gamma \\
@@ -679,48 +689,41 @@ A(\mathtt{Float64Array}) & = & \double \\
 %%    \rho(f) = \floor \\\\
 %%    \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
 %%   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-FDiv}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
-   \forall i . \tau_i <: \double}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
   {\exprjudge{\Gamma}{e_1\ \mathjs{/}\ e_2}{\double}}
 \\ \\
 \inferrule* [lab=\rel{T-IMod}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\intfour}}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\intfour}}
   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\intfour}}
 \qquad
 \inferrule* [lab=\rel{T-UMod}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\uintfour}}
   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\uintfour}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-FMod}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
-   \forall i . \tau_i <: \double}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\double}}
 \\ \\
 \inferrule* [lab=\rel{T-Rel}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau} \\\\
-   \tau <: \double}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \double}}
   {\exprjudge{\Gamma}{e_1\ \mathit{relop}\ e_2}{\boolean}}
 \qquad
 \inferrule* [lab=\rel{T-Bitwise}]
-  {\forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\tau_i} \\\\
-   \forall i . \tau_i <: \word}
+  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \word}}
   {\exprjudge{\Gamma}{e_1\ \mathit{bop}\ e_2}{\intfour}}
 \\ \\
 \inferrule* [lab=\rel{T-BitwiseNot}]
-  {\exprjudge{\Gamma}{e}{\tau} \\\\
-   \tau <: \word}
+  {\exprjudge{\Gamma}{e}{\tau <: \word}}
   {\exprjudge{\Gamma}{\mathjs{\~{}}e}{\intfour}}
 \qquad
 \inferrule* [lab=\rel{T-Not}]
-  {\exprjudge{\Gamma}{e}{\tau} \\\\
-   \tau <: \boolish}
+  {\exprjudge{\Gamma}{e}{\tau <: \boolish}}
   {\exprjudge{\Gamma}{\mathjs{!}e}{\boolean}}
 \qquad
 \inferrule* [lab=\rel{T-Negate}]
-  {\exprjudge{\Gamma}{e}{\tau} \\\\
-   \tau <: \word}
+  {\exprjudge{\Gamma}{e}{\tau <: \word}}
   {\exprjudge{\Gamma}{\mathjs{-}e}{\intfour}}
 \end{array}
 }
