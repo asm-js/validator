@@ -341,7 +341,7 @@ A(\mathtt{Float64Array}) & = & \double \\
    \{ \seq{f} \} \cap \{ b, e \} = \emptyset \\\\
    \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\
-   \forall i . \expjudge{\Gamma_0, \Gamma_1}{r}}
+   \forall i . \expjudge{\Gamma_0, \Gamma_1}{\mathit{exp}}}
   {\Pjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
 \end{array}
 }
@@ -410,6 +410,7 @@ A(\mathtt{Float64Array}) & = & \double \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
+%% FIXME: args should be <: jsval as well
 \inferrule* [lab=\rel{T-Singleton}]
   {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
    \tau <: \any }
@@ -486,6 +487,8 @@ A(\mathtt{Float64Array}) & = & \double \\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
+%% FIXME: need to enforce boolish
+%% FIXME: could allow empty clauses
 \inferrule* [lab=\rel{T-For}]
   {\forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \\\\
    \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
@@ -529,6 +532,7 @@ A(\mathtt{Float64Array}) & = & \double \\
 %%    \varepsilon = (\bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
 %%   {\sjudge{\rho}{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}}}{\tau}{\varepsilon}}
 %% \\ \\
+%% FIXME: add rule to handle empty switch
 \inferrule* [lab=\rel{T-Switch}]
   {\exprjudge{\Gamma}{e}{\sigma} \\\\
    \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
@@ -562,6 +566,8 @@ A(\mathtt{Float64Array}) & = & \double \\
 }
 \end{array}
 \]
+
+%% FIXME: add update operators (+=, ++, etc)
 
 \[
 \begin{array}{lr}

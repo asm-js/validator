@@ -1,0 +1,28 @@
+{
+  "name": "asm.js",
+  "description": "Tools for the asm.js subset of JavaScript",
+  "main": "lib/asm.js",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=0.8.6"
+  },
+  "author": "Dave Herman",
+  "license": "MIT",
+  "dependencies": {
+    "esprima": "0.9.9",
+    "dict": "1.1.0"
+  },
+  "devDependencies": {
+    "nodeunit": "0.7.4"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dherman/asm.js.git"
+  },
+  "keywords": [
+    "javascript"
+  ]
+}
