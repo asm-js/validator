@@ -112,7 +112,7 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \return{v} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
-  &  |  & \for{e}{e}{e}{s} \\
+  &  |  & \for{e^?}{e^?}{e^?}{s} \\
   &  |  & \switch{e}{\seq{c}} \\
   &  |  & \switch{e}{\seq{c}\ d} \\
   &  |  & \brk \\
@@ -407,11 +407,11 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
-%% FIXME: need to enforce boolish
-%% FIXME: allow empty clauses
 \inferrule* [lab=\rel{T-For}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\sigma_i} \\\\
-   \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
+  {e^?_1 = \varepsilon \lor \exprjudge{\Gamma}{e^?_1}{\sigma_1} \\
+   e^?_2 = \varepsilon \lor \exprjudge{\Gamma}{e^?_2}{\boolish} \\
+   e^?_3 = \varepsilon \lor \exprjudge{\Gamma}{e^?_3}{\sigma_3} \\\\
+   \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\for{e_1}{e_2}{e_3}{s}}{\tau}{\varepsilon'}}
 \end{array}
