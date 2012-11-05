@@ -558,6 +558,10 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\exprjudge{\Gamma}{e}{\sigma} \\
    \sigma <: \tau}
   {\exprjudge{\Gamma}{e}{\tau}}
+\qquad
+\inferrule* [lab=\rel{T-Cast}]
+  {\exprjudge{\Gamma}{e}{\double}}
+  {\exprjudge{\Gamma}{\mathjs{\~{}\~{}}e}{\signed}}
 \end{array}
 }
 \end{array}
