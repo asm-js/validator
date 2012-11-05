@@ -67,7 +67,7 @@
 \newcommand{\imul}{\mathtt{imul}}
 \newcommand{\intish}{\mathtt{intish}}
 
-\newcommand{\Pjudge}[1]{\vdash {#1}\ \ok}
+\newcommand{\progjudge}[1]{\vdash {#1}\ \ok}
 \newcommand{\impjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
 \newcommand{\fnjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
@@ -267,7 +267,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Program checking} & \hfil \fbox{$\Pjudge{P}$}
+\mbox{Program checking} & \hfil \fbox{$\progjudge{P}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -278,7 +278,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Gamma_0, \Gamma_1}{\mathit{exp}}}
-  {\Pjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
+  {\progjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
 \end{array}
 }
 \\ \\
