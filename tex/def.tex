@@ -33,11 +33,6 @@
 \newcommand{\block}[1]{\mathjs{\{ }{#1}\mathjs{ \}}}
 \newcommand{\ok}{\mathrm{\mathbf{ok}}}
 \newcommand{\rulebreak}{\vspace{.1in}\\}
-\newcommand{\pjudge}[2]{{#1} \vdash {#2}\ \ok}
-\newcommand{\fjudge}[3]{{#1};{#2} \vdash {#3}\ \ok}
-\newcommand{\ejudge}[5]{{#1};{#2};{#3} \vdash {#4} : {#5}}
-\newcommand{\sjudge}[7]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6} / {#7}}
-\newcommand{\cjudge}[8]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6}, {#7} / {#8}}
 \newcommand{\bit}{\mathtt{bit}}
 \newcommand{\unsigned}{\mathtt{unsigned}}
 \newcommand{\intsm}{\mathjssm{int}}
@@ -78,7 +73,7 @@
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
 \newcommand{\exprjudge}[3]{{#1} \vdash {#2} : {#3}}
-\newcommand{\notexprjudge}[3]{{#1} \not\vdash {#2} : {#3}}
+%% \newcommand{\notexprjudge}[3]{{#1} \not\vdash {#2} : {#3}}
 \newcommand{\casejudge}[6]{{#1};{#2} \vdash {#3} : {#4}, {#5} / {#6}}
 
 \begin{document}
@@ -342,7 +337,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\expjudge{\Gamma}{\return{f}}}
 \qquad
 \inferrule* [lab=\rel{T-Module}]
-  {\forall f . \Gamma(f) <: \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
+  {\forall f . \Gamma(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
   {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
 \end{array}
 }
