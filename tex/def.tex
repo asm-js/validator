@@ -38,20 +38,16 @@
 \newcommand{\ejudge}[5]{{#1};{#2};{#3} \vdash {#4} : {#5}}
 \newcommand{\sjudge}[7]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6} / {#7}}
 \newcommand{\cjudge}[8]{{#1};{#2};{#3};{#4} \vdash {#5} : {#6}, {#7} / {#8}}
-\newcommand{\boolean}{\mathtt{bits1}}
-\newcommand{\uintone}{\mathtt{uint8}}
-\newcommand{\uinttwo}{\mathtt{uint16}}
-\newcommand{\uintfour}{\mathtt{uint32}}
-\newcommand{\uinteight}{\mathtt{uint64}}
-\newcommand{\intone}{\mathtt{int8}}
-\newcommand{\inttwo}{\mathtt{int16}}
-\newcommand{\intfour}{\mathtt{int32}}
-\newcommand{\inteight}{\mathtt{int64}}
-\newcommand{\float}{\mathtt{float32}}
-\newcommand{\double}{\mathtt{float64}}
-\newcommand{\arr}[1]{\mathtt{array}_{#1}}
+\newcommand{\bit}{\mathtt{bit}}
+\newcommand{\unsigned}{\mathtt{unsigned}}
+\newcommand{\intsm}{\mathjssm{int}}
+\newcommand{\doublesm}{\mathjssm{double}}
+\newcommand{\signed}{\mathtt{signed}}
+\newcommand{\double}{\mathtt{double}}
+\newcommand{\arr}[2]{\mathtt{array}^{#1}_{#2}}
 \newcommand{\Fun}{\mathtt{Function}}
-\newcommand{\any}{\mathtt{jsval}}
+\newcommand{\jsval}{\mathtt{jsval}}
+\newcommand{\unk}{\mathtt{unknown}}
 \newcommand{\str}{\mathtt{string}}
 \newcommand{\undef}{\mathtt{undefined}}
 \newcommand{\void}{\mathtt{void}}
@@ -65,12 +61,16 @@
 \newcommand{\longlong}[2]{\mathjs{[}{#1},{#2}\mathjs{]}}
 \newcommand{\toint}[1]{{#1}\mathjs{ | 0}}
 \newcommand{\touint}[1]{{#1}\mathjs{ >>> 0}}
-\newcommand{\word}{\mathtt{bits32}}
+\newcommand{\tobits}[1]{\mathjs{\~{}\~{}}{#1}}
+\newcommand{\tofloat}[1]{\mathjs{+}{#1}}
+\renewcommand{\int}{\mathtt{int}}
 \newcommand{\dword}{\mathtt{bits64}}
 \newcommand{\function}{\mathtt{function}}
 \newcommand{\union}[2]{{#1}\mathrel{|}{#2}}
 \newcommand{\boolish}{\mathtt{boolish}}
 \newcommand{\floor}{\mathtt{floor}}
+\newcommand{\imul}{\mathtt{imul}}
+\newcommand{\coercible}{\mathtt{coercible}}
 
 \begin{document}
 
@@ -90,10 +90,10 @@ b, e, f, g, x, y, z & \in & \mathit{Identifier} \\
 
 \[
 \begin{array}{rcl}
-P               & ::= & \function(b, e)\mathjs{ \{ } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}} \\
+P               & ::= & \function\paren{b, e}\mathjs{ \{ } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}} \\
 \mathit{imp}_x  & ::= & \var{x \mathjs{ = } e\mathjs{.}y} \\
-                &  |  & \var{x \mathjs{ = } e\mathjs{.}y(b)} \\
-                &  |  & \var{x \mathjs{ = } \mathjs{new }e\mathjs{.}y(b)} \\
+                %% &  |  & \var{x \mathjs{ = } \funcall{e\mathjs{.}y}{b}} \\
+                &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{e\mathjs{.}y}{b}} \\
 \mathit{exp}    & ::= & \return{f} \\
                 &  |  & \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
 \mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
@@ -127,60 +127,68 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \]
 
 \[
-\begin{array}{rcl}
-\kappa_X & ::= & \toint{X} \\
-         %% &  |  & X \mathjs{ \& 0xff} \\
-         %% &  |  & X \mathjs{ \& 0xffff} \\
-         &  |  & \touint{X} \\
-         &  |  & \mathjs{+}X \\
-         &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}} \\
-         &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}} \\
-         %% &  |  & X \mathjs{ + ''} \\
-         %% &  |  & X \mathjs{ + ""} \\
-%         &  |  & \mathjs{!!}X \\
-\end{array}
+\kappa_X ::= \tobits{X} ~|~ \tofloat{X}
 \]
+
+%% \[
+%% \begin{array}{rcl}
+%% \kappa_X & ::= & \toint{X} \\
+%%          %% &  |  & X \mathjs{ \& 0xff} \\
+%%          %% &  |  & X \mathjs{ \& 0xffff} \\
+%%          %% &  |  & \touint{X} \\
+%%          %% &  |  & \mathjs{+}X \\
+%%          %% &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}} \\
+%%          %% &  |  & \longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}} \\
+%%          %% &  |  & X \mathjs{ + ''} \\
+%%          %% &  |  & X \mathjs{ + ""} \\
+%% %         &  |  & \mathjs{!!}X \\
+%% \end{array}
+%% \]
 
 \[
 \begin{array}{rcl}
-v & ::= & \kappa_{\mathit{num}} \\
-  &  |  & \longlong{\kappa_{\mathit{num}}}{\kappa_{\mathit{num}}} \\
-  %% &  |  & \mathit{bool} \\
-  %% &  |  & \mathit{str} \\
-  %% &  |  & \mathjs{null} \\
+v & ::= & r ~|~ n \\
+%% v & ::= & \kappa_{\mathit{num}} \\
+%%   &  |  & \longlong{\kappa_{\mathit{num}}}{\kappa_{\mathit{num}}} \\
+%%   %% &  |  & \mathit{bool} \\
+%%   %% &  |  & \mathit{str} \\
+%%   %% &  |  & \mathjs{null} \\
 \\
-e & ::= & \kappa_{\mathit{num}} \\
-  &  |  & \kappa_e \\
+e & ::= & v \\
+  %% &  |  & \kappa_e \\
   &  |  & \mathit{lval} \\
   &  |  & \mathit{lval}\mathjs{ = }e \\
   &  |  & \funcall{f}{\seq{e}} \\
   &  |  & \mathit{unop}\ e \\
-  &  |  & e\ \mathit{aop}\ e \\
-  &  |  & e\ \mathjs{/}\ e \\
-  &  |  & e\ \mathjs{\%}\ e \\
-  &  |  & e\ \mathit{bop}\ e \\
-  &  |  & e\ \mathit{relop}\ e \\
+  %% &  |  & e\ \mathit{aop}\ e \\
+  %% &  |  & e\ \mathjs{/}\ e \\
+  %% &  |  & e\ \mathjs{\%}\ e \\
+  &  |  & e\ \mathit{binop}\ e \\
+  %% &  |  & e\ \mathit{relop}\ e \\
   &  |  & \ternary{e}{e}{e} \\
   &  |  & \paren{\seq{e}} \\
-  &  |  & \longlong{e}{e} \\
-  &  |  & \getprop{e}{\mathjs{0}} \\
-  &  |  & \getprop{e}{\mathjs{1}} \\
+  %% &  |  & \longlong{e}{e} \\
+  %% &  |  & \getprop{e}{\mathjs{0}} \\
+  %% &  |  & \getprop{e}{\mathjs{1}} \\
 \\
-\mathit{unop} & ::= & \mathjs{\~{}} ~|~ \mathjs{-} ~|~ \mathjs{!} \\
+\mathit{unop} & ::= & \mathjs{+} ~|~ \mathjs{\~{}} ~|~ \mathjs{!} \\
 \\
-\mathit{aop} & ::= & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} \\
-\mathit{bop} & ::= & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} ~|~ \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
-\\
-\mathit{relop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
-%% \mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
-%%                &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
-%%                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
-%%                &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
-\\
-\mathit{lval} & ::= & x \\
-              &  |  & \getprop{x}{e} \\
-              &  |  & \getprop{x}{\mathjs{0}} \\
-              &  |  & \getprop{x}{\mathjs{1}} \\
+\mathit{binop} & ::= & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
+               &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} ~|~ \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
+               &  |  & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
+%% \mathit{aop} & ::= & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} \\
+%% \mathit{bop} & ::= & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} ~|~ \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
+%% \\
+%% \mathit{relop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
+%% %% \mathit{binop} & ::= & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
+%% %%                &  |  & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
+%% %%                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} \\
+%% %%                &  |  & \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
+%% \\
+\mathit{lval} & ::= & x ~|~ \getprop{x}{\paren{e\mathjs{ \& }m}\mathjs{ >> }n} \\
+              %% &  |  & \getprop{x}{e} \\
+              %% &  |  & \getprop{x}{\mathjs{0}} \\
+              %% &  |  & \getprop{x}{\mathjs{1}} \\
 \end{array}
 \]
 
@@ -188,21 +196,22 @@ e & ::= & \kappa_{\mathit{num}} \\
 
 \[
 \begin{array}{rcl}
-\sigma, \tau & ::= & \boolean ~|~ \word ~|~ \dword ~|~ \boolish \\
-             &  |  & \intfour ~|~ \uintfour \\
-             &  |  & \inteight ~|~ \uinteight \\
+\sigma, \tau & ::= & \bit ~|~ \int ~|~ \boolish \\
+             &  |  & \signed ~|~ \unsigned \\
+             %% &  |  & \inteight ~|~ \uinteight \\
              &  |  & \double \\
-             &  |  & \arr{\tau} ~|~ \function ~|~ \any \\
-             &  |  & \floor \\
-             &  |  & \funty{\seq{\sigma}}{\tau} \\
+             &  |  & \arr{n}{\tau} ~|~ \function ~|~ \unk ~|~ \jsval \\
+             &  |  & \coercible \\
+             &  |  & \imul \\
+             &  |  & (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'}) \\
              &  |  & \void \\
              %% &  |  & (\union{\sigma}{\tau}) \\
 %% \sigma, \tau & ::= & \mathtt{int} \\
-%%              &  |  & \uintone ~|~ \uinttwo ~|~ \uintfour \\
-%%              &  |  & \intone ~|~ \inttwo ~|~ \intfour \\
+%%              &  |  & \uintone ~|~ \uinttwo ~|~ \unsigned \\
+%%              &  |  & \intone ~|~ \inttwo ~|~ \signed \\
 %%              &  |  & \float ~|~ \double \\
 %%              &  |  & \arr{\tau} \\
-%%              &  |  & \any ~|~ \undef ~|~ \nul ~|~ \str ~|~ \boolean ~|~ \num ~|~ \obj ~|~ \mathtt{function} \\
+%%              &  |  & \jsval ~|~ \undef ~|~ \nul ~|~ \str ~|~ \bit ~|~ \num ~|~ \obj ~|~ \mathtt{function} \\
 \end{array}
 \]
 
@@ -231,57 +240,49 @@ L        \cup \mustret & = & L \\
 \end{array}
 \]
 
+%% \[
+%% \begin{array}{rcl}
+%% %\type(\mathit{bool}) & = & \bit \\
+%% %\type(\mathit{str}) & = & \str \\
+%% %\type(\mathit{null}) & = & \nul \\
+%% %\type(X \mathjs{ \& 0xff}) & = & \intone \\
+%% %\type(X \mathjs{ \& 0xffff}) & = & \inttwo \\
+%% \type(\toint{X}) & = & \signed \\
+%% \type(\touint{X}) & = & \unsigned \\
+%% \type(\mathjs{+}X) & = & \double \\
+%% \type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}}) & = & \inteight \\
+%% \type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}}) & = & \uinteight \\
+%% %\type(X \mathjs{ + ''}) & = & \str \\
+%% %\type(X \mathjs{ + ""}) & = & \str \\
+%% %\type(\mathjs{!!}X) & = & \bit \\
+%% \end{array}
+%% \]
+
 \[
 \begin{array}{rcl}
-%\type(\mathit{bool}) & = & \boolean \\
-%\type(\mathit{str}) & = & \str \\
-%\type(\mathit{null}) & = & \nul \\
-%\type(X \mathjs{ \& 0xff}) & = & \intone \\
-%\type(X \mathjs{ \& 0xffff}) & = & \inttwo \\
-\type(\toint{X}) & = & \intfour \\
-\type(\touint{X}) & = & \uintfour \\
-\type(\mathjs{+}X) & = & \double \\
-\type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\toint{\getprop{X}{\mathjs{1}}}}) & = & \inteight \\
-\type(\longlong{\touint{\getprop{X}{\mathjs{0}}}}{\touint{\getprop{X}{\mathjs{1}}}}) & = & \uinteight \\
-%\type(X \mathjs{ + ''}) & = & \str \\
-%\type(X \mathjs{ + ""}) & = & \str \\
-%\type(\mathjs{!!}X) & = & \boolean \\
+\type(\tobits{X})  & = & \int \\
+\type(\tofloat{X}) & = & \double \\
+\type(n)           & = & \int \\
+\type(r)           & = & \double \\
 \end{array}
 \]
 
-%% NOTE: pure pointers will not be any
+%% NOTE: pure pointers will not be jsval
 
 \[
 \begin{array}{rcl}
-\intfour, \uintfour   & <: & \word \\
-\inteight, \uinteight & <: & \dword \\
-\boolean              & <: & \boolish \\
-\word                 & <: & \boolish \\
-\word                 & <: & \double \\
-\double               & <: & \any \\
-\function             & <: & \any \\
-\arr{\tau}            & <: & \any \\
-\void                 & <: & \any \\
-\floor                & <: & \funty{\double}{\double} \\
-\funty{\sigma}{\tau}  & <: & \function \\
-%% \sigma              & <: & \union{\sigma}{\tau} \\
-%% \tau                & <: & \union{\sigma}{\tau} \\
-%% \uintone, \uinttwo, \uintfour & <: & \word \\
-%% \intone, \inttwo, \intfour    & <: & \word \\
-%% \word                         & <: & \num \\
-%% \float                        & <: & \num \\
-%% \double                       & <: & \num \\
-%% \undef                        & <: & \any \\
-%% \nul                          & <: & \any \\
-%% \boolean                      & <: & \any \\
-%% \num                          & <: & \any \\
-%% \obj                          & <: & \any \\
-%% \mathtt{function}             & <: & \any \\
+\signed, \unsigned                                                                  & <: & \int, \jsval \\
+\bit, \int                                                                          & <: & \boolish \\
+\void, \double, \arr{n}{\tau}, \function, \unk                                      & <: & \jsval \\
+\unk, \int                                                                          & <: & \coercible \\
+(\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'})      & <: & \function \\
+(\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_n}{\tau_n}) & <: & (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_{n-1}}{\tau_{n-1}}) \\
+\imul                                                                               & <: & \funty{\coercible, \coercible}{\signed} \\
 \end{array}
 \]
 
 %% \[
-%% \boolish \defeq \union{\boolean}{\word}
+%% \boolish \defeq \union{\bit}{\int}
 %% \]
 
 %% \[
@@ -298,24 +299,52 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-M(\floor) & = & \floor \\
-M(\mathtt{ceil}) & = & \funty{\double}{\double} \\
-M(\mathtt{sin}) & = & \funty{\double}{\double} \\
-M(\mathtt{cos}) & = & \funty{\double}{\double} \\
-& \ldots \\
+M(\imul) & : & \imul \\
+M(\mathtt{ceil}), M(\mathtt{sin}), M(\mathtt{cos}) & : & \funty{\double}{\double} \\
 \end{array}
 \]
 
 \[
 \begin{array}{rcl}
-A(\mathtt{Uint8Array}) & = & \uintfour \\
-A(\mathtt{Uint16Array}) & = & \uintfour \\
-A(\mathtt{Uint32Array}) & = & \uintfour \\
-A(\mathtt{Int8Array}) & = & \intfour \\
-A(\mathtt{Int16Array}) & = & \intfour \\
-A(\mathtt{Int32Array}) & = & \intfour \\
-A(\mathtt{Float32Array}) & = & \double \\
-A(\mathtt{Float64Array}) & = & \double \\
+A(\mathtt{Uint8Array}), A(\mathtt{Int8Array})   & = & \arr{8}{\intsm} \\
+A(\mathtt{Uint16Array}), A(\mathtt{Int16Array}) & = & \arr{16}{\intsm} \\
+A(\mathtt{Uint32Array}), A(\mathtt{Int32Array}) & = & \arr{32}{\intsm} \\
+A(\mathtt{Float32Array})                        & = & \arr{32}{\doublesm} \\
+A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
+%% A(\mathtt{Uint8Array})   & = & \arr{8}{\intsm} \\ %% \unsigned \\
+%% A(\mathtt{Uint16Array})  & = & \arr{16}{\intsm} \\ %% \unsigned \\
+%% A(\mathtt{Uint32Array})  & = & \arr{32}{\intsm} \\ %% \unsigned \\
+%% A(\mathtt{Int8Array})    & = & \arr{8}{\intsm} \\ %% \signed \\
+%% A(\mathtt{Int16Array})   & = & \arr{16}{\intsm} \\ %% \signed \\
+%% A(\mathtt{Int32Array})   & = & \arr{32}{\intsm} \\ %% \signed \\
+%% A(\mathtt{Float32Array}) & = & \arr{32}{\doublesm} \\ %% \double \\
+%% A(\mathtt{Float64Array}) & = & \arr{64}{\doublesm} \\ %% \double \\
+\end{array}
+\]
+
+\[
+\begin{array}{rcc@{\ }l}
+\mathjs{+}, \mathjs{-}
+                 & : &       & \funty{\double, \double}{\double} \\
+                 &   & \land & \funty{\int, \int}{\coercible} \\
+\mathjs{*}       & : &       & \funty{\double, \double}{\double} \\
+\mathjs{/}, \mathjs{\%}
+                 & : &       & \funty{\double, \double}{\double} \\
+                 &   & \land & \funty{\signed, \signed}{\coercible}  \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\coercible} \\
+\\
+\mathjs{|}, \mathjs{\&}, \mathjs{\^{}}, \mathjs{<<}, \mathjs{>>}
+                 & : &       & \funty{\coercible, \coercible}{\signed} \\
+\mathjs{>>>}     & : &       & \funty{\coercible, \coercible}{\unsigned} \\
+\\
+\mathjs{<}, \mathjs{<=}, \mathjs{>}, \mathjs{>=}, \mathjs{==}, \mathjs{!=}
+                 & : &       & \funty{\signed, \signed}{\bit} \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\bit} \\
+                 &   & \land & \funty{\double, \double}{\bit} \\
+\\
+\mathjs{+}       & : &       & \funty{\coercible}{\double} \\
+\mathjs{\~{}}    & : &       & \funty{\coercible}{\signed} \\
+\mathjs{!}       & : &       & \funty{\boolish}{\bit} \\
 \end{array}
 \]
 
@@ -355,27 +384,28 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \qquad
 \inferrule* [lab=\rel{T-ImportFFI}]
-  {y \not\in\dom(M)}
+  {y \not\in\dom(M) \\
+   \Gamma(x) = \function}
   {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
 \inferrule* [lab=\rel{T-View}]
-  {\Gamma(x) = \arr{A(y)}}
+  {\Gamma(x) = \arr{n}{A(y)}}
   {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y(b)}}}
 \qquad
 \inferrule* [lab=\rel{T-NewView}]
-  {\Gamma(x) = \arr{A(y)}}
+  {\Gamma(x) = \arr{n}{A(y)}}
   {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
 %% \\ \\
 %% \inferrule* [lab=\rel{T-Singleton}]
 %%   {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
 %%    f \in \{\seq{f}\} \\\\
-%%    \Delta(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+%%    \Delta(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
 %%   {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{f}}}
 %% \qquad
 %% \inferrule* [lab=\rel{T-Module}]
 %%   {\forall f . \fjudge{\rho}{\Delta}{\mathit{fn}_f} \\
 %%    \{\seq{g}\} \subseteq \{\seq{f}\} \\\\
-%%    \forall g . \Delta(g) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+%%    \forall g . \Delta(g) = \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
 %%   {\pjudge{\rho}{\seq{\mathit{fn}_f}\ \return{\mathjs{\{ } \seq{x \mathjs{:} g} \mathjs{ \}}}}}
 \end{array}
 }
@@ -413,11 +443,11 @@ A(\mathtt{Float64Array}) & = & \double \\
 %% FIXME: args should be <: jsval as well
 \inferrule* [lab=\rel{T-Singleton}]
   {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
-   \tau <: \any }
+   \tau <: \jsval }
   {\expjudge{\Gamma}{\return{f}}}
 \qquad
 \inferrule* [lab=\rel{T-Module}]
-  {\forall f . \Gamma(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \any}
+  {\forall f . \Gamma(f) <: \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
   {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
 \end{array}
 }
@@ -455,13 +485,13 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\stmtjudge{\Gamma}{L}{e\mathjs{;}}{\tau}{\emptyset}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
-  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
+  {\exprjudge{\Gamma}{e}{\boolish} \\\\
    \stmtjudge{\Gamma}{\emptyset}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \varepsilon \cup \emptyset}
   {\stmtjudge{\Gamma}{L}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
-  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
+  {\exprjudge{\Gamma}{e}{\boolish} \\\\
    \stmtjudge{\Gamma}{\emptyset}{s_1}{\tau}{\varepsilon_1} \\
    \stmtjudge{\Gamma}{\emptyset}{s_2}{\tau}{\varepsilon_2} \\\\
    \varepsilon = \varepsilon_1 \cup \varepsilon_2}
@@ -476,14 +506,14 @@ A(\mathtt{Float64Array}) & = & \double \\
   {\stmtjudge{\Gamma}{L}{\mathtt{return;}}{\void}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
+  {\exprjudge{\Gamma}{e}{\boolish} \\\\
    \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\while{e}{s}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
   {\stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\\\
-   \exprjudge{\Gamma}{e}{\sigma <: \boolish} \\\\
+   \exprjudge{\Gamma}{e}{\boolish} \\\\
    \varepsilon' = \varepsilon - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
@@ -575,61 +605,76 @@ A(\mathtt{Float64Array}) & = & \double \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Number}]
+\inferrule* [lab=\rel{T-Int}]
   { }
-  {\exprjudge{\Gamma}{\kappa_{\mathit{num}}}{\type(\kappa_{\mathit{num}})}}
+  {\exprjudge{\Gamma}{n}{\int}}
 \qquad
-\inferrule* [lab=\rel{T-Cast}]
-  {\kappa_e = \toint{(e_1\ \mathjs{/}\ e_2)} \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\intfour} \\\\
-   e = e_1\ \mathit{aop}\ e_2 \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\tau <: \word} \\\\
-   \exprjudge{\Gamma}{e}{\tau}}
-  {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
-%% \inferrule* [lab=\rel{T-Cast}]
-%%   {\exprjudge{\Gamma}{e}{\tau} \\\\
-%%    e = \funcall{f}{\seq{e}} \Rightarrow f \in \dom(\Delta)}
-%%   {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
+\inferrule* [lab=\rel{T-Double}]
+  { }
+  {\exprjudge{\Gamma}{r}{\double}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-BitsCast}]
+%%   {\exprjudge{\Gamma}{e}{\tau <: \jsval} \\
+%%    \tau \not<: \int}
+%%   {\exprjudge{\Gamma}{\mathjs{\~{}\~{}}e}{\signed}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-FloatCast}]
+%%   {\exprjudge{\Gamma}{e}{\tau <: \jsval}}
+%%   {\exprjudge{\Gamma}{\mathjs{+}e}{\double}}
+%% %% \qquad
+%% %% \inferrule* [lab=\rel{T-Cast}]
+%% %%   {\kappa_e = \toint{(e_1\ \mathjs{/}\ e_2)} \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\signed} \\\\
+%% %%    e = e_1\ \mathit{aop}\ e_2 \Rightarrow \exists i . \notexprjudge{\Gamma}{e_i}{\tau <: \int} \\\\
+%% %%    \exprjudge{\Gamma}{e}{\tau}}
+%% %%   {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
+%% %% \inferrule* [lab=\rel{T-Cast}]
+%% %%   {\exprjudge{\Gamma}{e}{\tau} \\\\
+%% %%    e = \funcall{f}{\seq{e}} \Rightarrow f \in \dom(\Delta)}
+%% %%   {\exprjudge{\Gamma}{\kappa_e}{\type(\kappa_e)}}
 \\ \\
 \inferrule* [lab=\rel{T-VarRef}]
   {\Gamma(x) = \tau}
   {\exprjudge{\Gamma}{x}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Assign}]
-  {\Gamma(x) = \tau \\
-   \exprjudge{\Gamma}{e}{\tau}}
+  {=\exprjudge{\Gamma}{e}{\Gamma(x)}}
   {\exprjudge{\Gamma}{x\mathjs{ = }e}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Load}]
-  {\Gamma(x) = \arr{\tau} \\
-   \exprjudge{\Gamma}{e}{\uintfour}}
-  {\exprjudge{\Gamma}{\getprop{x}{e}}{\tau}}
+  {m = 2^k - 1 \\\\
+   \Gamma(x) = \arr{n}{\tau} \\
+   \exprjudge{\Gamma}{e}{\int}}
+  {\exprjudge{\Gamma}{\getprop{x}{\paren{e\mathjs{ \& } m}\mathjs{ >> }n/8}}{\tau}}
   %% {\type(\rho(x)) = \arr{\tau} \\\\
   %%  \exprjudge{\Gamma}{e}{\sigma} \\
-  %%  \sigma <: \word \\\\
+  %%  \sigma <: \int \\\\
   %%  \type(\kappa_{\getpropsm{x}{e}}) = \tau}
   %% {\exprjudge{\Gamma}{\kappa_{\getpropsm{x}{e}}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Store}]
-  {\exprjudge{\Gamma}{e_1}{\uintfour} \\
-   \exprjudge{\Gamma}{e_2}{\Gamma(x)}}
-  {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
+  {m = 2^k - 1 \\
+   \Gamma(x) = \arr{n}{\tau} \\\\
+   \exprjudge{\Gamma}{e_1}{\int} \\
+   \exprjudge{\Gamma}{e_2}{\tau}}
+  {\exprjudge{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
   %% {\type(\rho(x)) = \arr{\tau} \\\\
   %%  \exprjudge{\Gamma}{e_1}{\sigma} \\
-  %%  \sigma <: \word \\\\
+  %%  \sigma <: \int \\\\
   %%  \exprjudge{\Gamma}{e_2}{\tau}}
   %% {\exprjudge{\Gamma}{\getprop{x}{e_1}\mathjs{ = }e_2}{\tau}}
 \\ \\
-\inferrule* [lab=\rel{T-LowUint}]
-  {\exprjudge{\Gamma}{e}{\uinteight}}
-  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\uintfour}}
-\qquad
-\inferrule* [lab=\rel{T-LowInt}]
-  {\exprjudge{\Gamma}{e}{\inteight}}
-  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\intfour}}
-\qquad
-\inferrule* [lab=\rel{T-HighUint}]
-  {\exprjudge{\Gamma}{e}{\tau <: \dword}}
-  {\exprjudge{\Gamma}{\getprop{e}{\mathjs{1}}}{\uintfour}}
-\\ \\
+%% \inferrule* [lab=\rel{T-LowUint}]
+%%   {\exprjudge{\Gamma}{e}{\uinteight}}
+%%   {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\unsigned}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-LowInt}]
+%%   {\exprjudge{\Gamma}{e}{\inteight}}
+%%   {\exprjudge{\Gamma}{\getprop{e}{\mathjs{0}}}{\signed}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-HighUint}]
+%%   {\exprjudge{\Gamma}{e}{\tau <: \dword}}
+%%   {\exprjudge{\Gamma}{\getprop{e}{\mathjs{1}}}{\unsigned}}
+%% \\ \\
 \inferrule* [lab=\rel{T-FunCall}]
   {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
    \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i}}
@@ -646,14 +691,14 @@ A(\mathtt{Float64Array}) & = & \double \\
 \qquad
 \inferrule* [lab=\rel{T-FFI}]
   {\Gamma(f) = \function \\\\
-   \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i <: \any}}
-  {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
+   \forall i . \exprjudge{\Gamma}{e_i}{\jsval}}
+  {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\unk}}
 %% \inferrule* [lab=\rel{T-FFI}]
 %%   {f \not\in\dom(\Delta) \\
 %%    f \not\in\dom(\Gamma) \\\\
 %%    \rho(f) = \mathtt{function} \\\\
 %%    \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i}}
-%%   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\any}}
+%%   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\jsval}}
 %% \\ \\
 %% \inferrule* [lab=\rel{T-UnaryOp}]
 %%   {\type(\mathit{unop}) = \sigma \rightarrow \tau \\
@@ -666,90 +711,102 @@ A(\mathtt{Float64Array}) & = & \double \\
 %%   {\ejudge{\rho}{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
-  {\exprjudge{\Gamma}{e_1}{\sigma <: \boolish} \\
-   \forall i . \exprjudge{\Gamma}{e_i}{\tau}}
+  {\exprjudge{\Gamma}{e_1}{\boolish} \\\\
+   \exprjudge{\Gamma}{e_2}{\tau} \\
+   \exprjudge{\Gamma}{e_3}{\tau}}
   {\exprjudge{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Paren}]
   {\forall i \leq n . \exprjudge{\Gamma}{e_i}{\tau_i}}
   {\exprjudge{\Gamma}{\paren{\seq{e}}}{\tau_n}}
 \\ \\
-\inferrule* [lab=\rel{T-IArith}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \word}}
-  {\exprjudge{\Gamma}{\toint{(e_1\ \mathit{aop}\ e_2)}}{\intfour}}
+\inferrule* [lab=\rel{T-Unop}]
+  {\mathit{unop} : \_ \land \funty{\sigma}{\tau} \land \_ \\
+   \exprjudge{\Gamma}{e}{\sigma}}
+  {\exprjudge{\Gamma}{\mathit{unop}\ e}{\tau}}
 \qquad
-\inferrule* [lab=\rel{T-UArith}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \word}}
-  {\exprjudge{\Gamma}{\touint{(e_1\ \mathit{aop}\ e_2)}}{\uintfour}}
-\\ \\
-\inferrule* [lab=\rel{T-FArith}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
-  {\exprjudge{\Gamma}{e_1\ \mathit{aop}\ e_2}{\double}}
+\inferrule* [lab=\rel{T-Binop}]
+  {\mathit{binop} : \_ \land \funty{\sigma_1, \sigma_2}{\tau} \land \_ \\\\
+   \exprjudge{\Gamma}{e_1}{\sigma_1} \\
+   \exprjudge{\Gamma}{e_2}{\sigma_2}}
+  {\exprjudge{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \end{array}
 }
 \end{array}
 \]
 
-\[
-\begin{array}{lr}
-\mbox{Expression checking (cont'd)} & \hfil \fbox{$\exprjudge{\Gamma}{e}{\tau}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{T-IDiv}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\intfour}}
-  {\exprjudge{\Gamma}{\toint{(e_1\ \mathjs{/}\ e_2)}}{\intfour}}
-\qquad
-\inferrule* [lab=\rel{T-UDiv}]
-  {\Gamma(f) = \floor \\\\
-   \forall i . \exprjudge{\Gamma}{e_i}{\uintfour}}
-  {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
+%% \[
+%% \begin{array}{lr}
+%% \mbox{Expression checking (cont'd)} & \hfil \fbox{$\exprjudge{\Gamma}{e}{\tau}$}
+%% \rulebreak
+%% \multicolumn{2}{c}{
+%% \begin{array}{c}
+%% \inferrule* [lab=\rel{T-IArith}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\_ <: \int}}
+%%   {\exprjudge{\Gamma}{\paren{e_1\ \mathit{aop}\ e_2}\mathjs{ | }e_3}{\signed}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-UArith}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\_ <: \int}}
+%%   {\exprjudge{\Gamma}{\paren{e_1\ \mathit{aop}\ e_2}\mathjs{ >>> }e_3}{\unsigned}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-FArith}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\double}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathit{aop}\ e_2}{\double}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-IDiv}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\signed}}
+%%   {\exprjudge{\Gamma}{\toint{(e_1\ \mathjs{/}\ e_2)}}{\signed}}
+%% \qquad
 %% \inferrule* [lab=\rel{T-UDiv}]
-%%   {f \not\in \Gamma \\
-%%    f \not\in \Delta \\
-%%    \rho(f) = \floor \\\\
-%%    \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\uintfour}}
-%%   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\uintfour}}
-\qquad
-\inferrule* [lab=\rel{T-FDiv}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
-  {\exprjudge{\Gamma}{e_1\ \mathjs{/}\ e_2}{\double}}
-\\ \\
-\inferrule* [lab=\rel{T-IMod}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\intfour}}
-  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\intfour}}
-\qquad
-\inferrule* [lab=\rel{T-UMod}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\uintfour}}
-  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\uintfour}}
-\qquad
-\inferrule* [lab=\rel{T-FMod}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
-  {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\double}}
-\\ \\
-\inferrule* [lab=\rel{T-Rel}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \double}}
-  {\exprjudge{\Gamma}{e_1\ \mathit{relop}\ e_2}{\boolean}}
-\qquad
-\inferrule* [lab=\rel{T-Bitwise}]
-  {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \word}}
-  {\exprjudge{\Gamma}{e_1\ \mathit{bop}\ e_2}{\intfour}}
-\\ \\
-\inferrule* [lab=\rel{T-BitwiseNot}]
-  {\exprjudge{\Gamma}{e}{\tau <: \word}}
-  {\exprjudge{\Gamma}{\mathjs{\~{}}e}{\intfour}}
-\qquad
-\inferrule* [lab=\rel{T-Not}]
-  {\exprjudge{\Gamma}{e}{\tau <: \boolish}}
-  {\exprjudge{\Gamma}{\mathjs{!}e}{\boolean}}
-\qquad
-\inferrule* [lab=\rel{T-Negate}]
-  {\exprjudge{\Gamma}{e}{\tau <: \word}}
-  {\exprjudge{\Gamma}{\mathjs{-}e}{\intfour}}
-\end{array}
-}
-\end{array}
-\]
+%%   {\Gamma(f) = \floor \\\\
+%%    \forall i . \exprjudge{\Gamma}{e_i}{\unsigned}}
+%%   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\unsigned}}
+%% %% \inferrule* [lab=\rel{T-UDiv}]
+%% %%   {f \not\in \Gamma \\
+%% %%    f \not\in \Delta \\
+%% %%    \rho(f) = \floor \\\\
+%% %%    \forall i \in \{1,2\} . \exprjudge{\Gamma}{e_i}{\unsigned}}
+%% %%   {\exprjudge{\Gamma}{\funcall{f}{e_1\ \mathjs{/}\ e_2}}{\unsigned}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-FDiv}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathjs{/}\ e_2}{\double}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-Mod}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \int}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\int}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-UMod}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\unsigned}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\unsigned}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-FMod}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \double}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathjs{\%}\ e_2}{\double}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-Rel}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\tau <: \double}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathit{relop}\ e_2}{\bit}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-Bitwise}]
+%%   {\forall i . \exprjudge{\Gamma}{e_i}{\tau_i <: \int}}
+%%   {\exprjudge{\Gamma}{e_1\ \mathit{bop}\ e_2}{\signed}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-BitwiseNot}]
+%%   {\exprjudge{\Gamma}{e}{\tau <: \int}}
+%%   {\exprjudge{\Gamma}{\mathjs{\~{}}e}{\signed}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-Not}]
+%%   {\exprjudge{\Gamma}{e}{\tau <: \boolish}}
+%%   {\exprjudge{\Gamma}{\mathjs{!}e}{\bit}}
+%% %% \qquad
+%% %% \inferrule* [lab=\rel{T-Negate}]
+%% %%   {\exprjudge{\Gamma}{e}{\tau <: \int}}
+%% %%   {\exprjudge{\Gamma}{\mathjs{-}e}{\signed}}
+%% \end{array}
+%% }
+%% \end{array}
+%% \]
 
 
 \end{document}
