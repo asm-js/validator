@@ -507,7 +507,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\exprjudge{\Gamma}{x}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Assign}]
-  {=\exprjudge{\Gamma}{e}{\Gamma(x)}}
+  {\exprjudge{\Gamma}{e}{\Gamma(x)}}
   {\exprjudge{\Gamma}{x\mathjs{ = }e}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Load}]
