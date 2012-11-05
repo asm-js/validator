@@ -86,9 +86,8 @@
 
 \[
 \begin{array}{rcl}
-b, e, f, g, x, y, z & \in & \mathit{Identifier} \\
-\mathtt{arguments} & \not\in & \mathit{Identifier} \\
-\mathtt{eval} & \not\in & \mathit{Identifier} \\
+b, e, f, g, x, y, z               & \in & \mathit{Identifier} \\
+\mathtt{arguments}, \mathtt{eval} & \not\in & \mathit{Identifier} \\
 \end{array}
 \]
 
@@ -107,6 +106,7 @@ P               & ::= & \function\paren{b, e}\mathjs{ \{ } \seq{\mathit{imp}_x}\
 \begin{array}{rcl}
 s & ::= & \block{\mathit{ss}} \\
   &  |  & e\mathjs{;} \\
+  &  |  & \mathjs{;} \\
   &  |  & \ifthen{e}{s} \\
   &  |  & \ifthenelse{e}{s}{s} \\
   &  |  & \return{v} \\
@@ -461,6 +461,14 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
    \casejudge{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
   {\stmtjudge{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
+\\ \\
+\inferrule* [lab=\rel{T-EmptySwitch}]
+  {\exprjudge{\Gamma}{e}{\sigma}}
+  {\stmtjudge{\Gamma}{L}{\switch{e}{}}{\tau}{\emptyset}}
+\qquad
+\inferrule* [lab=\rel{T-EmptyStatement}]
+  { }
+  {\stmtjudge{\Gamma}{L}{\mathjs{;}}{\tau}{\emptyset}}
 \end{array}
 }
 \\ \\
