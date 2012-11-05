@@ -730,6 +730,11 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \exprjudge{\Gamma}{e_1}{\sigma_1} \\
    \exprjudge{\Gamma}{e_2}{\sigma_2}}
   {\exprjudge{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
+\\ \\
+\inferrule* [lab=\rel{T-Sub}]
+  {\exprjudge{\Gamma}{e}{\sigma} \\
+   \sigma <: \tau}
+  {\exprjudge{\Gamma}{e}{\tau}}
 \end{array}
 }
 \end{array}
