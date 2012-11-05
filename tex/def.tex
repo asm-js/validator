@@ -489,9 +489,13 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Int}]
+\inferrule* [lab=\rel{T-Signed}]
   { }
-  {\exprjudge{\Gamma}{n}{\int}}
+  {\exprjudge{\Gamma}{n}{\signed}}
+\qquad
+\inferrule* [lab=\rel{T-Unsigned}]
+  { }
+  {\exprjudge{\Gamma}{n}{\unsigned}}
 \qquad
 \inferrule* [lab=\rel{T-Double}]
   { }
