@@ -503,7 +503,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Constant}]
-  { }
+  {-2^{32} < n < 2^{32}}
   {\exprjudge{\Gamma}{n}{\constant}}
 \qquad
 \inferrule* [lab=\rel{T-Double}]
