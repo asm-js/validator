@@ -42,7 +42,7 @@
 \newcommand{\double}{\mathtt{double}}
 \newcommand{\arr}[2]{\mathtt{array}^{#1}_{#2}}
 \newcommand{\Fun}{\mathtt{Function}}
-\newcommand{\jsval}{\mathtt{jsval}}
+\newcommand{\extern}{\mathtt{extern}}
 \newcommand{\unk}{\mathtt{unknown}}
 \newcommand{\str}{\mathtt{string}}
 \newcommand{\undef}{\mathtt{undefined}}
@@ -157,16 +157,11 @@ e & ::= & v \\
 \section{Type rules}
 
 \[
-\begin{array}{rcl}
-\sigma, \tau & ::= & \bit ~|~ \int ~|~ \boolish \\
-             &  |  & \signed ~|~ \unsigned \\
-             &  |  & \double \\
-             &  |  & \arr{n}{\tau} ~|~ \function ~|~ \unk ~|~ \jsval \\
-             &  |  & \intish \\
-             &  |  & \imul \\
-             &  |  & (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'}) \\
-             &  |  & \void \\
-\end{array}
+\sigma, \tau ::= \bit ~|~ \double ~|~ \int ~|~ \signed ~|~ \unsigned ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk
+\]
+
+\[
+\rho ::= \tau ~|~ \arr{n}{\tau} ~|~ \imul ~|~ (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'}) ~|~ \function
 \]
 
 \[
@@ -210,9 +205,9 @@ L        \cup \mustret & = & L \\
 \[
 \begin{array}{rcl}
 \constant                                                                           & <: & \signed, \unsigned \\
-\signed, \unsigned                                                                  & <: & \int, \jsval \\
+\signed, \unsigned                                                                  & <: & \int, \extern \\
 \bit, \int                                                                          & <: & \boolish \\
-\void, \double, \arr{n}{\tau}, \function, \unk                                      & <: & \jsval \\
+\double                                                                             & <: & \extern \\
 \unk, \int                                                                          & <: & \intish \\
 (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_n}{\tau_n}) & <: & (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_{n-1}}{\tau_{n-1}}) \\
 \imul                                                                               & <: & \funty{\intish, \intish}{\signed} \\
@@ -263,7 +258,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \]
 
 \[
-\Gamma ::= \{ \seq{x : \tau} \} ~|~ \Gamma, \{ \seq{x : \tau} \}
+\Gamma ::= \{ \seq{x : \rho} \} ~|~ \Gamma, \{ \seq{x : \rho} \}
 \]
 
 \[
@@ -333,15 +328,13 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \begin{array}{c}
 %% FIXME: args should be <: jsval as well
 \inferrule* [lab=\rel{T-Singleton}]
-  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
-   \forall i . \sigma_i <: \jsval \\
-   \tau <: \jsval }
+  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
+   \tau <: \extern }
   {\expjudge{\Gamma}{\return{f}}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-Module}]
   {\forall f . (\Gamma(f) = \funty{\seq{\sigma}}{\tau} \land
-   \forall i . \sigma_i <: \jsval \land
-   \tau <: \jsval)}
+   \tau <: \extern)}
   {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
 \end{array}
 }
@@ -538,7 +531,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \qquad
 \inferrule* [lab=\rel{T-FFI}]
   {\Gamma(f) = \function \\\\
-   \forall i . \exprjudge{\Gamma}{e_i}{\jsval}}
+   \forall i . \exprjudge{\Gamma}{e_i}{\extern}}
   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\unk}}
 \\ \\
 \inferrule* [lab=\rel{T-Conditional}]
