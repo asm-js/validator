@@ -38,6 +38,7 @@
 \newcommand{\intsm}{\mathjssm{int}}
 \newcommand{\doublesm}{\mathjssm{double}}
 \newcommand{\signed}{\mathtt{signed}}
+\newcommand{\constant}{\mathtt{constant}}
 \newcommand{\double}{\mathtt{double}}
 \newcommand{\arr}[2]{\mathtt{array}^{#1}_{#2}}
 \newcommand{\Fun}{\mathtt{Function}}
@@ -54,10 +55,8 @@
 \newcommand{\getprop}[2]{{#1}\mathjs{[}{#2}\mathjs{]}}
 \newcommand{\getpropsm}[2]{{#1}\mathjssm{[}{#2}\mathjssm{]}}
 \newcommand{\longlong}[2]{\mathjs{[}{#1},{#2}\mathjs{]}}
-\newcommand{\toint}[1]{{#1}\mathjs{ | 0}}
-\newcommand{\touint}[1]{{#1}\mathjs{ >>> 0}}
-\newcommand{\tobits}[1]{\mathjs{\~{}\~{}}{#1}}
-\newcommand{\tofloat}[1]{\mathjs{+}{#1}}
+\newcommand{\toint}[1]{\mathjs{\~{}\~{}}{#1}}
+\newcommand{\todouble}[1]{\mathjs{+}{#1}}
 \renewcommand{\int}{\mathtt{int}}
 \newcommand{\dword}{\mathtt{bits64}}
 \newcommand{\function}{\mathtt{function}}
@@ -109,7 +108,7 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \mathjs{;} \\
   &  |  & \ifthen{e}{s} \\
   &  |  & \ifthenelse{e}{s}{s} \\
-  &  |  & \return{v} \\
+  &  |  & \return{e} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
   &  |  & \for{e^?}{e^?}{e^?}{s} \\
@@ -130,7 +129,7 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \]
 
 \[
-\kappa_X ::= \tobits{X} ~|~ \tofloat{X}
+\kappa_x ::= \toint{x} ~|~ \todouble{x} ~|~ x\mathjs{|0} ~|~ x\mathjs{>>>0} \\
 \]
 
 \[
@@ -197,10 +196,12 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
-\type(\tobits{X})  & = & \int \\
-\type(\tofloat{X}) & = & \double \\
-\type(n)           & = & \int \\
-\type(r)           & = & \double \\
+\type(\toint{X})      & = & \int \\
+\type(\todouble{X})   & = & \double \\
+\type(n)              & = & \int \\
+\type(r)              & = & \double \\
+\type(X\mathjs{|0})   & = & \signed \\
+\type(X\mathjs{>>>0}) & = & \unsigned \\
 \end{array}
 \]
 
@@ -208,6 +209,7 @@ L        \cup \mustret & = & L \\
 
 \[
 \begin{array}{rcl}
+\constant                                                                           & <: & \signed, \unsigned \\
 \signed, \unsigned                                                                  & <: & \int, \jsval \\
 \bit, \int                                                                          & <: & \boolish \\
 \void, \double, \arr{n}{\tau}, \function, \unk                                      & <: & \jsval \\
@@ -215,10 +217,6 @@ L        \cup \mustret & = & L \\
 (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_n}{\tau_n}) & <: & (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_{n-1}}{\tau_{n-1}}) \\
 \imul                                                                               & <: & \funty{\intish, \intish}{\signed} \\
 \end{array}
-\]
-
-\[
-\Gamma ::= \{ \seq{x : \tau} \} ~|~ \Gamma, \{ \seq{x : \tau} \}
 \]
 
 \[
@@ -262,6 +260,10 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \mathjs{\~{}}    & : &       & \funty{\intish}{\signed} \\
 \mathjs{!}       & : &       & \funty{\boolish}{\bit} \\
 \end{array}
+\]
+
+\[
+\Gamma ::= \{ \seq{x : \tau} \} ~|~ \Gamma, \{ \seq{x : \tau} \}
 \]
 
 \[
@@ -331,12 +333,15 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \begin{array}{c}
 %% FIXME: args should be <: jsval as well
 \inferrule* [lab=\rel{T-Singleton}]
-  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\
+  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
+   \forall i . \sigma_i <: \jsval \\
    \tau <: \jsval }
   {\expjudge{\Gamma}{\return{f}}}
-\qquad
+\\ \\
 \inferrule* [lab=\rel{T-Module}]
-  {\forall f . \Gamma(f) = \funty{\seq{\sigma}}{\tau} \land \tau <: \jsval}
+  {\forall f . (\Gamma(f) = \funty{\seq{\sigma}}{\tau} \land
+   \forall i . \sigma_i <: \jsval \land
+   \tau <: \jsval)}
   {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
 \end{array}
 }
@@ -387,7 +392,8 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\stmtjudge{\Gamma}{L}{\ifthenelse{e}{s_1}{s_2}}{\tau}{\varepsilon}}
 \\ \\
 \inferrule* [lab=\rel{T-ReturnExpr}]
-  {\exprjudge{\Gamma}{e}{\tau}}
+  {\type(e) <: \tau \\
+   \exprjudge{\Gamma}{e}{\tau}}
   {\stmtjudge{\Gamma}{L}{\return{e}}{\tau}{\mustret}}
 \qquad
 \inferrule* [lab=\rel{T-ReturnVoid}]
@@ -496,13 +502,9 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Signed}]
+\inferrule* [lab=\rel{T-Constant}]
   { }
-  {\exprjudge{\Gamma}{n}{\signed}}
-\qquad
-\inferrule* [lab=\rel{T-Unsigned}]
-  { }
-  {\exprjudge{\Gamma}{n}{\unsigned}}
+  {\exprjudge{\Gamma}{n}{\constant}}
 \qquad
 \inferrule* [lab=\rel{T-Double}]
   { }
