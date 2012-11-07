@@ -209,8 +209,6 @@ L        \cup \mustret & = & L \\
 \bit, \int                                                                          & <: & \boolish \\
 \double                                                                             & <: & \extern \\
 \unk, \int                                                                          & <: & \intish \\
-(\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_n}{\tau_n}) & <: & (\funty{\seq{\sigma}_1}{\tau_1}) \land \ldots \land (\funty{\seq{\sigma}_{n-1}}{\tau_{n-1}}) \\
-\imul                                                                               & <: & \funty{\intish, \intish}{\signed} \\
 \end{array}
 \]
 
@@ -524,8 +522,13 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \exprjudge{\Gamma}{e_2}{\tau}}
   {\exprjudge{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
 \\ \\
+\inferrule* [lab=\rel{T-IMul}]
+  {\Gamma(f) = \imul \\\\
+   \forall i . \exprjudge{\Gamma}{e_i}{\intish}}
+  {\exprjudge{\Gamma}{\funcall{f}{e_1, e_2}}{\signed}}
+\qquad
 \inferrule* [lab=\rel{T-FunCall}]
-  {\Gamma(f) = \funty{\seq{\sigma}}{\tau} \\\\
+  {\Gamma(f) = \_ \land \funty{\seq{\sigma}}{\tau} \land \_ \\\\
    \forall i . \exprjudge{\Gamma}{e_i}{\sigma_i}}
   {\exprjudge{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
 \qquad
