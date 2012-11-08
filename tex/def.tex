@@ -13,16 +13,16 @@
 \newcommand{\mathjs}[1]{\mbox{\texttt{{#1}}}}
 \newcommand{\mathjssm}[1]{\mbox{\texttt{\scriptsize {#1}}}}
 \newcommand{\return}[1]{\mathjs{return }{#1}\mathjs{;}}
-\newcommand{\fun}[3]{\mathjs{function }{#1}\mathjs{(}{#2}\mathjs{) \{ }{#3}\mathjs{ \}}}
-\newcommand{\afun}[2]{\mathjs{function}\mathjs{(}{#1}\mathjs{) \{ }{#2}\mathjs{ \}}}
+\newcommand{\fun}[3]{\mathjs{function }{#1}\mathjs{(}{#2}\mathjs{) \char123{} }{#3}\mathjs{ \char125{}}}
+\newcommand{\afun}[2]{\mathjs{function}\mathjs{(}{#1}\mathjs{) \char123{} }{#2}\mathjs{ \char125{}}}
 \newcommand{\var}[1]{\mathjs{var }{#1}\mathjs{;}}
 \newcommand{\rel}[1]{\scriptsize [\textsc{#1}]}
 \newcommand\defeq{\stackrel{\mbox{\tiny def}}{=}}
 \newcommand{\while}[2]{\mathjs{while (}{#1}\mathjs{) }{#2}}
 \newcommand{\dowhile}[2]{\mathjs{do }{#1}\mathjs{ while (}{#2}\mathjs{);}}
 \newcommand{\for}[4]{\mathjs{for (}{#1}\mathjs{; }{#2}\mathjs{; }{#3}\mathjs{) }{#4}}
-\newcommand{\switch}[2]{\mathjs{switch (}{#1}\mathjs{) \{ }{#2}\mathjs{ \}}}
-\newcommand{\switchdef}[3]{\mathjs{switch (}{#1}\mathjs{) \{ }{#2}\mathjs{ default:}\,{#3}\mathjs{ \}}}
+\newcommand{\switch}[2]{\mathjs{switch (}{#1}\mathjs{) \char123{} }{#2}\mathjs{ \char125{}}}
+\newcommand{\switchdef}[3]{\mathjs{switch (}{#1}\mathjs{) \char123{} }{#2}\mathjs{ default:}\,{#3}\mathjs{ \char125{}}}
 \newcommand{\brk}{\mathjs{break;}}
 \newcommand{\brkl}[1]{\mathjs{break }{#1}\mathjs{;}}
 \newcommand{\cont}{\mathjs{continue;}}
@@ -30,7 +30,7 @@
 \newcommand{\lab}[2]{{#1}\mathjs{:}\,{#2}}
 \newcommand{\ifthen}[2]{\mathjs{if (}{#1}\mathjs{) }{#2}}
 \newcommand{\ifthenelse}[3]{\mathjs{if (}{#1}\mathjs{) }{#2}\mathjs{ else }{#3}}
-\newcommand{\block}[1]{\mathjs{\{ }{#1}\mathjs{ \}}}
+\newcommand{\block}[1]{\mathjs{\char123{} }{#1}\mathjs{ \char125{}}}
 \newcommand{\ok}{\mathrm{\mathbf{ok}}}
 \newcommand{\rulebreak}{\vspace{.1in}\\}
 \newcommand{\bit}{\mathtt{bit}}
@@ -41,7 +41,6 @@
 \newcommand{\constant}{\mathtt{constant}}
 \newcommand{\double}{\mathtt{double}}
 \newcommand{\arr}[2]{\mathtt{array}^{#1}_{#2}}
-\newcommand{\Fun}{\mathtt{Function}}
 \newcommand{\extern}{\mathtt{extern}}
 \newcommand{\unk}{\mathtt{unknown}}
 \newcommand{\str}{\mathtt{string}}
@@ -92,11 +91,11 @@ b, e, f, g, x, y, z               & \in & \mathit{Identifier} \\
 
 \[
 \begin{array}{rcl}
-P               & ::= & \function\paren{b, e}\mathjs{ \{ } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}} \\
+P               & ::= & \fun{[g]}{[e[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}} \\
 \mathit{imp}_x  & ::= & \var{x \mathjs{ = } e\mathjs{.}y} \\
                 &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{e\mathjs{.}y}{b}} \\
 \mathit{exp}    & ::= & \return{f} \\
-                &  |  & \return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}} \\
+                &  |  & \return{\mathjs{\char123{} } \seq{x \mathjs{:} f} \mathjs{ \char125{}}} \\
 \mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
 \end{array}
 \]
@@ -111,7 +110,7 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \return{e} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
-  &  |  & \for{e^?}{e^?}{e^?}{s} \\
+  &  |  & \for{[e]}{[e]}{[e]}{s} \\
   &  |  & \switch{e}{\seq{c}} \\
   &  |  & \switch{e}{\seq{c}\ d} \\
   &  |  & \brk \\
@@ -267,35 +266,31 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Program}]
   {\{ \seq{x} \} \cap \{ \seq{f} \} = \emptyset \\
-   \{ \seq{x} \} \cap \{ b, e \} = \emptyset \\
-   \{ \seq{f} \} \cap \{ b, e \} = \emptyset \\\\
-   \forall i . \impjudge{b}{e}{\Gamma_0}{\mathit{imp}_x} \\
+   \{ \seq{x} \} \cap \{ [g], [e], [b] \} = \emptyset \\
+   \{ \seq{f} \} \cap \{ [g], [e], [b] \} = \emptyset \\\\
+   \forall i . \impjudge{[e]}{[b]}{\Gamma_0}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Gamma_0, \Gamma_1}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Gamma_0, \Gamma_1}{\mathit{exp}}}
-  {\progjudge{\function(b,e)\mathjs{ \{ }\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}\mathjs{ \}}}}
+  {\progjudge{\fun{[g]}{[e[, b]]}{\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \mathit{exp}}}}
 \end{array}
 }
 \\ \\
-\mbox{Import checking} & \hfil \fbox{$\impjudge{b}{e}{\Gamma}{\mathit{imp}}$}
+\mbox{Import checking} & \hfil \fbox{$\impjudge{[e]}{[b]}{\Gamma}{\mathit{imp}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-ImportStd}]
   {\Gamma(x) = M(y)}
-  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
+  {\impjudge{e}{[b]}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \qquad
 \inferrule* [lab=\rel{T-ImportFFI}]
   {y \not\in\dom(M) \\
    \Gamma(x) = \function}
-  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
+  {\impjudge{e}{[b]}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
-\inferrule* [lab=\rel{T-View}]
-  {\Gamma(x) = \arr{n}{A(y)}}
-  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y(b)}}}
-\qquad
 \inferrule* [lab=\rel{T-NewView}]
   {\Gamma(x) = \arr{n}{A(y)}}
-  {\impjudge{b}{e}{\Gamma}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
+  {\impjudge{e}{b}{\Gamma}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
 \end{array}
 }
 \\ \\
@@ -333,7 +328,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Module}]
   {\forall f . (\Gamma(f) = \funty{\seq{\sigma}}{\tau} \land
    \tau <: \extern)}
-  {\expjudge{\Gamma}{\return{\mathjs{\{ } \seq{x \mathjs{:} f} \mathjs{ \}}}}}
+  {\expjudge{\Gamma}{\return{\mathjs{\char123{} } \seq{x \mathjs{:} f} \mathjs{ \char125{}}}}}
 \end{array}
 }
 \end{array}
@@ -404,12 +399,12 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\stmtjudge{\Gamma}{L}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-For}]
-  {e^?_1 = \varepsilon \lor \exprjudge{\Gamma}{e^?_1}{\sigma_1} \\
-   e^?_2 = \varepsilon \lor \exprjudge{\Gamma}{e^?_2}{\boolish} \\
-   e^?_3 = \varepsilon \lor \exprjudge{\Gamma}{e^?_3}{\sigma_3} \\\\
+  {[\exprjudge{\Gamma}{e_1}{\sigma_1}] \\
+   [\exprjudge{\Gamma}{e_2}{\boolish}] \\
+   [\exprjudge{\Gamma}{e_3}{\sigma_3}] \\\\
    \stmtjudge{\Gamma}{L \cup \{ \epsilon \}}{s}{\tau}{\varepsilon} \\
    \varepsilon' = \emptyset \cup \varepsilon - (L \cup \{ \epsilon \})}
-  {\stmtjudge{\Gamma}{L}{\for{e_1}{e_2}{e_3}{s}}{\tau}{\varepsilon'}}
+  {\stmtjudge{\Gamma}{L}{\for{[e_1]}{[e_2]}{[e_3]}{s}}{\tau}{\varepsilon'}}
 \end{array}
 }
 \end{array}
