@@ -284,7 +284,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\impjudge{e}{[b]}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \qquad
 \inferrule* [lab=\rel{T-ImportFFI}]
-  {y \not\in\dom(M) \\
+  {y \not\in\dom(M), \dom(A) \\
    \Gamma(x) = \function}
   {\impjudge{e}{[b]}{\Gamma}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
