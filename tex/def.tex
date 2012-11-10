@@ -501,19 +501,20 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\exprjudge{\Gamma}{x}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Assign}]
-  {\exprjudge{\Gamma}{e}{\Gamma(x)}}
+  {\exprjudge{\Gamma}{e}{\tau} \\
+   \tau <: \Gamma(x)}
   {\exprjudge{\Gamma}{x\mathjs{ = }e}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Load}]
   {m = 2^k - 1 \\\\
    \Gamma(x) = \arr{n}{\tau} \\
-   \exprjudge{\Gamma}{e}{\int}}
+   \exprjudge{\Gamma}{e}{\intish}}
   {\exprjudge{\Gamma}{\getprop{x}{\paren{e\mathjs{ \& } m}\mathjs{ >> }n/8}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Store}]
   {m = 2^k - 1 \\
    \Gamma(x) = \arr{n}{\tau} \\\\
-   \exprjudge{\Gamma}{e_1}{\int} \\
+   \exprjudge{\Gamma}{e_1}{\intish} \\
    \exprjudge{\Gamma}{e_2}{\tau}}
   {\exprjudge{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
 \\ \\
