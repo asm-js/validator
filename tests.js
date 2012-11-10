@@ -42,3 +42,55 @@ exports.testAdd = test(add, "addition", {
         add1: types.arrow([types.int], types.signed)
     }
 });
+
+function imul(env) {
+    "use asm";
+    __PURE__
+    function double(x) {
+        x = ~~x;
+        return imul(x, 2)|0;
+    }
+    return double;
+}
+
+exports.testImul = test(imul, "multiplication", {
+    pass: true,
+    types: {
+        double: types.arrow([types.int], types.signed)
+    }
+});
+
+function load(env, buffer) {
+    "use asm";
+    __ALL__
+    function get(i) {
+        i = ~~i;
+        return H32[(i&0xffff)>>4]|0;
+    }
+    return get;
+}
+
+exports.testLoad = test(load, "heap load", {
+    pass: true,
+    types: {
+        get: types.arrow([types.int], types.signed)
+    }
+});
+
+function store(env, buffer) {
+    "use asm";
+    __ALL__
+    function set(i, x) {
+        i = ~~i;
+        x = ~~x;
+        H32[(i&0xffff)>>4] = x|0;
+    }
+    return set;
+}
+
+exports.testStore = test(store, "heap store", {
+    pass: true,
+    types: {
+        set: types.arrow([types.int, types.int], types.void)
+    }
+});
