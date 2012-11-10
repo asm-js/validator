@@ -94,3 +94,26 @@ exports.testStore = test(store, "heap store", {
         set: types.arrow([types.int, types.int], types.void)
     }
 });
+
+exports.testEval1 = test(function eval() {
+    "use asm";
+    __PURE__
+    function empty () { }
+    return empty;
+}, "module named eval", { pass: false });
+
+exports.testEval2 = test(function() {
+    "use asm";
+    __PURE__
+    function eval() { }
+    return eval;
+}, "function named eval", { pass: false });
+
+exports.testEval3 = test(function() {
+    "use asm";
+    __PURE__
+    function f() {
+        var eval = 0;
+    }
+    return f;
+}, "local named eval", { pass: false });

@@ -1,4 +1,5 @@
 var validate = require('../lib/validate');
+var fail = require('../lib/fail');
 
 function explode(test) {
     var __EMPTY__ = [];
