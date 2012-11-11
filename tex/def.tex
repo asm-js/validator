@@ -274,7 +274,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \forall i . \impjudge{[e]}{[b]}{\Delta}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Delta}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Delta}{\mathit{exp}}}
-  {\progjudge{\fun{[g]}{[e[, b]]}{\seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{y \mathjs{ = } v}}\ \mathit{exp}}}}
+  {\progjudge{\fun{[g]}{[e[, b]]}{\mathjs{"use asm";}\ \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{y \mathjs{ = } v}}\ \mathit{exp}}}}
 \end{array}
 }
 \\ \\
