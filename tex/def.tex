@@ -71,7 +71,7 @@
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[6]{{#1};{#2};{#3} \vdash {#4} : {#5} / {#6}}
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
-\newcommand{\casejudge}[6]{{#1};{#2} \vdash {#3} : {#4}, {#5} / {#6}}
+\newcommand{\casejudge}[7]{{#1};{#2};{#3} \vdash {#4} : {#5}, {#6} / {#7}}
 
 \begin{document}
 
@@ -90,12 +90,12 @@ b, e, f, g, x, y, z               & \in & \mathit{Identifier} \\
 
 \[
 \begin{array}{rcl}
-P               & ::= & \fun{[g]}{[e[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{y \mathjs{ = } v}}\ \mathit{exp}} \\
+P               & ::= & \fun{[g]}{[e[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}} \\
 \mathit{imp}_x  & ::= & \var{x \mathjs{ = } e\mathjs{.}y} \\
                 &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{e\mathjs{.}y}{b}} \\
 \mathit{exp}    & ::= & \return{f} \\
                 &  |  & \return{\mathjs{\char123{} } \seq{x \mathjs{:} f} \mathjs{ \char125{}}} \\
-\mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}} \\
+\mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}} \\
 \end{array}
 \]
 
@@ -267,14 +267,12 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Program}]
-  {\{ \seq{x} \} \cap \{ \seq{f} \} = \emptyset \\
-   \{ \seq{x} \} \cap \{ [g], [e], [b] \} = \emptyset \\
-   \{ \seq{f} \} \cap \{ [g], [e], [b] \} = \emptyset \\\\
+  {\seq{x}, \seq{y}, \seq{f}, [g], [e], [b]\ \mbox{distinct} \\
    \forall y . \Delta(y) = \type(v) \\\\
    \forall i . \impjudge{[e]}{[b]}{\Delta}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Delta}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Delta}{\mathit{exp}}}
-  {\progjudge{\fun{[g]}{[e[, b]]}{\mathjs{"use asm";}\ \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{y \mathjs{ = } v}}\ \mathit{exp}}}}
+  {\progjudge{\fun{[g]}{[e[, b]]}{\mathjs{"use asm";}\ \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}}}
 \end{array}
 }
 \\ \\
@@ -302,19 +300,19 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Function}]
-  {\{ \seq{x} \} \cap \{ \seq{y} \} = \emptyset \\
+  {\seq{x}, \seq{y}\ \mbox{distinct} \\
    \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
    \seq{\sigma} = \seq{\type(\kappa_x)} \\
    \tau \not= \void \\\\
    \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\emptyset}{\mathit{ss}}{\tau}{\mustret}}
-  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \\ \\
 \inferrule* [lab=\rel{T-VoidFunction}]
-  {\{ \seq{x} \} \cap \{ \seq{y} \} = \emptyset \\
+  {\seq{x}, \seq{y}\ \mbox{distinct} \\
    \Delta(f) = \funty{\seq{\sigma}}{\void} \\
    \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
    \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\emptyset}{\mathit{ss}}{\void}{\varepsilon}}
-  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \var{\seq{y\mathjs{ = }v}}\ \mathit{ss}}}}
+  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \end{array}
 }
 \\ \\
@@ -441,17 +439,17 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \\ \\
 \inferrule* [lab=\rel{T-Switch}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \casejudge{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
+   \forall i . \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
+   \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
    \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
    \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
   {\stmtjudge{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
 \qquad
 \inferrule* [lab=\rel{T-SwitchReturn}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \casejudge{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
+   \forall i . \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
    \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
-   \casejudge{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
+   \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
   {\stmtjudge{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
 \\ \\
 \inferrule* [lab=\rel{T-EmptySwitch}]
@@ -464,18 +462,18 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Case checking} & \hfil \fbox{$\casejudge{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
+\mbox{Case checking} & \hfil \fbox{$\casejudge{\Delta}{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Case}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
    \stmtjudge{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\casejudge{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\casejudge{\Delta}{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
 \qquad
 \inferrule* [lab=\rel{T-Default}]
   {\stmtjudge{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\casejudge{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\casejudge{\Delta}{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
 \end{array}
 }
 \end{array}
