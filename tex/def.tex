@@ -120,7 +120,7 @@ s & ::= & \block{\mathit{ss}} \\
 \\
 \mathit{ss} & ::= & \seq{s} \\
 \\
-c & ::= & \mathjs{case }e\mathjs{:}\,\mathit{ss} \\
+c & ::= & \mathjs{case }v\mathjs{:}\,\mathit{ss} \\
 d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \mathit{cd} & ::= & c ~|~ d \\
 \end{array}
@@ -410,6 +410,19 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \end{array}
 \]
 
+\newsavebox{\switchcontrol}
+\begin{lrbox}{\switchcontrol}
+\begin{minipage}[t]{3.25in}
+\vspace{-.25in}
+\[
+\varepsilon = \left\{ \begin{array}{ll}
+                      \mustret & \mbox{if}\ \varepsilon_n = \mustret \land \forall i . \varepsilon_i \cup \emptyset = \emptyset \\
+                      \bigcup \varepsilon_i - (L \cup \{ \epsilon \}) & \mbox{otherwise}
+                      \end{array} \right.
+\]
+\end{minipage}
+\end{lrbox}
+
 \[
 \begin{array}{lr}
 \mbox{Statement checking (cont'd)} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{L}{s}{\tau}{\varepsilon}$}
@@ -438,19 +451,16 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\stmtjudge{\Delta}{\Gamma}{L}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
 \\ \\
 \inferrule* [lab=\rel{T-Switch}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\varepsilon} \\\\
-   \varepsilon \not= \mustret \lor \exists i . \varepsilon_i \cup \emptyset \not= \emptyset \\\\
-   \varepsilon' = (\varepsilon \cup \bigcup_i \varepsilon_i) - (L \cup \{ \epsilon \})}
-  {\stmtjudge{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{T-SwitchReturn}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \forall i . \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{c_i}{\sigma}{\tau}{\varepsilon_i} \\\\
-   \forall i . \varepsilon_i \cup \emptyset = \emptyset \\\\
-   \casejudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}}{\sigma}{\tau}{\mustret}}
-  {\stmtjudge{\Delta}{\Gamma}{L}{\switch{e}{\seq{c}\ \mathit{cd}}}{\tau}{\mustret}}
+  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
+   \sigma <: \extern \\\\
+   \forall i . \mathit{cd}_i = \mathjs{case } v_i\mathjs{:}\,\mathit{ss}_i \Rightarrow \type(v_i) <: \sigma \\\\
+   \forall i . \stmtjudge{\Delta}{\Gamma}{L \cup \{ \epsilon \}}{\mathit{cd}_i}{\tau}{\varepsilon_i} \\\\
+   \usebox{\switchcontrol}}
+                 %% \left\{\begin{array}{ll}
+                 %%        \mustret & \mbox{if}\ \varepsilon_n = \mustret \land \forall i . \varepsilon_i \cup \emptyset = \emptyset \\
+                 %%        (\varepsilon_n \cup \bigcup_{i<n} \varepsilon_i) - (L \cup \{ \epsilon \}) & \mbox{otherwise}
+                 %%        \end{array}\right. }
+  {\stmtjudge{\Delta}{\Gamma}{L}{\switch{e}{\seq{\mathit{cd}}}}{\tau}{\varepsilon}}
 \\ \\
 \inferrule* [lab=\rel{T-EmptySwitch}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
