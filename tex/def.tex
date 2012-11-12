@@ -71,7 +71,6 @@
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[6]{{#1};{#2};{#3} \vdash {#4} : {#5} / {#6}}
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
-\newcommand{\casejudge}[7]{{#1};{#2};{#3} \vdash {#4} : {#5}, {#6} / {#7}}
 
 \begin{document}
 
@@ -472,18 +471,17 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Case checking} & \hfil \fbox{$\casejudge{\Delta}{\Gamma}{L}{\mathit{cd}}{\sigma}{\tau}{\varepsilon}$}
+\mbox{Case checking} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{L}{\mathit{cd}}{\tau}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Case}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\\\
-   \stmtjudge{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\casejudge{\Delta}{\Gamma}{L}{\mathjs{case }e\mathjs{:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\stmtjudge{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
+  {\stmtjudge{\Delta}{\Gamma}{L}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}{\tau}{\varepsilon}}
 \qquad
 \inferrule* [lab=\rel{T-Default}]
   {\stmtjudge{\Delta}{\Gamma}{L}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\casejudge{\Delta}{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\sigma}{\tau}{\varepsilon}}
+  {\stmtjudge{\Delta}{\Gamma}{L}{\mathjs{default:}\,\mathit{ss}}{\tau}{\varepsilon}}
 \end{array}
 }
 \end{array}
