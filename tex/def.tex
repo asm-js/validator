@@ -71,6 +71,8 @@
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
+\newcommand{\stmtretjudge}[2]{\vdash {#1} \hookrightarrow {#2}}
+\newcommand{\sjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
 
 \begin{document}
 
@@ -288,7 +290,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \Delta(x) = \function}
   {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
-\inferrule* [lab=\rel{T-NewView}]
+\inferrule* [lab=\rel{T-View}]
   {\Delta(x) = \arr{n}{A(y)}}
   {\impjudge{e}{b}{\Delta}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
 \end{array}
@@ -301,17 +303,19 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Function}]
   {\seq{x}, \seq{y}\ \mbox{distinct} \\
    \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
-   \seq{\sigma} = \seq{\type(\kappa_x)} \\
-   \tau \not= \void \\\\
-   \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\tau}{\mustret}}
-  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
-\\ \\
-\inferrule* [lab=\rel{T-VoidFunction}]
-  {\seq{x}, \seq{y}\ \mbox{distinct} \\
-   \Delta(f) = \funty{\seq{\sigma}}{\void} \\
    \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
-   \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\void}{\varepsilon}}
+   %% \tau \not= \void \\\\
+   \tau \not=\void \Rightarrow\ \stmtretjudge{\mathit{ss}}{\mustret} \\\\
+   %% \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\tau}{\mustret}}
+   \sjudge{\Delta}{\{\seq{x: \sigma}, \seq{y : \type(v)}\}}{f}{\mathit{ss}}}
   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-VoidFunction}]
+%%   {\seq{x}, \seq{y}\ \mbox{distinct} \\
+%%    \Delta(f) = \funty{\seq{\sigma}}{\void} \\
+%%    \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
+%%    \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\void}{\varepsilon}}
+%%   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \end{array}
 }
 \\ \\
@@ -333,82 +337,6 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \end{array}
 \]
 
-\[
-\begin{array}{lr}
-\mbox{Statement list checking} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{\mathit{ss}}{\tau}{\varepsilon}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{T-NoStatements}]
-  { }
-  {\stmtjudge{\Delta}{\Gamma}{\epsilon}{\tau}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{T-Statements}]
-  {\forall i . \stmtjudge{\Delta}{\Gamma}{s_i}{\tau}{\varepsilon_i} \\\\
-   n > 0 \\
-   \varepsilon = \varepsilon_1 \seqcomp \ldots \seqcomp \varepsilon_n}
-  {\stmtjudge{\Delta}{\Gamma}{\seq{s}}{\tau}{\varepsilon}}
-\end{array}
-}
-\\ \\
-\mbox{Statement checking} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{T-Block}]
-  {\stmtjudge{\Delta}{\Gamma}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\stmtjudge{\Delta}{\Gamma}{\block{\mathit{ss}}}{\tau}{\varepsilon}}
-\qquad
-\inferrule* [lab=\rel{T-ExprStmt}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
-  {\stmtjudge{\Delta}{\Gamma}{e\mathjs{;}}{\tau}{\emptyset}}
-\\ \\
-\inferrule* [lab=\rel{T-If}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon} \\\\
-   \varepsilon' = \varepsilon \cup \emptyset}
-  {\stmtjudge{\Delta}{\Gamma}{\ifthen{e}{s}}{\tau}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{T-IfElse}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \stmtjudge{\Delta}{\Gamma}{s_1}{\tau}{\varepsilon_1} \\
-   \stmtjudge{\Delta}{\Gamma}{s_2}{\tau}{\varepsilon_2} \\\\
-   \varepsilon = \varepsilon_1 \cup \varepsilon_2}
-  {\stmtjudge{\Delta}{\Gamma}{\ifthenelse{e}{s_1}{s_2}}{\tau}{\varepsilon}}
-\\ \\
-\inferrule* [lab=\rel{T-ReturnExpr}]
-  {\type(e) <: \tau \\
-   \exprjudge{\Delta}{\Gamma}{e}{\tau}}
-  {\stmtjudge{\Delta}{\Gamma}{\return{e}}{\tau}{\mustret}}
-\qquad
-\inferrule* [lab=\rel{T-ReturnVoid}]
-  { }
-  {\stmtjudge{\Delta}{\Gamma}{\mathtt{return;}}{\void}{\mustret}}
-\\ \\
-\inferrule* [lab=\rel{T-While}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon} \\\\
-   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
-  {\stmtjudge{\Delta}{\Gamma}{\while{e}{s}}{\tau}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{T-DoWhile}]
-  {\stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon} \\\\
-   \exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \varepsilon' = \varepsilon - \{ \epsilon \}}
-  {\stmtjudge{\Delta}{\Gamma}{\dowhile{s}{e}}{\tau}{\varepsilon'}}
-\\ \\
-\inferrule* [lab=\rel{T-For}]
-  {[\exprjudge{\Delta}{\Gamma}{e_1}{\sigma_1}] \\
-   [\exprjudge{\Delta}{\Gamma}{e_2}{\boolish}] \\
-   [\exprjudge{\Delta}{\Gamma}{e_3}{\sigma_3}] \\\\
-   \stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon} \\
-   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
-  {\stmtjudge{\Delta}{\Gamma}{\for{[e_1]}{[e_2]}{[e_3]}{s}}{\tau}{\varepsilon'}}
-\end{array}
-}
-\end{array}
-\]
-
 \newsavebox{\switchcontrol}
 \begin{lrbox}{\switchcontrol}
 \begin{minipage}[t]{2.87in}
@@ -424,66 +352,231 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Statement checking (cont'd)} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon}$}
+\mbox{Statement list control flow analysis} & \hfil \fbox{$\stmtretjudge{\mathit{ss}}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Break}]
+\inferrule* [lab=\rel{A-NoStatements}]
   { }
-  {\stmtjudge{\Delta}{\Gamma}{\brk}{\tau}{\{ \epsilon \}}}
+  {\stmtretjudge{\epsilon}{\emptyset}}
 \qquad
-\inferrule* [lab=\rel{T-BreakLabel}]
-  { }
-  {\stmtjudge{\Delta}{\Gamma}{\brkl{\mathit{lab}}}{\tau}{\{ \mathit{lab} \}}}
-\\ \\
-\inferrule* [lab=\rel{T-Continue}]
-  { }
-  {\stmtjudge{\Delta}{\Gamma}{\contl{[\mathit{lab}]}}{\tau}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{T-Label}]
-  {\stmtjudge{\Delta}{\Gamma}{s}{\tau}{\varepsilon} \\\\
-   \varepsilon' = \varepsilon - \{ \mathit{lab} \}}
-  {\stmtjudge{\Delta}{\Gamma}{\lab{\mathit{lab}}{s}}{\tau}{\varepsilon'}}
-\\ \\
-\inferrule* [lab=\rel{T-Switch}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \extern \\\\
-   \forall i . \mathit{cd}_i = \mathjs{case } v_i\mathjs{:}\,\mathit{ss}_i \Rightarrow \type(v_i) <: \sigma \\\\
-   \forall i . \stmtjudge{\Delta}{\Gamma}{\mathit{cd}_i}{\tau}{\varepsilon_i} \\\\
-   \usebox{\switchcontrol}}
-                 %% \left\{\begin{array}{ll}
-                 %%        \mustret & \mbox{if}\ \varepsilon_n = \mustret \land \forall i . \varepsilon_i \cup \emptyset = \emptyset \\
-                 %%        (\varepsilon_n \cup \bigcup_{i<n} \varepsilon_i) - (L \cup \{ \epsilon \}) & \mbox{otherwise}
-                 %%        \end{array}\right. }
-  {\stmtjudge{\Delta}{\Gamma}{\switch{e}{\seq{\mathit{cd}}}}{\tau}{\varepsilon}}
-\\ \\
-\inferrule* [lab=\rel{T-EmptySwitch}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
-  {\stmtjudge{\Delta}{\Gamma}{\switch{e}{}}{\tau}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{T-EmptyStatement}]
-  { }
-  {\stmtjudge{\Delta}{\Gamma}{\mathjs{;}}{\tau}{\emptyset}}
+\inferrule* [lab=\rel{A-Statements}]
+  {\forall i . \stmtretjudge{s_i}{\varepsilon_i} \\
+   n > 0 \\
+   \varepsilon = \varepsilon_1 ; \ldots ; \varepsilon_n}
+  {\stmtretjudge{\seq{s}}{\varepsilon}}
 \end{array}
 }
 \\ \\
-\mbox{Case checking} & \hfil \fbox{$\stmtjudge{\Delta}{\Gamma}{\mathit{cd}}{\tau}{\varepsilon}$}
+\mbox{Statement control flow analysis} & \hfil \fbox{$\stmtretjudge{s}{\varepsilon}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Case}]
-  {\stmtjudge{\Delta}{\Gamma}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\stmtjudge{\Delta}{\Gamma}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}{\tau}{\varepsilon}}
+\inferrule* [lab=\rel{A-Block}]
+  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
+  {\stmtretjudge{\block{\mathit{ss}}}{\varepsilon}}
 \qquad
-\inferrule* [lab=\rel{T-Default}]
-  {\stmtjudge{\Delta}{\Gamma}{\mathit{ss}}{\tau}{\varepsilon}}
-  {\stmtjudge{\Delta}{\Gamma}{\mathjs{default:}\,\mathit{ss}}{\tau}{\varepsilon}}
+\inferrule* [lab=\rel{A-ExprStmt}]
+  { }
+  {\stmtretjudge{e\mathjs{;}}{\emptyset}}
+\qquad
+\inferrule* [lab=\rel{A-Return}]
+  { }
+  {\stmtretjudge{\return{[e]}}{\mustret}}
+\\ \\
+\inferrule* [lab=\rel{A-If}]
+  {\stmtretjudge{s}{\varepsilon} \\\\
+   \varepsilon' = \varepsilon \cup \emptyset}
+  {\stmtretjudge{\ifthen{e}{s}}{\varepsilon'}}
+\qquad
+\inferrule* [lab=\rel{A-IfElse}]
+  {\stmtretjudge{s_1}{\varepsilon_1} \\
+   \stmtretjudge{s_2}{\varepsilon_2} \\\\
+   \varepsilon = \varepsilon_1 \cup \varepsilon_2}
+  {\stmtretjudge{\ifthenelse{e}{s_1}{s_2}}{\varepsilon}}
+\\ \\
+\inferrule* [lab=\rel{A-While}]
+  {\stmtretjudge{s}{\varepsilon} \\\\
+   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
+  {\stmtretjudge{\while{e}{s}}{\varepsilon'}}
+\qquad
+\inferrule* [lab=\rel{A-DoWhile}]
+  {\stmtretjudge{s}{\varepsilon}
+   \varepsilon' = \varepsilon - \{ \epsilon \}}
+  {\stmtretjudge{\dowhile{s}{e}}{\varepsilon'}}
+\\ \\
+\inferrule* [lab=\rel{A-For}]
+  {\stmtretjudge{s}{\varepsilon} \\\\
+   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
+  {\stmtretjudge{\for{[e_1]}{[e_2]}{[e_3]}{s}}{\varepsilon'}}
+\\ \\
+\inferrule* [lab=\rel{A-Break}]
+  { }
+  {\stmtretjudge{\brk}{\{\epsilon\}}}
+\qquad
+\inferrule* [lab=\rel{A-BreakLabel}]
+  { }
+  {\stmtretjudge{\brkl{\mathit{lab}}}{\{\mathit{lab}\}}}
+\qquad
+\inferrule* [lab=\rel{A-Continue}]
+  { }
+  {\stmtretjudge{\contl{[\mathit{lab}]}}{\emptyset}}
+\\ \\
+\inferrule* [lab=\rel{A-Label}]
+  {\stmtretjudge{s}{\varepsilon} \\\\
+   \varepsilon' = \varepsilon - \{ \mathit{lab} \}}
+  {\stmtretjudge{\lab{\mathit{lab}}{s}}{\varepsilon'}}
+\qquad
+\inferrule* [lab=\rel{A-Switch}]
+  {\forall i . \stmtretjudge{\mathit{cd}_i}{\varepsilon_i} \\\\
+   \usebox{\switchcontrol}}
+  {\stmtretjudge{\switch{e}{\seq{\mathit{cd}}}}{\varepsilon}}
+\\ \\
+\inferrule* [lab=\rel{A-EmptySwitch}]
+  { }
+  {\stmtretjudge{\switch{e}{}}{\emptyset}}
+\qquad
+\inferrule* [lab=\rel{A-EmptyStatement}]
+  { }
+  {\stmtretjudge{\mathjs{;}}{\emptyset}}
+\end{array}
+}
+\\ \\
+\mbox{Case control flow analysis} & \hfil \fbox{$\stmtretjudge{\mathit{cd}}{\varepsilon}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{A-Case}]
+  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
+  {\stmtretjudge{\mathjs{case }v\mathjs{:}\,\mathit{ss}}{\varepsilon}}
+\qquad
+\inferrule* [lab=\rel{A-Default}]
+  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
+  {\stmtretjudge{\mathjs{default:}\,\mathit{ss}}{\varepsilon}}
 \end{array}
 }
 \end{array}
 \]
 
-\clearpage
+\[
+\begin{array}{lr}
+\mbox{Statement list checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-Statements}]
+  {\forall i . \sjudge{\Delta}{\Gamma}{f}{s_i}}
+  {\sjudge{\Delta}{\Gamma}{f}{\seq{s}}}
+%% \inferrule* [lab=\rel{T-NoStatements}]
+%%   { }
+%%   {\stmtjudge{\Delta}{\Gamma}{\epsilon}{\tau}{\emptyset}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-Statements}]
+%%   {\forall i . \stmtjudge{\Delta}{\Gamma}{s_i}{\tau}{\varepsilon_i} \\\\
+%%    n > 0 \\
+%%    \varepsilon = \varepsilon_1 \seqcomp \ldots \seqcomp \varepsilon_n}
+%%   {\stmtjudge{\Delta}{\Gamma}{\seq{s}}{\tau}{\varepsilon}}
+\end{array}
+}
+\\ \\
+\mbox{Statement checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{s}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-Block}]
+  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{f}{\block{\mathit{ss}}}}
+\qquad
+\inferrule* [lab=\rel{T-ExprStmt}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
+  {\sjudge{\Delta}{\Gamma}{f}{e\mathjs{;}}}
+\\ \\
+\inferrule* [lab=\rel{T-If}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
+   \sjudge{\Delta}{\Gamma}{f}{s}}
+  {\sjudge{\Delta}{\Gamma}{f}{\ifthen{e}{s}}}
+\qquad
+\inferrule* [lab=\rel{T-IfElse}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
+   \sjudge{\Delta}{\Gamma}{f}{s_1} \\
+   \sjudge{\Delta}{\Gamma}{f}{s_2}}
+  {\sjudge{\Delta}{\Gamma}{f}{\ifthenelse{e}{s_1}{s_2}}}
+\\ \\
+\inferrule* [lab=\rel{T-ReturnExpr}]
+  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\tau} \\
+   \type(e) <: \tau}
+  {\sjudge{\Delta}{\Gamma}{f}{\return{e}}}
+\qquad
+\inferrule* [lab=\rel{T-ReturnVoid}]
+  {\Delta(f) = \funty{\seq{\sigma}}{\void}}
+  {\sjudge{\Delta}{\Gamma}{f}{\mathtt{return;}}}
+\\ \\
+\inferrule* [lab=\rel{T-While}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
+   \sjudge{\Delta}{\Gamma}{f}{s}}
+  {\sjudge{\Delta}{\Gamma}{f}{\while{e}{s}}}
+\qquad
+\inferrule* [lab=\rel{T-DoWhile}]
+  {\sjudge{\Delta}{\Gamma}{f}{s} \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\boolish}}
+  {\sjudge{\Delta}{\Gamma}{f}{\dowhile{s}{e}}}
+\\ \\
+\inferrule* [lab=\rel{T-For}]
+  {[\exprjudge{\Delta}{\Gamma}{e_1}{\sigma_1}] \\
+   [\exprjudge{\Delta}{\Gamma}{e_2}{\boolish}] \\
+   [\exprjudge{\Delta}{\Gamma}{e_3}{\sigma_3}] \\\\
+   \sjudge{\Delta}{\Gamma}{f}{s}}
+  {\sjudge{\Delta}{\Gamma}{f}{\for{[e_1]}{[e_2]}{[e_3]}{s}}}
+\\ \\
+\inferrule* [lab=\rel{T-Break}]
+  { }
+  {\sjudge{\Delta}{\Gamma}{f}{\brkl{[\mathit{lab}]}}}
+\qquad
+\inferrule* [lab=\rel{T-Continue}]
+  { }
+  {\sjudge{\Delta}{\Gamma}{f}{\contl{[\mathit{lab}]}}}
+\\ \\
+\inferrule* [lab=\rel{T-Label}]
+  {\sjudge{\Delta}{\Gamma}{f}{s}}
+  {\sjudge{\Delta}{\Gamma}{f}{\lab{\mathit{lab}}{s}}}
+\
+\inferrule* [lab=\rel{T-Switch}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
+   \sigma <: \extern \\\\
+   \forall i . \mathit{cd}_i = \mathjs{case } v_i\mathjs{:}\,\mathit{ss}_i \Rightarrow \type(v_i) <: \sigma \\\\
+   \forall i . \sjudge{\Delta}{\Gamma}{f}{\mathit{cd}_i}}
+  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{\seq{\mathit{cd}}}}}
+\\ \\
+\inferrule* [lab=\rel{T-EmptySwitch}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
+  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{}}}
+\qquad
+\inferrule* [lab=\rel{T-EmptyStatement}]
+  { }
+  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{;}}}
+\end{array}
+}
+\end{array}
+\]
+
+\[
+\begin{array}{lr}
+\mbox{Case checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{\mathit{cd}}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
+\inferrule* [lab=\rel{T-Case}]
+  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}}
+\qquad
+\inferrule* [lab=\rel{T-Default}]
+  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{default:}\,\mathit{ss}}}
+\end{array}
+}
+\end{array}
+\]
 
 \[
 (\Delta\cdot\Gamma)(x) = \left\{\begin{array}{ll}
