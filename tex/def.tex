@@ -490,6 +490,10 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-ExprStmt}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
   {\sjudge{\Delta}{\Gamma}{f}{e\mathjs{;}}}
+\qquad
+\inferrule* [lab=\rel{T-EmptyStatement}]
+  { }
+  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{;}}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
@@ -502,12 +506,17 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \sjudge{\Delta}{\Gamma}{f}{s_2}}
   {\sjudge{\Delta}{\Gamma}{f}{\ifthenelse{e}{s_1}{s_2}}}
 \\ \\
+\inferrule* [lab=\rel{T-ReturnVar}]
+  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
+   \exprjudge{\Delta}{\Gamma}{x}{\tau}}
+  {\sjudge{\Delta}{\Gamma}{f}{\return{x}}}
+\qquad
 \inferrule* [lab=\rel{T-ReturnExpr}]
   {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
    \exprjudge{\Delta}{\Gamma}{e}{\tau} \\
    \type(e) <: \tau}
   {\sjudge{\Delta}{\Gamma}{f}{\return{e}}}
-\qquad
+\\ \\
 \inferrule* [lab=\rel{T-ReturnVoid}]
   {\Delta(f) = \funty{\seq{\sigma}}{\void}}
   {\sjudge{\Delta}{\Gamma}{f}{\mathtt{return;}}}
@@ -540,21 +549,14 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Label}]
   {\sjudge{\Delta}{\Gamma}{f}{s}}
   {\sjudge{\Delta}{\Gamma}{f}{\lab{\mathit{lab}}{s}}}
-\
+\qquad
 \inferrule* [lab=\rel{T-Switch}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \extern \\\\
-   \forall i . \mathit{cd}_i = \mathjs{case } v_i\mathjs{:}\,\mathit{ss}_i \Rightarrow \type(v_i) <: \sigma \\\\
-   \forall i . \sjudge{\Delta}{\Gamma}{f}{\mathit{cd}_i}}
-  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{\seq{\mathit{cd}}}}}
-\\ \\
-\inferrule* [lab=\rel{T-EmptySwitch}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
-  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{}}}
-\qquad
-\inferrule* [lab=\rel{T-EmptyStatement}]
-  { }
-  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{;}}}
+   \sigma <: \extern \\
+   \forall i . \type(v_i) <: \sigma \\\\
+   \forall i . \sjudge{\Delta}{\Gamma}{f}{\mathit{ss}_i} \\
+   [\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}]}
+  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{\seq{\mathjs{case }v_i\mathjs{:}\,\mathit{ss}_i}\ [\mathjs{default:}\,\mathit{ss}]}}}
 \end{array}
 }
 \end{array}
