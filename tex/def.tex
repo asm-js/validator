@@ -40,7 +40,7 @@
 \newcommand{\signed}{\mathtt{signed}}
 \newcommand{\constant}{\mathtt{constant}}
 \newcommand{\double}{\mathtt{double}}
-\newcommand{\arr}[2]{\mathtt{array}^{#1}_{#2}}
+\newcommand{\view}[2]{\mathtt{view}^{#1}_{#2}}
 \newcommand{\extern}{\mathtt{extern}}
 \newcommand{\unk}{\mathtt{unknown}}
 \newcommand{\str}{\mathtt{string}}
@@ -73,6 +73,9 @@
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
 \newcommand{\stmtretjudge}[2]{\vdash {#1} \hookrightarrow {#2}}
 \newcommand{\sjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
+
+\newcommand{\returns}{\mathit{returns}}
+\newcommand{\breaks}{\mathit{breaks}}
 
 \begin{document}
 
@@ -107,16 +110,13 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \mathjs{;} \\
   &  |  & \ifthen{e}{s} \\
   &  |  & \ifthenelse{e}{s}{s} \\
-  &  |  & \return{e} \\
+  &  |  & \return{[e]} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
   &  |  & \for{[e]}{[e]}{[e]}{s} \\
-  &  |  & \switch{e}{\seq{c}} \\
-  &  |  & \switch{e}{\seq{c}\ d} \\
-  &  |  & \brk \\
-  &  |  & \brkl{\mathit{lab}} \\
-  &  |  & \cont \\
-  &  |  & \contl{\mathit{lab}} \\
+  &  |  & \switch{e}{\seq{c}\ [d]} \\
+  &  |  & \brkl{[\mathit{lab}]} \\
+  &  |  & \contl{[\mathit{lab}]} \\
   &  |  & \lab{\mathit{lab}}{s} \\
 \\
 \mathit{ss} & ::= & \seq{s} \\
@@ -158,35 +158,35 @@ e & ::= & v \\
 \[
 \begin{array}{rcl}
 \sigma, \tau & ::= & \bit ~|~ \double ~|~ \int ~|~ \signed ~|~ \unsigned ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk \\
-\rho & ::= & \tau ~|~ \arr{n}{\tau} ~|~ \imul ~|~ \function ~|~ \funty{\seq{\sigma}}{\tau} \\
+\rho & ::= & \tau ~|~ \view{n}{\tau} ~|~ \imul ~|~ \function ~|~ \funty{\seq{\sigma}}{\tau} \\
 \omega & ::= & (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'}) \\
 \end{array}
 \]
 
-\[
-\begin{array}{rcl}
-\ell        & ::= & \mathit{lab} ~|~ \epsilon \\
-L           & ::= & \{ \seq{\ell} \} \\
-\varepsilon & ::= & L ~|~ \mustret \\
-\end{array}
-\]
+%% \[
+%% \begin{array}{rcl}
+%% \ell        & ::= & \mathit{lab} ~|~ \epsilon \\
+%% L           & ::= & \{ \seq{\ell} \} \\
+%% \varepsilon & ::= & L ~|~ \mustret \\
+%% \end{array}
+%% \]
 
-\[
-\begin{array}{rcl}
-L                       \seqcomp L'       & = & L \cup L' \\
-\emptyset               \seqcomp \mustret & = & \mustret \\
-\{ \ell, \seq{\ell'} \} \seqcomp \mustret & = & \{ \ell, \seq{\ell'} \} \\
-\mustret                \seqcomp L        & = & \mustret \\
-\end{array}
-\]
+%% \[
+%% \begin{array}{rcl}
+%% L                       \seqcomp L'       & = & L \cup L' \\
+%% \emptyset               \seqcomp \mustret & = & \mustret \\
+%% \{ \ell, \seq{\ell'} \} \seqcomp \mustret & = & \{ \ell, \seq{\ell'} \} \\
+%% \mustret                \seqcomp L        & = & \mustret \\
+%% \end{array}
+%% \]
 
-\[
-\begin{array}{rcl}
-L        \cup \mustret & = & L \\
-\mustret \cup L        & = & L \\
-\mustret \cup \mustret & = & \mustret \\
-\end{array}
-\]
+%% \[
+%% \begin{array}{rcl}
+%% L        \cup \mustret & = & L \\
+%% \mustret \cup L        & = & L \\
+%% \mustret \cup \mustret & = & \mustret \\
+%% \end{array}
+%% \]
 
 \[
 \begin{array}{rcl}
@@ -220,11 +220,11 @@ M(\mathtt{ceil}), M(\mathtt{sin}), M(\mathtt{cos}) & : & \funty{\double}{\double
 
 \[
 \begin{array}{rcl}
-A(\mathtt{Uint8Array}), A(\mathtt{Int8Array})   & = & \arr{8}{\intsm} \\
-A(\mathtt{Uint16Array}), A(\mathtt{Int16Array}) & = & \arr{16}{\intsm} \\
-A(\mathtt{Uint32Array}), A(\mathtt{Int32Array}) & = & \arr{32}{\intsm} \\
-A(\mathtt{Float32Array})                        & = & \arr{32}{\doublesm} \\
-A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
+A(\mathtt{Uint8Array}), A(\mathtt{Int8Array})   & = & \view{8}{\intsm} \\
+A(\mathtt{Uint16Array}), A(\mathtt{Int16Array}) & = & \view{16}{\intsm} \\
+A(\mathtt{Uint32Array}), A(\mathtt{Int32Array}) & = & \view{32}{\intsm} \\
+A(\mathtt{Float32Array})                        & = & \view{32}{\doublesm} \\
+A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 \]
 
@@ -262,6 +262,25 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \]
 
 \[
+\begin{array}{rcl}
+\breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
+\breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
+\breaks(\ifthen{e}{s}) & = & \breaks(s) \\
+\breaks(\ifthenelse{e}{s_1}{s_2}) & = & \breaks(s_1) \cup \breaks(s_2) \\
+\breaks(\while{e}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\dowhile{s}{e}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\for{[e_1]}{[e_2]}{[e_3]}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\brk) & = & \{ \epsilon \} \\
+\breaks(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
+\breaks(\lab{\mathit{lab}}{s}) & = & \breaks(s) - \{ \mathit{lab} \} \\
+\breaks(\switch{e}{\seq{\mathit{cd}}}) & = & \bigcup_i \breaks(\mathit{cd}_i) - \{ \epsilon \} \\
+\breaks(s) \mbox{ (otherwise)} & = & \emptyset \\
+\breaks(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+\breaks(\mathjs{default:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+\end{array}
+\]
+
+\[
 \begin{array}{lr}
 \mbox{Program checking} & \hfil \fbox{$\progjudge{P}$}
 \rulebreak
@@ -291,7 +310,7 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
   {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
 \inferrule* [lab=\rel{T-View}]
-  {\Delta(x) = \arr{n}{A(y)}}
+  {\Delta(x) = \view{n}{A(y)}}
   {\impjudge{e}{b}{\Delta}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
 \end{array}
 }
@@ -305,9 +324,9 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
    \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
    \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
    %% \tau \not= \void \\\\
-   \tau \not=\void \Rightarrow\ \stmtretjudge{\mathit{ss}}{\mustret} \\\\
    %% \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\tau}{\mustret}}
-   \sjudge{\Delta}{\{\seq{x: \sigma}, \seq{y : \type(v)}\}}{f}{\mathit{ss}}}
+   \sjudge{\Delta}{\{\seq{x: \sigma}, \seq{y : \type(v)}\}}{f}{\mathit{ss}} \\
+   \tau \not=\void \Rightarrow \returns(\mathit{ss})}
   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 %% \\ \\
 %% \inferrule* [lab=\rel{T-VoidFunction}]
@@ -351,112 +370,50 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \end{lrbox}
 
 \[
-\begin{array}{lr}
-\mbox{Statement list control flow analysis} & \hfil \fbox{$\stmtretjudge{\mathit{ss}}{\varepsilon}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{A-NoStatements}]
-  { }
-  {\stmtretjudge{\epsilon}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{A-Statements}]
-  {\forall i . \stmtretjudge{s_i}{\varepsilon_i} \\
-   n > 0 \\
-   \varepsilon = \varepsilon_1 ; \ldots ; \varepsilon_n}
-  {\stmtretjudge{\seq{s}}{\varepsilon}}
-\end{array}
-}
-\\ \\
-\mbox{Statement control flow analysis} & \hfil \fbox{$\stmtretjudge{s}{\varepsilon}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{A-Block}]
-  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
-  {\stmtretjudge{\block{\mathit{ss}}}{\varepsilon}}
-\qquad
-\inferrule* [lab=\rel{A-ExprStmt}]
-  { }
-  {\stmtretjudge{e\mathjs{;}}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{A-Return}]
-  { }
-  {\stmtretjudge{\return{[e]}}{\mustret}}
-\\ \\
-\inferrule* [lab=\rel{A-If}]
-  {\stmtretjudge{s}{\varepsilon} \\\\
-   \varepsilon' = \varepsilon \cup \emptyset}
-  {\stmtretjudge{\ifthen{e}{s}}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{A-IfElse}]
-  {\stmtretjudge{s_1}{\varepsilon_1} \\
-   \stmtretjudge{s_2}{\varepsilon_2} \\\\
-   \varepsilon = \varepsilon_1 \cup \varepsilon_2}
-  {\stmtretjudge{\ifthenelse{e}{s_1}{s_2}}{\varepsilon}}
-\\ \\
-\inferrule* [lab=\rel{A-While}]
-  {\stmtretjudge{s}{\varepsilon} \\\\
-   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
-  {\stmtretjudge{\while{e}{s}}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{A-DoWhile}]
-  {\stmtretjudge{s}{\varepsilon}
-   \varepsilon' = \varepsilon - \{ \epsilon \}}
-  {\stmtretjudge{\dowhile{s}{e}}{\varepsilon'}}
-\\ \\
-\inferrule* [lab=\rel{A-For}]
-  {\stmtretjudge{s}{\varepsilon} \\\\
-   \varepsilon' = \emptyset \cup \varepsilon - \{ \epsilon \}}
-  {\stmtretjudge{\for{[e_1]}{[e_2]}{[e_3]}{s}}{\varepsilon'}}
-\\ \\
-\inferrule* [lab=\rel{A-Break}]
-  { }
-  {\stmtretjudge{\brk}{\{\epsilon\}}}
-\qquad
-\inferrule* [lab=\rel{A-BreakLabel}]
-  { }
-  {\stmtretjudge{\brkl{\mathit{lab}}}{\{\mathit{lab}\}}}
-\qquad
-\inferrule* [lab=\rel{A-Continue}]
-  { }
-  {\stmtretjudge{\contl{[\mathit{lab}]}}{\emptyset}}
-\\ \\
-\inferrule* [lab=\rel{A-Label}]
-  {\stmtretjudge{s}{\varepsilon} \\\\
-   \varepsilon' = \varepsilon - \{ \mathit{lab} \}}
-  {\stmtretjudge{\lab{\mathit{lab}}{s}}{\varepsilon'}}
-\qquad
-\inferrule* [lab=\rel{A-Switch}]
-  {\forall i . \stmtretjudge{\mathit{cd}_i}{\varepsilon_i} \\\\
-   \usebox{\switchcontrol}}
-  {\stmtretjudge{\switch{e}{\seq{\mathit{cd}}}}{\varepsilon}}
-\\ \\
-\inferrule* [lab=\rel{A-EmptySwitch}]
-  { }
-  {\stmtretjudge{\switch{e}{}}{\emptyset}}
-\qquad
-\inferrule* [lab=\rel{A-EmptyStatement}]
-  { }
-  {\stmtretjudge{\mathjs{;}}{\emptyset}}
-\end{array}
-}
-\\ \\
-\mbox{Case control flow analysis} & \hfil \fbox{$\stmtretjudge{\mathit{cd}}{\varepsilon}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{A-Case}]
-  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
-  {\stmtretjudge{\mathjs{case }v\mathjs{:}\,\mathit{ss}}{\varepsilon}}
-\qquad
-\inferrule* [lab=\rel{A-Default}]
-  {\stmtretjudge{\mathit{ss}}{\varepsilon}}
-  {\stmtretjudge{\mathjs{default:}\,\mathit{ss}}{\varepsilon}}
-\end{array}
-}
+\begin{array}{l}
+\returns(\seq{s}) \\
+\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \\
+\qquad \mbox{for some } m \\
+\returns(\block{\mathit{ss}}) \\
+\qquad \mbox{if } \returns(ss) \\
+\returns(\ifthenelse{e}{s_1}{s_2}) \\
+\qquad \mbox{if } \returns(s_1) \land \returns(s_2) \\
+\returns(\dowhile{s}{e}) \\
+\qquad \mbox{if } \returns(s) \\
+\returns(\switch{e}{\seq{\mathit{cd}}}) \\
+\qquad \mbox{if } \returns(cd_n) \land \forall i . \breaks(cd_i) = \emptyset \\
+\returns(\mathjs{case }v\mathjs{:}\,\mathit{ss}) \\
+\qquad \mbox{if } \returns(\mathit{ss}) \\
+\returns(\mathjs{default:}\,\mathit{ss}) \\
+\qquad \mbox{if } \returns(\mathit{ss})
 \end{array}
 \]
+
+%% \[
+%% \begin{array}{rcl}
+%% \flow(\seq{s}) & = & \flow(s_1) \mathrel{;} \ldots \mathrel{;} flow(s_n) \\
+%% \flow(\block{\mathit{ss}}) & = & \flow(\mathit{ss}) \\
+%% \flow(e\mathjs{;}) & = & \emptyset \\
+%% \flow(\mathjs{;}) & = & \emptyset \\
+%% \flow(\return{[e]}) & = & \mustret \\
+%% \flow(\ifthen{e}{s}) & = & \flow(s) \cup \emptyset \\
+%% \flow(\ifthenelse{e}{s_1}{s_2} & = & \flow(s_1) \cup \flow(s_2) \\
+%% \flow(\while{e}{s}) & = & \emptyset \cup \flow(s) - \{ \epsilon \} \\
+%% \flow(\dowhile{s}{e}) & = & \flow(s) - \{ \epsilon \} \\
+%% \flow(\for{[e_1]}{[e_2]}{[e_3]}{s} & = & \emptyset \cup \flow(s) - \{ \epsilon \} \\
+%% \flow(\brk) & = & \{ \epsilon \} \\
+%% \flow(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
+%% \flow(\contl{[\mathit{lab}]}) & = & \emptyset \\
+%% \flow(\lab{\mathit{lab}}{s}) & = & \flow(s) - \{ \mathit{lab} \} \\
+%% \flow(\switch{e}{\seq{\mathit{cd}}}) & = & \left\{\begin{array}{ll}
+%%                                                   \mustret & \mbox{if } \flow(\mathit{cd}_n) = \mustret \\
+%%                                                            & \mbox{and } \forall i . \flow(\mathit{cd}_i) \cup \emptyset = \emptyset \\
+%%                                                   \bigcup \flow(\mathit{cd}_i) - \{ \epsilon \} & \mbox{otherwise}
+%%                                                   \end{array}\right. \\
+%% \flow(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \flow(\mathit{ss}) \\
+%% \flow(\mathjs{default:}\,\mathit{ss}) & = & \flow(\mathit{ss}) \\
+%% \end{array}
+%% \]
 
 \[
 \begin{array}{lr}
@@ -467,15 +424,6 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Statements}]
   {\forall i . \sjudge{\Delta}{\Gamma}{f}{s_i}}
   {\sjudge{\Delta}{\Gamma}{f}{\seq{s}}}
-%% \inferrule* [lab=\rel{T-NoStatements}]
-%%   { }
-%%   {\stmtjudge{\Delta}{\Gamma}{\epsilon}{\tau}{\emptyset}}
-%% \qquad
-%% \inferrule* [lab=\rel{T-Statements}]
-%%   {\forall i . \stmtjudge{\Delta}{\Gamma}{s_i}{\tau}{\varepsilon_i} \\\\
-%%    n > 0 \\
-%%    \varepsilon = \varepsilon_1 \seqcomp \ldots \seqcomp \varepsilon_n}
-%%   {\stmtjudge{\Delta}{\Gamma}{\seq{s}}{\tau}{\varepsilon}}
 \end{array}
 }
 \\ \\
@@ -612,13 +560,13 @@ A(\mathtt{Float64Array})                        & = & \arr{64}{\doublesm} \\
 \\ \\
 \inferrule* [lab=\rel{T-Load}]
   {m = 2^k - 1 \\
-   (\Delta\cdot\Gamma)(x) = \arr{n}{\tau} \\\\
+   (\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
    \exprjudge{\Delta}{\Gamma}{e}{\intish}}
   {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e\mathjs{ \& } m}\mathjs{ >> }n/8}}{\tau}}
 \qquad
 \inferrule* [lab=\rel{T-Store}]
   {m = 2^k - 1 \\
-   (\Delta\cdot\Gamma)(x) = \arr{n}{\tau} \\\\
+   (\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
    \exprjudge{\Delta}{\Gamma}{e_1}{\intish} \\
    \exprjudge{\Delta}{\Gamma}{e_2}{\tau}}
   {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
