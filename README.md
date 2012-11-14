@@ -20,16 +20,19 @@ function mymodule(env, buffer) {
 
     function f(x, y, z, w) {
         // SECTION A: parameter type declarations
-        x = ~~x;   // int (sign-agnostic) parameter
-        y = +y;    // double parameter
-        z = z|0;   // signed parameter
-        w = w>>>0; // unsigned parameter
+        x = ~~x;      // int (sign-agnostic) parameter
+        y = +y;       // double parameter
+        z = z|0;      // signed parameter
+        w = w>>>0;    // unsigned parameter
+
+        // SECTION B: function body
         log(x|0);     // call into FFI -- must know the sign
         log(w);       // call into FFI -- already know the sign
         log(y);       // call into FFI -- already know it's a double
         x = (z+3)|0;  // signed addition
-        // compound expression
-        return ((((x+z)|0)>>>0)/w)>>>0;
+
+        // SECTION C: unconditional return
+        return ((((x+z)|0)>>>0)/w)>>>0; // compound expression
     }
 
     function g() {
@@ -44,8 +47,8 @@ function mymodule(env, buffer) {
     function h(i, x) {
         i = i>>>0;
         x = ~~x;
-        H32[(i&0xffffffff)>>4] = x; // address masked by 2^k-1, shifted by byte count
-        ftable_2[(x-2)&2](); // dynamic call of functions in table 2
+        H32[(i&0xffffffff)>>4] = x; // masked by 2^k-1, shifted by byte count
+        ftable_2[(x-2)&2]();        // dynamic call of functions in table 2
     }
     
     // -------------------------------------------------------------------------
