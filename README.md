@@ -1,5 +1,7 @@
 # asm.js
 
+![faux logo](https://raw.github.com/dherman/asm.js/master/fauxgo.png)
+
 A Mozilla Research project to specify and develop the extremely optimizable subset of JS targeted by compilers like Emscripten, Mandreel, and LLJS.
 
 ## Example
