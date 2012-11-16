@@ -7,7 +7,9 @@
 \newcommand{\funcall}[2]{{#1}\mathjs{(}{#2}\mathjs{)}}
 \newcommand{\paren}[1]{\mathjs{(}{#1}\mathjs{)}}
 \newcommand{\dom}{\mathit{dom}}
-\newcommand{\type}{\mathit{type}}
+\newcommand{\funtype}{\mathit{fun}\mbox{-}\mathit{type}}
+\newcommand{\vartype}{\mathit{var}\mbox{-}\mathit{type}}
+\newcommand{\rettype}{\mathit{return}\mbox{-}\mathit{type}}
 \newcommand{\funty}[2]{({#1}) \rightarrow {#2}}
 \newcommand{\seq}[1]{\overline{{#1}}}
 \newcommand{\mathjs}[1]{\mbox{\texttt{{#1}}}}
@@ -38,7 +40,7 @@
 \newcommand{\intsm}{\mathjssm{int}}
 \newcommand{\doublesm}{\mathjssm{double}}
 \newcommand{\signed}{\mathtt{signed}}
-\newcommand{\constant}{\mathtt{constant}}
+\newcommand{\fixnum}{\mathtt{fixnum}}
 \newcommand{\double}{\mathtt{double}}
 \newcommand{\view}[2]{\mathtt{view}^{#1}_{#2}}
 \newcommand{\extern}{\mathtt{extern}}
@@ -72,7 +74,7 @@
 \newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
 \newcommand{\stmtretjudge}[2]{\vdash {#1} \hookrightarrow {#2}}
-\newcommand{\sjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
+\newcommand{\sjudge}[3]{{#1};{#2} \vdash {#3}\ \ok}
 
 \newcommand{\returns}{\mathit{returns}}
 \newcommand{\breaks}{\mathit{breaks}}
@@ -110,7 +112,7 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \mathjs{;} \\
   &  |  & \ifthen{e}{s} \\
   &  |  & \ifthenelse{e}{s}{s} \\
-  &  |  & \return{[e]} \\
+  &  |  & \return{[\mathit{re}]} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
   &  |  & \for{[e]}{[e]}{[e]}{s} \\
@@ -128,7 +130,10 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \]
 
 \[
-\kappa_x ::= \toint{x} ~|~ \todouble{x} ~|~ x\mathjs{|0} ~|~ x\mathjs{>>>0} \\
+\begin{array}{rcl}
+\kappa_x & ::= & x\mathjs{|0} ~|~ \todouble{x} \\
+\mathit{re} & ::= & e\mathjs{|0} ~|~ \todouble{e} ~|~ n ~|~ r \\
+\end{array}
 \]
 
 \[
@@ -163,51 +168,23 @@ e & ::= & v \\
 \end{array}
 \]
 
-%% \[
-%% \begin{array}{rcl}
-%% \ell        & ::= & \mathit{lab} ~|~ \epsilon \\
-%% L           & ::= & \{ \seq{\ell} \} \\
-%% \varepsilon & ::= & L ~|~ \mustret \\
-%% \end{array}
-%% \]
-
-%% \[
-%% \begin{array}{rcl}
-%% L                       \seqcomp L'       & = & L \cup L' \\
-%% \emptyset               \seqcomp \mustret & = & \mustret \\
-%% \{ \ell, \seq{\ell'} \} \seqcomp \mustret & = & \{ \ell, \seq{\ell'} \} \\
-%% \mustret                \seqcomp L        & = & \mustret \\
-%% \end{array}
-%% \]
-
-%% \[
-%% \begin{array}{rcl}
-%% L        \cup \mustret & = & L \\
-%% \mustret \cup L        & = & L \\
-%% \mustret \cup \mustret & = & \mustret \\
-%% \end{array}
-%% \]
-
 \[
 \begin{array}{rcl}
-\type(\toint{X})      & = & \int \\
-\type(\todouble{X})   & = & \double \\
-\type(n)              & = & \int \\
-\type(r)              & = & \double \\
-\type(X\mathjs{|0})   & = & \signed \\
-\type(X\mathjs{>>>0}) & = & \unsigned \\
+\vartype(\todouble{x}), \vartype(r) & = & \double \\
+\vartype(x\mathjs{|0}), \vartype(n) & = & \int \mbox{ $(-2^{31} \leq n < 2^{32})$} \\
+\rettype(\todouble{e}), \rettype(r) & = & \double \\
+\rettype(e\mathjs{|0}), \rettype(n) & = & \signed \mbox{ $(-2^{31} \leq n < 2^{31})$} \\
+\rettype(\epsilon)                  & = & \void \\
 \end{array}
 \]
 
-%% NOTE: pure pointers will not be jsval
-
 \[
 \begin{array}{rcl}
-\constant                                                                           & <: & \signed, \unsigned \\
-\signed, \unsigned                                                                  & <: & \int, \extern \\
-\bit, \int                                                                          & <: & \boolish \\
-\double                                                                             & <: & \extern \\
-\unk, \int                                                                          & <: & \intish \\
+\fixnum            & <: & \signed, \unsigned \\
+\signed, \unsigned & <: & \int, \extern \\
+\bit, \int         & <: & \boolish \\
+\double            & <: & \extern \\
+\unk, \bit, \int   & <: & \intish \\
 \end{array}
 \]
 
@@ -262,6 +239,14 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \]
 
 \[
+\begin{array}{l}
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
+\qquad \mbox{where } \forall i . \vartype(\kappa_{x_i}) = \sigma_i \\
+\qquad \mbox{and } \forall [\mathit{re}] \in \mathit{ss} . \rettype([\mathit{re}]) = \tau
+\end{array}
+\]
+
+\[
 \begin{array}{rcl}
 \breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
 \breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
@@ -288,7 +273,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Program}]
   {\seq{x}, \seq{y}, \seq{f}, [g], [e], [b]\ \mbox{distinct} \\
-   \forall y . \Delta(y) = \type(v) \\\\
+   \Delta = \{ \seq{f : \funtype(\mathit{fn}_f)}, \seq{y : \vartype(v)} \} \\\\
    \forall i . \impjudge{[e]}{[b]}{\Delta}{\mathit{imp}_x} \\
    \forall i . \fnjudge{\Delta}{\mathit{fn}_f} \\
    \forall i . \expjudge{\Delta}{\mathit{exp}}}
@@ -322,19 +307,10 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Function}]
   {\seq{x}, \seq{y}\ \mbox{distinct} \\
    \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
-   \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
-   %% \tau \not= \void \\\\
-   %% \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\tau}{\mustret}}
-   \sjudge{\Delta}{\{\seq{x: \sigma}, \seq{y : \type(v)}\}}{f}{\mathit{ss}} \\
+   \seq{\sigma} = \seq{\vartype(\kappa_x)} \\\\
+   \sjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \vartype(v)} \}}{\mathit{ss}} \\
    \tau \not=\void \Rightarrow \returns(\mathit{ss})}
   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
-%% \\ \\
-%% \inferrule* [lab=\rel{T-VoidFunction}]
-%%   {\seq{x}, \seq{y}\ \mbox{distinct} \\
-%%    \Delta(f) = \funty{\seq{\sigma}}{\void} \\
-%%    \seq{\sigma} = \seq{\type(\kappa_x)} \\\\
-%%    \stmtjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \type(v)} \}}{\mathit{ss}}{\void}{\varepsilon}}
-%%   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \end{array}
 }
 \\ \\
@@ -372,8 +348,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \[
 \begin{array}{l}
 \returns(\seq{s}) \\
-\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \\
-\qquad \mbox{for some } m \\
+\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \mbox{ for some } m \\
 \returns(\block{\mathit{ss}}) \\
 \qquad \mbox{if } \returns(ss) \\
 \returns(\ifthenelse{e}{s_1}{s_2}) \\
@@ -389,122 +364,90 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 \]
 
-%% \[
-%% \begin{array}{rcl}
-%% \flow(\seq{s}) & = & \flow(s_1) \mathrel{;} \ldots \mathrel{;} flow(s_n) \\
-%% \flow(\block{\mathit{ss}}) & = & \flow(\mathit{ss}) \\
-%% \flow(e\mathjs{;}) & = & \emptyset \\
-%% \flow(\mathjs{;}) & = & \emptyset \\
-%% \flow(\return{[e]}) & = & \mustret \\
-%% \flow(\ifthen{e}{s}) & = & \flow(s) \cup \emptyset \\
-%% \flow(\ifthenelse{e}{s_1}{s_2} & = & \flow(s_1) \cup \flow(s_2) \\
-%% \flow(\while{e}{s}) & = & \emptyset \cup \flow(s) - \{ \epsilon \} \\
-%% \flow(\dowhile{s}{e}) & = & \flow(s) - \{ \epsilon \} \\
-%% \flow(\for{[e_1]}{[e_2]}{[e_3]}{s} & = & \emptyset \cup \flow(s) - \{ \epsilon \} \\
-%% \flow(\brk) & = & \{ \epsilon \} \\
-%% \flow(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
-%% \flow(\contl{[\mathit{lab}]}) & = & \emptyset \\
-%% \flow(\lab{\mathit{lab}}{s}) & = & \flow(s) - \{ \mathit{lab} \} \\
-%% \flow(\switch{e}{\seq{\mathit{cd}}}) & = & \left\{\begin{array}{ll}
-%%                                                   \mustret & \mbox{if } \flow(\mathit{cd}_n) = \mustret \\
-%%                                                            & \mbox{and } \forall i . \flow(\mathit{cd}_i) \cup \emptyset = \emptyset \\
-%%                                                   \bigcup \flow(\mathit{cd}_i) - \{ \epsilon \} & \mbox{otherwise}
-%%                                                   \end{array}\right. \\
-%% \flow(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \flow(\mathit{ss}) \\
-%% \flow(\mathjs{default:}\,\mathit{ss}) & = & \flow(\mathit{ss}) \\
-%% \end{array}
-%% \]
-
 \[
 \begin{array}{lr}
-\mbox{Statement list checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}$}
+\mbox{Statement list checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{ss}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Statements}]
-  {\forall i . \sjudge{\Delta}{\Gamma}{f}{s_i}}
-  {\sjudge{\Delta}{\Gamma}{f}{\seq{s}}}
+  {\forall i . \sjudge{\Delta}{\Gamma}{s_i}}
+  {\sjudge{\Delta}{\Gamma}{\seq{s}}}
 \end{array}
 }
 \\ \\
-\mbox{Statement checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{s}$}
+\mbox{Statement checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{s}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Block}]
-  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{f}{\block{\mathit{ss}}}}
+  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\block{\mathit{ss}}}}
 \qquad
 \inferrule* [lab=\rel{T-ExprStmt}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
-  {\sjudge{\Delta}{\Gamma}{f}{e\mathjs{;}}}
+  {\sjudge{\Delta}{\Gamma}{e\mathjs{;}}}
 \qquad
 \inferrule* [lab=\rel{T-EmptyStatement}]
   { }
-  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{;}}}
+  {\sjudge{\Delta}{\Gamma}{\mathjs{;}}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{f}{s}}
-  {\sjudge{\Delta}{\Gamma}{f}{\ifthen{e}{s}}}
+   \sjudge{\Delta}{\Gamma}{s}}
+  {\sjudge{\Delta}{\Gamma}{\ifthen{e}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{f}{s_1} \\
-   \sjudge{\Delta}{\Gamma}{f}{s_2}}
-  {\sjudge{\Delta}{\Gamma}{f}{\ifthenelse{e}{s_1}{s_2}}}
+   \sjudge{\Delta}{\Gamma}{s_1} \\
+   \sjudge{\Delta}{\Gamma}{s_2}}
+  {\sjudge{\Delta}{\Gamma}{\ifthenelse{e}{s_1}{s_2}}}
 \\ \\
-\inferrule* [lab=\rel{T-ReturnVar}]
-  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
-   \exprjudge{\Delta}{\Gamma}{x}{\tau}}
-  {\sjudge{\Delta}{\Gamma}{f}{\return{x}}}
-\qquad
 \inferrule* [lab=\rel{T-ReturnExpr}]
-  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\\\
-   \exprjudge{\Delta}{\Gamma}{e}{\tau} \\
-   \type(e) <: \tau}
-  {\sjudge{\Delta}{\Gamma}{f}{\return{e}}}
-\\ \\
+  {\exprjudge{\Delta}{\Gamma}{\mathit{re}}{\tau} \\
+   \rettype(\mathit{re}) = \tau}
+  {\sjudge{\Delta}{\Gamma}{\return{\mathit{re}}}}
+\qquad
 \inferrule* [lab=\rel{T-ReturnVoid}]
-  {\Delta(f) = \funty{\seq{\sigma}}{\void}}
-  {\sjudge{\Delta}{\Gamma}{f}{\mathtt{return;}}}
+  { }
+  {\sjudge{\Delta}{\Gamma}{\mathtt{return;}}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{f}{s}}
-  {\sjudge{\Delta}{\Gamma}{f}{\while{e}{s}}}
+   \sjudge{\Delta}{\Gamma}{s}}
+  {\sjudge{\Delta}{\Gamma}{\while{e}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
-  {\sjudge{\Delta}{\Gamma}{f}{s} \\\\
+  {\sjudge{\Delta}{\Gamma}{s} \\\\
    \exprjudge{\Delta}{\Gamma}{e}{\boolish}}
-  {\sjudge{\Delta}{\Gamma}{f}{\dowhile{s}{e}}}
+  {\sjudge{\Delta}{\Gamma}{\dowhile{s}{e}}}
 \\ \\
 \inferrule* [lab=\rel{T-For}]
   {[\exprjudge{\Delta}{\Gamma}{e_1}{\sigma_1}] \\
    [\exprjudge{\Delta}{\Gamma}{e_2}{\boolish}] \\
    [\exprjudge{\Delta}{\Gamma}{e_3}{\sigma_3}] \\\\
-   \sjudge{\Delta}{\Gamma}{f}{s}}
-  {\sjudge{\Delta}{\Gamma}{f}{\for{[e_1]}{[e_2]}{[e_3]}{s}}}
+   \sjudge{\Delta}{\Gamma}{s}}
+  {\sjudge{\Delta}{\Gamma}{\for{[e_1]}{[e_2]}{[e_3]}{s}}}
 \\ \\
 \inferrule* [lab=\rel{T-Break}]
   { }
-  {\sjudge{\Delta}{\Gamma}{f}{\brkl{[\mathit{lab}]}}}
+  {\sjudge{\Delta}{\Gamma}{\brkl{[\mathit{lab}]}}}
 \qquad
 \inferrule* [lab=\rel{T-Continue}]
   { }
-  {\sjudge{\Delta}{\Gamma}{f}{\contl{[\mathit{lab}]}}}
+  {\sjudge{\Delta}{\Gamma}{\contl{[\mathit{lab}]}}}
 \\ \\
 \inferrule* [lab=\rel{T-Label}]
-  {\sjudge{\Delta}{\Gamma}{f}{s}}
-  {\sjudge{\Delta}{\Gamma}{f}{\lab{\mathit{lab}}{s}}}
+  {\sjudge{\Delta}{\Gamma}{s}}
+  {\sjudge{\Delta}{\Gamma}{\lab{\mathit{lab}}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-Switch}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
    \sigma <: \extern \\
-   \forall i . \type(v_i) <: \sigma \\\\
-   \forall i . \sjudge{\Delta}{\Gamma}{f}{\mathit{ss}_i} \\
-   [\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}]}
-  {\sjudge{\Delta}{\Gamma}{f}{\switch{e}{\seq{\mathjs{case }v_i\mathjs{:}\,\mathit{ss}_i}\ [\mathjs{default:}\,\mathit{ss}]}}}
+   \forall i . \exprjudge{\Delta}{\Gamma}{v_i}{\sigma} \\\\
+   \forall i . \sjudge{\Delta}{\Gamma}{\mathit{ss}_i} \\
+   [\sjudge{\Delta}{\Gamma}{\mathit{ss}}]}
+  {\sjudge{\Delta}{\Gamma}{\switch{e}{\seq{\mathjs{case }v_i\mathjs{:}\,\mathit{ss}_i}\ [\mathjs{default:}\,\mathit{ss}]}}}
 \end{array}
 }
 \end{array}
@@ -512,17 +455,17 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Case checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{f}{\mathit{cd}}$}
+\mbox{Case checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{cd}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Case}]
-  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}}
 \qquad
 \inferrule* [lab=\rel{T-Default}]
-  {\sjudge{\Delta}{\Gamma}{f}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{f}{\mathjs{default:}\,\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\mathjs{default:}\,\mathit{ss}}}
 \end{array}
 }
 \end{array}
@@ -541,14 +484,22 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Constant}]
-  {-2^{31} \leq n < 2^{32}}
-  {\exprjudge{\Delta}{\Gamma}{n}{\constant}}
+\inferrule* [lab=\rel{T-Signed}]
+  {-2^{31} \leq n < 0}
+  {\exprjudge{\Delta}{\Gamma}{n}{\signed}}
 \qquad
+\inferrule* [lab=\rel{T-Fixnum}]
+  {0 \leq n < 2^{31}}
+  {\exprjudge{\Delta}{\Gamma}{n}{\fixnum}}
+\qquad
+\inferrule* [lab=\rel{T-Unsigned}]
+  {2^{31} \leq n < 2^{32}}
+  {\exprjudge{\Delta}{\Gamma}{n}{\unsigned}}
+\\ \\
 \inferrule* [lab=\rel{T-Double}]
   { }
   {\exprjudge{\Delta}{\Gamma}{r}{\double}}
-\\ \\
+\qquad
 \inferrule* [lab=\rel{T-VarRef}]
   {(\Delta\cdot\Gamma)(x) = \tau}
   {\exprjudge{\Delta}{\Gamma}{x}{\tau}}
