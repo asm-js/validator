@@ -22,19 +22,16 @@ function mymodule(env, buffer) {
 
     function f(x, y, z, w) {
         // SECTION A: parameter type declarations
-        x = ~~x;      // int (sign-agnostic) parameter
+        x = x|0;      // int parameter
         y = +y;       // double parameter
-        z = z|0;      // signed parameter
-        w = w>>>0;    // unsigned parameter
 
         // SECTION B: function body
-        log(x|0);     // call into FFI -- must know the sign
-        log(w);       // call into FFI -- already know the sign
+        log(x|0);     // call into FFI -- must force the sign
         log(y);       // call into FFI -- already know it's a double
-        x = (z+3)|0;  // signed addition
+        x = (x+3)|0;  // signed addition
 
         // SECTION C: unconditional return
-        return ((((x+z)|0)>>>0)/w)>>>0; // compound expression
+        return ((((x+1)|0)>>>0)/(x|0))>>>0; // compound expression
     }
 
     function g() {
@@ -47,10 +44,10 @@ function mymodule(env, buffer) {
     }
 
     function h(i, x) {
-        i = i>>>0;
-        x = ~~x;
-        H32[(i&0xffffffff)>>4] = x; // masked by 2^k-1, shifted by byte count
-        ftable_2[(x-2)&2]();        // dynamic call of functions in table 2
+        i = i|0;
+        x = x|0;
+        H32[((i>>>0)&0xffffffff)>>4] = x; // masked by 2^k-1, shifted by byte count
+        ftable_2[((x|0)-2)&2]();          // dynamic call of functions in table 2
     }
     
     // -------------------------------------------------------------------------
@@ -62,7 +59,7 @@ function mymodule(env, buffer) {
     // -------------------------------------------------------------------------
     // SECTION 4: globals
 
-    var g_i = 0;   // int (sign-agnostic) global
+    var g_i = 0;   // int global
     var g_f = 0.0; // double global
 
     // -------------------------------------------------------------------------
