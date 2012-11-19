@@ -46,8 +46,8 @@ function mymodule(env, buffer) {
     function h(i, x) {
         i = i|0;
         x = x|0;
-        H32[((i>>>0)&0xffffffff)>>4] = x; // masked by 2^k-1, shifted by byte count
-        ftable_2[((x|0)-2)&2]();          // dynamic call of functions in table 2
+        H32[(i&0xffffffff)>>4] = x; // masked by 2^k-1, shifted by byte count
+        ftable_2[(x-2)&2]();        // dynamic call of functions in table 2
     }
     
     // -------------------------------------------------------------------------
