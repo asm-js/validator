@@ -800,9 +800,13 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
   {\sjudge{\Delta}{\Gamma}{\ifthenelse{e}{s_1}{s_2}}}
 \\ \\
 \inferrule* [lab=\rel{T-ReturnExpr}]
-  {\exprjudge{\Delta}{\Gamma}{\mathit{re}}{\tau} \\
+  {\exprjudge{\Delta}{\Gamma}{\mathit{re}}{\tau} \\\\
    \rettype(\mathit{re}) = \tau}
   {\sjudge{\Delta}{\Gamma}{\return{\mathit{re}}}}
+\qquad
+\inferrule* [lab=\rel{T-ReturnDouble}]
+  {\exprjudge{\Delta}{\Gamma}{e}{\double}}
+  {\sjudge{\Delta}{\Gamma}{\return{\mathjs{+}e}}}
 \qquad
 \inferrule* [lab=\rel{T-ReturnVoid}]
   { }
