@@ -2,6 +2,7 @@
 
 \usepackage{mathpartir}
 \usepackage{amssymb}
+\usepackage{graphicx}
 
 \newcommand{\ternary}[3]{{#1}\ \mathjs{?}\ {#2}\ \mathjs{:}\ {#3}}
 \newcommand{\funcall}[2]{{#1}\mathjs{(}{#2}\mathjs{)}}
@@ -81,35 +82,254 @@
 
 \begin{document}
 
-\title{\texttt{asm.js}}
+\title{\texttt{asm.js}: a High-Performance Subset of JavaScript}
 \author{Dave Herman, Luke Wagner, and Alon Zakai}
 \maketitle
 
+\section{Introduction}
+
+This document describes a formal definition of a subset of the
+JavaScript programming language that can be used as a high-performance
+compiler target language. This sublanguage or dialect, which we call
+$\mathjs{asm.js}$, effectively describes a safe virtual machine for
+memory-unsafe languages such as C and C++.
+
+Because $\mathjs{asm.js}$ is a proper subset of JavaScript, both
+syntactically and semantically, the language is fully defined by a
+static {\it validation} judgment, which yields a predicate that
+determines whether a given JavaScript program is or is not in the
+subset. No specification of a dynamic semantics is needed, since the
+behavior of an $\mathjs{asm.js}$ program is simply defined by its
+behavior as a JavaScript program.
+
+\subsection{Overview}
+
+The unit of compilation/validation of $\mathjs{asm.js}$ is the
+$\mathjs{asm.js}$ {\it module}, which takes the form of a closed
+JavaScript function beginning with the {\it prologue
+directive}~\cite{es5}:
+\[
+\mathjs{"use asm";}
+\]
+The presence of this directive serves two purposes. First, it allows
+JavaScript engines that wish to provide specialized optimizations for
+$\mathjs{asm.js}$ to efficiently recognize that the module should be
+validated as an $\mathjs{asm.js}$, without the need for complex,
+heuristic or concurrent recognition logic. (Since validation requires
+a non-trivial traversal of the body of the module, it is likely too
+expensive to speculatively validate {\it all} JavaScript code during
+JIT compilation.) Second, by requiring the programmer or code
+generator to state the intention explicitly that the code should be
+recognized as $\mathjs{asm.js}$, it allows user agents to report
+validation errors or performance faults to developer consoles.
+
+An $\mathjs{asm.js}$ module takes two optional parameters: an {\it
+environment}, containing imported functions and constants from
+external JavaScript (serving as one side of a kind of foreign-function
+interface), and a JavaScript $\mathjs{ArrayBuffer}$ representing a
+virtualized memory. The module can provide different views of the
+buffer by using typed array wrappers imported from the environment:
+\begin{verbatim}
+function mod(env, buffer) {
+    "use asm";
+
+    var HEAP_I32 = new env.Int32Array(buffer);
+    var HEAP_F64 = new env.Float64Array(buffer);
+    // ...
+}
+\end{verbatim}
+
+The body of an $\mathjs{asm.js}$ module consists of any number of
+function definitions, followed by an {\it export clause}:
+\[
+\return{\mathjs{\char123{} foo:\,f, bar:\,g \char125{}}}
+\]
+If a module only exports a single function, it can do so directly,
+without the object literal:
+\[
+\return{\mathjs{foo}}
+\]
+
+\subsection{Types}
+
+The $\mathjs{asm.js}$ language is statically typed: every function,
+variable, and expression has a statically predictable type, according
+to a type hierarchy covering a subset of JavaScript values (see
+Section~\ref{sec:types}). Variables, parameters, and functions are
+provided with an explicit type bound through a stylized use of
+JavaScript coercions. This technique was pioneered by the Emscripten
+compiler~\cite{emscripten}, and is now used by a number of compilers
+that target JavaScript~\cite{mandreel,lljs}.
+
+For example, the following is a simple function from integers to
+integers:
+\begin{verbatim}
+function id(x) {
+    x = x|0;
+    return x|0;
+}
+\end{verbatim}
+Even though JavaScript provides only double-precision floating-point
+numbers (doubles) in its data model, the $\mathjs{asm.js}$ type system
+enforces that 32-bit integer values---a strict subset of
+doubles---never overflow to larger doubles. This allows optimizing
+compilers to represent these values as unboxed integers in 32-bit
+registers or memory.
+
+Again following the practice established by Emscripten, it is possible
+to do integer operations such as arithmetic and conditionals by means
+of coercions:
+\begin{verbatim}
+function add1(x) {
+    x = x|0;
+    return ((x|0)+1)|0;
+}
+\end{verbatim}
+While the JavaScript semantics dictates that the addition may overflow
+to a larger number than a 32-bit integer, the outer coercion ensures
+that the entire expression results in a 32-bit integer---the same
+integer that would be produced by a signed, 32-bit addition in a
+typical assembly language. The $\mathjs{asm.js}$ type system thus
+ensures that integer operations can be efficiently compiled by
+optimizing JavaScript engines to predictable machine instructions.
+
+\subsection{Validation, linking, and execution}
+
+The $\mathjs{asm.js}$ validator is defined as a static type system,
+which can be performed by an optimizing JavaScript engine at the time
+the module is parsed by the JavaScript engine. (If compilation time is
+a concern, it can be delayed to runtime by hiding the source code in a
+string and passed to $\mathjs{eval}$ or the $\mathjs{Function}$
+constructor.) During this phase, any static validation errors can be
+reported to a developer console.
+
+After a $\mathjs{asm.js}$ module is compiled, its evaluation produces
+a closure with an empty lexical environment. The module can be {\it
+linked} by calling the function with an object representing the
+imported environment and an optional buffer:
+\begin{verbatim}
+function mod(env, buffer) {
+    "use asm";
+    // ...
+    return { f: foo, g: bar };
+}
+
+var env = {
+    Int32Array: Int32Array,
+    Uint32Array: Uint32Array,
+    // ...
+};
+var buf = new ArrayBuffer(0x100000);
+
+// link the module
+var m = mod(env, buf);
+\end{verbatim}
+
+This linking phase may need to perform additional, dynamic
+validation. In particular, dynamic validation can fail if, for
+example, the $\mathjs{Int32Array}$ function passed in through the
+environment does not turn out to construct a proper typed array
+(thereby defeating typed array-based optimizations).
+
+The resulting module object provides access to the exported
+$\mathjs{asm.js}$ functions, which have been fully validated (both
+statically and dynamically) and optimized.
+
+\subsection{Notation conventions}
+
+The following notation conventions are used in this document. Optional
+items in a grammar are presented in $[\mbox{square
+brackets}]$. Sequences are presented with a $\seq{\mbox{horizontal
+overbar}}$. The empty sequence is denoted by $\epsilon$.
+
+\subsection{Document outline}
+
+The remainder of this document proceeds as follows.
+%% FIXME: outline
+
 \section{Abstract syntax}
 
+This section specifies the abstract syntax of $\mathjs{asm.js}$. The
+grammar is presented with concrete syntax for conciseness and
+readability, but should be read as describing the subset of abstract
+syntax trees produced by a standard JavaScript parser.
+
+We make the following assumptions about canonicalization of
+$\mathjs{asm.js}$ abstract syntax trees:
+\begin{enumerate}
+\item Parentheses are ignored in the AST. This allows parentheses to
+  be left out of any of the formal definitions of this spec.
+
+\item Empty statements ($\mathjs{;}$) are ignored in the AST. This
+  allows empty statements to be left out of any of the formal
+  definitions of this spec.
+
+\item The identifiers $\mathjs{arguments}$ and $\mathjs{eval}$ do not
+  appear in $\mathjs{asm.js}$ programs. If either of these identifiers
+  appears anywhere, static validation must fail.
+\end{enumerate}
+
+In various places in this document, the meta-variables $b$, $c$, $f$,
+$g$, $x$, $y$, and $z$ are used to range over JavaScript identifiers.
+
+\subsection{Modules}
+
+An $\mathjs{asm.js}$ module has the following syntax:
+\[
+\mathit{mod} ::= \fun{[g]}{[c[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}
+\]
+The syntax consists of:
+\begin{enumerate}
+\item up to two optional parameters;
+\item a $\mathjs{"use asm";}$ prologue directive;
+\item a sequence of import statements;
+\item a sequence of function declarations;
+\item a sequence of global variable declarations; and
+\item a single export statement.
+\end{enumerate}
+
+An import statement is either an FFI function binding, a
+type-annotated (coerced) constant binding, or a heap view declaration:
 \[
 \begin{array}{rcl}
-b, e, f, g, x, y, z               & \in & \mathit{Identifier} \\
-\mathtt{arguments}, \mathtt{eval} & \not\in & \mathit{Identifier} \\
+\mathit{imp}_x  & ::= & \var{x \mathjs{ = } c\mathjs{.}y} \\
+                &  |  & \var{x \mathjs{ = } c\mathjs{.}y\mathjs{|0}} \\
+                &  |  & \var{x \mathjs{ = } \mathjs{+}c\mathjs{.}y} \\
+                &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{c\mathjs{.}y}{b}} \\
 \end{array}
 \]
 
+A function declaration has the following syntax:
+\[
+\mathit{fn}_f ::= \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}
+\]
+The syntax consists of type annotations for the parameters, a sequence
+of local variable declarations, and a sequence of statements.
+
+Type annotations are either $\int$ or $\double$ coercions:
+\[
+\mathit{ann}_x ::= x\mathjs{|0} ~|~ \todouble{x}
+\]
+
+An export statement returns either a single function or an object
+literal containing multiple functions:
 \[
 \begin{array}{rcl}
-P               & ::= & \fun{[g]}{[e[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}} \\
-\mathit{imp}_x  & ::= & \var{x \mathjs{ = } e\mathjs{.}y} \\
-                &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{e\mathjs{.}y}{b}} \\
 \mathit{exp}    & ::= & \return{f} \\
                 &  |  & \return{\mathjs{\char123{} } \seq{x \mathjs{:} f} \mathjs{ \char125{}}} \\
-\mathit{fn}_f   & ::= & \fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}} \\
 \end{array}
 \]
 
+\subsection{Statements}
+
+The set of legal statements in $\mathjs{asm.js}$ includes blocks,
+expression statements, conditionals, returns, loops, $\mathjs{switch}$
+blocks, $\mathjs{break}$ and $\mathjs{continue}$, and labeled
+statements:
 \[
 \begin{array}{rcl}
 s & ::= & \block{\mathit{ss}} \\
   &  |  & e\mathjs{;} \\
-  &  |  & \mathjs{;} \\
   &  |  & \ifthen{e}{s} \\
   &  |  & \ifthenelse{e}{s}{s} \\
   &  |  & \return{[\mathit{re}]} \\
@@ -122,24 +342,34 @@ s & ::= & \block{\mathit{ss}} \\
   &  |  & \lab{\mathit{lab}}{s} \\
 \\
 \mathit{ss} & ::= & \seq{s} \\
-\\
+\end{array}
+\]
+
+Return arguments always have their type explicitly manifest: either a
+$\signed$ or $\double$ coercion or a literal:
+\[
+\mathit{re} ::= e\mathjs{|0} ~|~ \todouble{e} ~|~ v
+\]
+
+The contents of $\mathjs{switch}$ blocks are restricted: in addition
+to requiring the (optional) $\mathjs{default}$ clause to be the last
+clause, each $\mathjs{case}$ clause is syntactically restricted to
+contain only literal values:
+\[
+\begin{array}{rcl}
 c & ::= & \mathjs{case }v\mathjs{:}\,\mathit{ss} \\
 d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \mathit{cd} & ::= & c ~|~ d \\
 \end{array}
 \]
 
-\[
-\begin{array}{rcl}
-\kappa_x & ::= & x\mathjs{|0} ~|~ \todouble{x} \\
-\mathit{re} & ::= & e\mathjs{|0} ~|~ \todouble{e} ~|~ n ~|~ r \\
-\end{array}
-\]
+\subsection{Expressions}
 
+Expressions include literals, lvalues, assignments, function calls,
+unary expressions, binary expressions, conditional expressions, and
+sequence expressions:
 \[
 \begin{array}{rcl}
-v & ::= & r ~|~ n \\
-\\
 e & ::= & v \\
   &  |  & \mathit{lval} \\
   &  |  & \mathit{lval}\mathjs{ = }e \\
@@ -154,19 +384,195 @@ e & ::= & v \\
 \mathit{binop} & ::= & \mathjs{+} ~|~ \mathjs{-} ~|~ \mathjs{*} ~|~ \mathjs{/} ~|~ \mathjs{\%} \\
                &  |  & \mathjs{|} ~|~ \mathjs{\&} ~|~ \mathjs{\^{}} ~|~ \mathjs{<<} ~|~ \mathjs{>>} ~|~ \mathjs{>>>} \\
                &  |  & \mathjs{<} ~|~ \mathjs{<=} ~|~ \mathjs{>} ~|~ \mathjs{>=} ~|~ \mathjs{!=} ~|~ \mathjs{==} \\
-\mathit{lval} & ::= & x ~|~ \getprop{x}{\paren{e\mathjs{ \& }m}\mathjs{ >> }n} \\
 \end{array}
+\]
+
+Literals are either doubles or integers:
+\[
+v ::= r ~|~ n
+\]
+
+Lvalues are either variables or typed array dereference
+expressions. The latter requires a mask to force the byte offset into
+a valid range and a shift to convert the offset into a proper index
+for the size of the typed array.
+\[
+\mathit{lval} ::= x ~|~ \getprop{x}{\paren{e\mathjs{ \& }m}\mathjs{ >> }n}
+\]
+
+\section{Types}
+\label{sec:types}
+
+The $\mathjs{asm.js}$ validator relies on a static type system that
+classifies and constraints the syntax beyond the grammar.
+
+\subsection{Expression types}
+
+The set of {\it expression types} classifies the results of expression
+evaluation and constrains the allowable values of variables.
+\[
+\begin{array}{rcl}
+\sigma, \tau & ::= & \double ~|~ \signed ~|~ \unsigned ~|~ \fixnum ~|~ \extern \\
+             &  |  & \bit ~|~ \int ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk \\
+\end{array}
+\]
+
+These types are arranged in a subtyping hierarchy, defined by:
+\[
+\begin{array}{rcl}
+\fixnum            & <: & \signed, \unsigned \\
+\signed, \unsigned & <: & \int, \extern \\
+\bit, \int         & <: & \boolish \\
+\double            & <: & \extern \\
+\unk, \bit, \int   & <: & \intish \\
+\end{array}
+\]
+
+Figure~\ref{fig:subtypes} depicts this subtyping hierarchy
+visually. Note that some types are presented in white boxes and others
+in gray boxes. The white boxes represent types that may escape into
+external JavaScript; the gray types are internal to the
+$\mathjs{asm.js}$ module and cannot escape. This allows an optimizing
+implementation to use unboxed representations that would otherwise be
+illegal. What follows is an explanation of each type.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[scale=0.5]{subtypes}
+\caption{The hierarchy of expression types.}
+\label{fig:subtypes}
+\end{figure}
+
+\subsubsection*{The $\extern$ type}
+
+This abstract type represents the root of all types that can escape
+back into ordinary JavaScript. Any type that is a subtype of $\extern$
+must carry enough information in its internal representation in an
+optimizing virtual machine to faithfully convert back into a dynamic
+JavaScript value.
+
+\subsubsection*{The $\double$ type}
+
+This is the type of double-precision floating-point values. An
+optimizing engine can represent these as unboxed 64-bit floats. If
+they escape into external JavaScript they must of course be wrapped
+back up as JavaScript values according to the JavaScript engine's
+value representation.
+
+\subsubsection*{The $\signed$ and $\unsigned$ types}
+
+These are the types of signed and unsigned 32-bit integers,
+respectively. For an optimizing engine, their representation can be
+the same: an unboxed 32-bit integer. If a value escapes into external
+JavaScript, the sign is used to determine which JavaScript value it
+represents. For example, the bit pattern $\mathjs{0xffffffff}$
+represents either the JavaScript value $\mathjs{-1}$ or
+$\mathjs{4294967295}$, depending on the signedness of the type.
+
+\subsubsection*{The $\fixnum$ type}
+
+This type represents integers in the range $[0, 2^{31})$, which are
+both valid signed and unsigned integers. Literals in this range are
+given the type $\fixnum$.
+
+\subsubsection*{The $\int$ type}
+
+This is the type of 32-bit integers whose sign is not known. Again,
+optimizing engines can represent them as unboxed 32-bit integers. But
+because the sign is not known, they cannot be allowed to escape to
+external JavaScript, as it is impossible to determine exactly which
+JavaScript value they represent. While this might not seem like a very
+useful type, the JavaScript bitwise coercions can be used to force an
+$\int$ value back to $\signed$ or $\unsigned$ without any loss of
+data.
+
+\subsubsection*{The $\intish$ type}
+
+The JavaScript arithmetic operations can be performed on 32-bit
+integer values, but their results may produce non-integer values. For
+example, addition and subtraction can overflow to large numbers that
+exceed the 32-bit integer range, and integer division can produce a
+non-integer value. However, if the result is coerced back to an
+integer, the resulting arithmetic operation behaves identically to the
+typical corresponding machine operation (i.e., integer addition,
+subtraction, or division). The $\intish$ type represents the result of
+a JavaScript integer artihmetic operation that must be coerced back to
+integer with an explicit coercion. Because this type can only be used
+as an argument to a coercion (or silently ignored in an expression
+statement), $\mathjs{asm.js}$ integer arithmetic can always be
+implemented in an optimizing engine by the machine integer artithmetic
+operations.
+
+The one arithmetic operation that does not quite fit into this story
+is multiplication. Multiplying two large integers can results in a
+large enough double that some lower bits of precision are lost, so
+that coercing the result back to integer does {\it not} behave
+identically to the machine operation. The use of the proposed ES6
+$\mathjs{Math.imul}$ function~\cite{imul} as an FFI function is
+recommended as the proper means of implementing integer
+multiplication.
+
+\subsubsection*{The $\bit$ type}
+
+The conditional operators produce boolean values in
+JavaScript. Booleans are interconvertible to the JavaScript integer
+values $\mathjs{0}$ and $\mathjs{1}$ via integer coercion and back via
+boolean coercion. In order to allow optimizing engines to represent
+these as untagged 32-bit integers, we disallow the $\bit$ type from
+escaping to external JavaScript. The only contexts where they can be
+used are in conditionals (such as the test expression of an
+$\mathjs{if}$ statement), or in coercions to integer.
+
+\subsubsection*{The $\boolish$ type}
+
+Every type in JavaScript can be implicitly converted to a boolean for
+the sake of evaluating a conditional expression or statement. This
+coercion is allowed in $\mathjs{asm.js}$ for the $\bit$ type as well
+as the integer types, but not for the $\double$ type. This ensures
+that an optimizing JavaScript engine only ever performs a conditional
+based on an unboxed 32-bit integer value, avoiding the need for a more
+expensive conversion.
+
+\subsubsection*{The $\unk$ type}
+
+Calling an external JavaScript function through the FFI results in an
+arbitrary JavaScript value. Because $\mathjs{asm.js}$ is designed to
+avoid dealing with general values, the result must be coerced to one
+of the other types before it can be used. The $\unk$ type represents
+one of these result values before being coerced to an integer or
+double.
+
+\subsubsection*{The $\void$ type}
+
+A function that returns $\mathjs{undefined}$ is considered to have the
+$\void$ result type. The $\mathjs{undefined}$ value is not actually a
+first-class value in $\mathjs{asm.js}$. It can only be ignored via an
+expression statement. This avoids having to represent it at all as
+data.
+
+\subsection{Environment types}
+
+Validation tracks the types not only of expressions and local
+variables but also global variables, FFI imports, and functions. These
+include typed arrays, the special $\mathjs{Math.imul}$ value, FFI
+functions, and $\mathjs{asm.js}$ functions:
+\[
+\rho ::= \tau ~|~ \view{n}{\tau} ~|~ \imul ~|~ \function ~|~ \funty{\seq{\sigma}}{\tau}
+\]
+
+The type of a typed array tracks the number of bits per element and
+the elements' value type ($\int$ or $\double$). The $\imul$ and
+$\function$ types are straightforward. The type of a function define
+within the $\mathjs{asm.js}$ module includes the types of its
+parameters and its return type.
+
+\subsection{Operator types}
+
+\[
+\omega ::= (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'})
 \]
 
 \section{Type rules}
-
-\[
-\begin{array}{rcl}
-\sigma, \tau & ::= & \bit ~|~ \double ~|~ \int ~|~ \signed ~|~ \unsigned ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk \\
-\rho & ::= & \tau ~|~ \view{n}{\tau} ~|~ \imul ~|~ \function ~|~ \funty{\seq{\sigma}}{\tau} \\
-\omega & ::= & (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'}) \\
-\end{array}
-\]
 
 \[
 \begin{array}{rcl}
@@ -175,16 +581,6 @@ e & ::= & v \\
 \rettype(\todouble{e}), \rettype(r) & = & \double \\
 \rettype(e\mathjs{|0}), \rettype(n) & = & \signed \mbox{ $(-2^{31} \leq n < 2^{31})$} \\
 \rettype(\epsilon)                  & = & \void \\
-\end{array}
-\]
-
-\[
-\begin{array}{rcl}
-\fixnum            & <: & \signed, \unsigned \\
-\signed, \unsigned & <: & \int, \extern \\
-\bit, \int         & <: & \boolish \\
-\double            & <: & \extern \\
-\unk, \bit, \int   & <: & \intish \\
 \end{array}
 \]
 
@@ -240,9 +636,9 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 
 \[
 \begin{array}{l}
-\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
-\qquad \mbox{where } \forall i . \vartype(\kappa_{x_i}) = \sigma_i \\
-\qquad \mbox{and } \forall [\mathit{re}] \in \mathit{ss} . \rettype([\mathit{re}]) = \tau
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
+\qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
+\qquad \mbox{and } \forall \return{[\mathit{re}]} \in \mathit{ss} . \rettype([\mathit{re}]) = \tau
 \end{array}
 \]
 
@@ -267,7 +663,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Program checking} & \hfil \fbox{$\progjudge{P}$}
+\mbox{Module checking} & \hfil \fbox{$\progjudge{\mathit{mod}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -307,10 +703,10 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-Function}]
   {\seq{x}, \seq{y}\ \mbox{distinct} \\
    \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
-   \seq{\sigma} = \seq{\vartype(\kappa_x)} \\\\
+   \seq{\sigma} = \seq{\vartype(\mathit{ann}_x)} \\\\
    \sjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \vartype(v)} \}}{\mathit{ss}} \\
    \tau \not=\void \Rightarrow \returns(\mathit{ss})}
-  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\kappa_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
+  {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \end{array}
 }
 \\ \\
