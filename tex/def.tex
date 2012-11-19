@@ -4,7 +4,6 @@
 \usepackage{amssymb}
 \usepackage{graphicx}
 
-\newcommand{\ternary}[3]{{#1}\ \mathjs{?}\ {#2}\ \mathjs{:}\ {#3}}
 \newcommand{\funcall}[2]{{#1}\mathjs{(}{#2}\mathjs{)}}
 \newcommand{\paren}[1]{\mathjs{(}{#1}\mathjs{)}}
 \newcommand{\dom}{\mathit{dom}}
@@ -366,8 +365,7 @@ d & ::= & \mathjs{default:}\,\mathit{ss} \\
 \subsection{Expressions}
 
 Expressions include literals, lvalues, assignments, function calls,
-unary expressions, binary expressions, conditional expressions, and
-sequence expressions:
+unary expressions, binary expressions, and sequence expressions:
 \[
 \begin{array}{rcl}
 e & ::= & v \\
@@ -376,7 +374,6 @@ e & ::= & v \\
   &  |  & \funcall{f}{\seq{e}} \\
   &  |  & \mathit{unop}\ e \\
   &  |  & e\ \mathit{binop}\ e \\
-  &  |  & \ternary{e}{e}{e} \\
   &  |  & \paren{\seq{e}} \\
 \\
 \mathit{unop} & ::= & \mathjs{+} ~|~ \mathjs{\~{}} ~|~ \mathjs{!} \\
@@ -526,11 +523,11 @@ $\mathjs{if}$ statement), or in coercions to integer.
 \subsubsection*{The $\boolish$ type}
 
 Every type in JavaScript can be implicitly converted to a boolean for
-the sake of evaluating a conditional expression or statement. This
-coercion is allowed in $\mathjs{asm.js}$ for the $\bit$ type as well
-as the integer types, but not for the $\double$ type. This ensures
-that an optimizing JavaScript engine only ever performs a conditional
-based on an unboxed 32-bit integer value, avoiding the need for a more
+the sake of evaluating a conditional statement. This coercion is
+allowed in $\mathjs{asm.js}$ for the $\bit$ type as well as the
+integer types, but not for the $\double$ type. This ensures that an
+optimizing JavaScript engine only ever performs a conditional based on
+an unboxed 32-bit integer value, avoiding the need for a more
 expensive conversion.
 
 \subsubsection*{The $\unk$ type}
@@ -568,8 +565,68 @@ parameters and its return type.
 
 \subsection{Operator types}
 
+Every operator (unary or binary) has an overloaded function type:
 \[
 \omega ::= (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'})
+\]
+This overloading corresponds to the different machine operations used
+in an optimizing engine to implement the various cases. Whereas
+JavaScript generally needs to choose the behavior of operators
+dynamically, $\mathjs{asm.js}$ makes it possible to resolve the
+overloaded operators statically based on the types of the operands.
+
+The types of the arithmetic operators are as follows:
+\[
+\begin{array}{rcc@{\ }l}
+\mathjs{+}, \mathjs{-}
+                 & : &       & \funty{\double, \double}{\double} \\
+                 &   & \land & \funty{\int, \int}{\intish} \\
+\mathjs{*}       & : &       & \funty{\double, \double}{\double} \\
+\mathjs{/}, \mathjs{\%}
+                 & : &       & \funty{\double, \double}{\double} \\
+                 &   & \land & \funty{\signed, \signed}{\intish}  \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\intish} \\
+\end{array}
+\]
+Note that some operations produce the type $\intish$, indicating that
+their result must be immediately coerced back to an integer. Note also
+that multiplication is only defined on doubles; integer multiplication
+must either be performed by splitting a 32-bit integer into two 16-bit
+halves and manually performing the carry, or by using the $\imul$
+operation.
+
+The bitwise operators are one of only two places in the language that
+can consume an $\intish$ expression. Every one of these operators can
+be composed with the arithmetic operators to produce the correct
+behavior of integer arithmetic.
+\[
+\begin{array}{rcc@{\ }l}
+\mathjs{|}, \mathjs{\&}, \mathjs{\^{}}, \mathjs{<<}, \mathjs{>>}
+                 & : &       & \funty{\intish, \intish}{\signed} \\
+\mathjs{>>>}     & : &       & \funty{\intish, \intish}{\unsigned} \\
+\end{array}
+\]
+
+The conditional operators rely on the sign of their input and produce
+a boolean result:
+\[
+\begin{array}{rcc@{\ }l}
+\mathjs{<}, \mathjs{<=}, \mathjs{>}, \mathjs{>=}, \mathjs{==}, \mathjs{!=}
+                 & : &       & \funty{\signed, \signed}{\bit} \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\bit} \\
+                 &   & \land & \funty{\double, \double}{\bit} \\
+\end{array}
+\]
+
+Finally, the unary operators can also serve to coerce $\intish$
+expressions, similar to the bitwise operators, as well as $\boolish$
+in the case of $\mathjs{!}$:
+\[
+\begin{array}{rcc@{\ }l}
+\mathjs{+}       & : &       & \funty{\intish}{\double} \\
+\mathjs{\~{}}    & : &       & \funty{\intish}{\signed} \\
+\mathjs{!}       & : &       & \funty{\boolish}{\bit} \\
+\end{array}
 \]
 
 \section{Type rules}
@@ -598,32 +655,6 @@ A(\mathtt{Uint16Array}), A(\mathtt{Int16Array}) & = & \view{16}{\intsm} \\
 A(\mathtt{Uint32Array}), A(\mathtt{Int32Array}) & = & \view{32}{\intsm} \\
 A(\mathtt{Float32Array})                        & = & \view{32}{\doublesm} \\
 A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
-\end{array}
-\]
-
-\[
-\begin{array}{rcc@{\ }l}
-\mathjs{+}, \mathjs{-}
-                 & : &       & \funty{\double, \double}{\double} \\
-                 &   & \land & \funty{\int, \int}{\intish} \\
-\mathjs{*}       & : &       & \funty{\double, \double}{\double} \\
-\mathjs{/}, \mathjs{\%}
-                 & : &       & \funty{\double, \double}{\double} \\
-                 &   & \land & \funty{\signed, \signed}{\intish}  \\
-                 &   & \land & \funty{\unsigned, \unsigned}{\intish} \\
-\\
-\mathjs{|}, \mathjs{\&}, \mathjs{\^{}}, \mathjs{<<}, \mathjs{>>}
-                 & : &       & \funty{\intish, \intish}{\signed} \\
-\mathjs{>>>}     & : &       & \funty{\intish, \intish}{\unsigned} \\
-\\
-\mathjs{<}, \mathjs{<=}, \mathjs{>}, \mathjs{>=}, \mathjs{==}, \mathjs{!=}
-                 & : &       & \funty{\signed, \signed}{\bit} \\
-                 &   & \land & \funty{\unsigned, \unsigned}{\bit} \\
-                 &   & \land & \funty{\double, \double}{\bit} \\
-\\
-\mathjs{+}       & : &       & \funty{\intish}{\double} \\
-\mathjs{\~{}}    & : &       & \funty{\intish}{\signed} \\
-\mathjs{!}       & : &       & \funty{\boolish}{\bit} \\
 \end{array}
 \]
 
@@ -937,16 +968,6 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
    \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\extern}}
   {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\unk}}
 \\ \\
-\inferrule* [lab=\rel{T-Conditional}]
-  {\exprjudge{\Delta}{\Gamma}{e_1}{\boolish} \\\\
-   \exprjudge{\Delta}{\Gamma}{e_2}{\tau} \\
-   \exprjudge{\Delta}{\Gamma}{e_3}{\tau}}
-  {\exprjudge{\Delta}{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
-\qquad
-\inferrule* [lab=\rel{T-Paren}]
-  {\forall i \leq n . \exprjudge{\Delta}{\Gamma}{e_i}{\tau_i}}
-  {\exprjudge{\Delta}{\Gamma}{\paren{\seq{e}}}{\tau_n}}
-\\ \\
 \inferrule* [lab=\rel{T-Unop}]
   {\mathit{unop} : \_ \land \funty{\sigma}{\tau} \land \_ \\
    \exprjudge{\Delta}{\Gamma}{e}{\sigma}}
@@ -958,6 +979,10 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
    \exprjudge{\Delta}{\Gamma}{e_2}{\sigma_2}}
   {\exprjudge{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
 \\ \\
+\inferrule* [lab=\rel{T-Paren}]
+  {\forall i \leq n . \exprjudge{\Delta}{\Gamma}{e_i}{\tau_i}}
+  {\exprjudge{\Delta}{\Gamma}{\paren{\seq{e}}}{\tau_n}}
+\qquad
 \inferrule* [lab=\rel{T-Sub}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
    \sigma <: \tau}
