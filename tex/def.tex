@@ -3,6 +3,8 @@
 \usepackage{mathpartir}
 \usepackage{amssymb}
 \usepackage{graphicx}
+\RequirePackage{algorithm}
+\RequirePackage[noend]{algpseudocode}
 
 \newcommand{\funcall}[2]{{#1}\mathjs{(}{#2}\mathjs{)}}
 \newcommand{\paren}[1]{\mathjs{(}{#1}\mathjs{)}}
@@ -30,8 +32,8 @@
 \newcommand{\cont}{\mathjs{continue;}}
 \newcommand{\contl}[1]{\mathjs{continue }{#1}\mathjs{;}}
 \newcommand{\lab}[2]{{#1}\mathjs{:}\,{#2}}
-\newcommand{\ifthen}[2]{\mathjs{if (}{#1}\mathjs{) }{#2}}
-\newcommand{\ifthenelse}[3]{\mathjs{if (}{#1}\mathjs{) }{#2}\mathjs{ else }{#3}}
+\newcommand{\ifone}[2]{\mathjs{if (}{#1}\mathjs{) }{#2}}
+\newcommand{\iftwo}[3]{\mathjs{if (}{#1}\mathjs{) }{#2}\mathjs{ else }{#3}}
 \newcommand{\block}[1]{\mathjs{\char123{} }{#1}\mathjs{ \char125{}}}
 \newcommand{\ok}{\mathrm{\mathbf{ok}}}
 \newcommand{\rulebreak}{\vspace{.1in}\\}
@@ -329,8 +331,8 @@ statements:
 \begin{array}{rcl}
 s & ::= & \block{\mathit{ss}} \\
   &  |  & e\mathjs{;} \\
-  &  |  & \ifthen{e}{s} \\
-  &  |  & \ifthenelse{e}{s}{s} \\
+  &  |  & \ifone{e}{s} \\
+  &  |  & \iftwo{e}{s}{s} \\
   &  |  & \return{[\mathit{re}]} \\
   &  |  & \while{e}{s} \\
   &  |  & \dowhile{s}{e} \\
@@ -547,28 +549,25 @@ first-class value in $\mathjs{asm.js}$. It can only be ignored via an
 expression statement. This avoids having to represent it at all as
 data.
 
-\subsection{Environment types}
+\subsection{Global types}
 
 Validation tracks the types not only of expressions and local
-variables but also global variables, FFI imports, and functions. These
-include typed arrays, the special $\mathjs{Math.imul}$ value, FFI
-functions, and $\mathjs{asm.js}$ functions:
+variables but also global variables, FFI imports, and functions. In
+addition to variables of expression type, globals may also be typed
+array views on the module's buffer, imported FFI constants and
+functions, and functions defined in the $\mathjs{asm.js}$ module.
 \[
-\rho ::= \tau ~|~ \view{n}{\tau} ~|~ \imul ~|~ \function ~|~ \funty{\seq{\sigma}}{\tau}
+\gamma ::= \tau ~|~ \view{n}{\tau} ~|~ (\funty{\seq{\sigma}}{\tau}) \land \cdots \land (\funty{\seq{\sigma'}}{\tau'})
 \]
 
 The type of a typed array tracks the number of bits per element and
-the elements' value type ($\int$ or $\double$). The $\imul$ and
-$\function$ types are straightforward. The type of a function define
-within the $\mathjs{asm.js}$ module includes the types of its
-parameters and its return type.
+the elements' value type ($\int$ or $\double$). A function type may be
+overloaded to allow different parameter types, potentially providing
+different result types for each overloading.
 
 \subsection{Operator types}
 
-Every operator (unary or binary) has an overloaded function type:
-\[
-\omega ::= (\funty{\seq{\sigma}}{\tau}) \land \ldots \land (\funty{\seq{\sigma'}}{\tau'})
-\]
+Every operator (unary or binary) has an overloaded function type.
 This overloading corresponds to the different machine operations used
 in an optimizing engine to implement the various cases. Whereas
 JavaScript generally needs to choose the behavior of operators
@@ -629,24 +628,75 @@ in the case of $\mathjs{!}$:
 \end{array}
 \]
 
-\section{Type rules}
+\section{Validation}
+
+This section describes the $\mathjs{asm.js}$ validation process, which
+is essentially a static type system.
+
+\subsection{Annotations}
+
+Type annotations are provided in the form of explicit
+coercions. Variables in $\mathjs{asm.js}$ are always taken to have the
+type $\double$ or $\int$, never $\signed$ or $\unsigned$. This is
+because they are intended to be representable as unboxed 32-bit words
+in memory or registers, which are agnostic about what sign to
+interpret the bits with.
 
 \[
 \begin{array}{rcl}
 \vartype(\todouble{x}), \vartype(r) & = & \double \\
-\vartype(x\mathjs{|0}), \vartype(n) & = & \int \mbox{ $(-2^{31} \leq n < 2^{32})$} \\
+\vartype(x\mathjs{|0}), \vartype(n) & = & \int \mbox{ $(-2^{31} \leq n < 2^{32})$}
+\end{array}
+\]
+
+Function return types are determined by explicit coercions in their
+return statements. Function return types are always explicit about
+their sign so that they can be exported to external JavaScript.
+
+\[
+\begin{array}{rcl}
 \rettype(\todouble{e}), \rettype(r) & = & \double \\
 \rettype(e\mathjs{|0}), \rettype(n) & = & \signed \mbox{ $(-2^{31} \leq n < 2^{31})$} \\
 \rettype(\epsilon)                  & = & \void \\
 \end{array}
 \]
 
+The type of a function can be extracted by looking at its parameter
+annotations and return statements.
+
 \[
-\begin{array}{rcl}
-M(\imul) & : & \imul \\
-M(\mathtt{ceil}), M(\mathtt{sin}), M(\mathtt{cos}) & : & \funty{\double}{\double} \\
+\begin{array}{l}
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
+\qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
+\qquad \mbox{and } \forall \return{[\mathit{re}]} \in \mathit{ss} . \rettype([\mathit{re}]) = \tau \\
+\qquad \mbox{or } \not\exists \return{[\mathit{re}]} \in \mathit{ss} \mbox{ and } \tau = \void \\
 \end{array}
 \]
+
+\subsection{Standard libraries}
+
+The JavaScript $\mathjs{Math}$ API is recognized as a typed standard
+library; each of its functions is allowed as an import with the same
+name and is given an appropriate function type.
+\[
+\begin{array}{rcl}
+M(\mathtt{acos}), M(\mathtt{asin}), M(\mathtt{atan})                & : & \funty{\double}{\double} \\
+M(\mathtt{cos}), M(\mathtt{sin}), M(\mathtt{tan})                   & : & \funty{\double}{\double} \\
+M(\mathtt{ceil}), M(\mathtt{floor}), M(\mathtt{round})              & : & \funty{\double}{\double} \\
+M(\mathtt{exp}), M(\mathtt{log}), M(\mathtt{pow}), M(\mathtt{sqrt}) & : & \funty{\double}{\double} \\
+M(\mathtt{abs}) & :     & \funty{\signed}{\unsigned} \\
+                & \land & \funty{\unsigned}{\unsigned} \\
+                & \land & \funty{\double}{\double} \\
+M(\mathtt{atan2}) & : & \funty{\double, \double}{\double} \\
+M(\imul) & : & \funty{\int, \int}{\signed} \\
+M(\mathtt{max}), M(\mathtt{min}) & :     & \funty{\ldots\signed}{\signed} \\
+                                 & \land & \funty{\ldots\unsigned}{\unsigned} \\
+                                 & \land & \funty{\ldots\double}{\double} \\
+M(\mathtt{random}) & : & \funty{}{\double} \\
+\end{array}
+\]
+
+\subsection{View types}
 
 \[
 \begin{array}{rcl}
@@ -658,43 +708,18 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 \]
 
+\subsection{Module validation}
+
 \[
 \begin{array}{rcl}
-\Delta & ::= & \{ \seq{x : \rho} \} \\
+\Delta & ::= & \{ \seq{x : \gamma} \} \\
 \Gamma & ::= & \{ \seq{x : \tau} \} \\
 \end{array}
 \]
 
 \[
-\begin{array}{l}
-\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
-\qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
-\qquad \mbox{and } \forall \return{[\mathit{re}]} \in \mathit{ss} . \rettype([\mathit{re}]) = \tau
-\end{array}
-\]
-
-\[
-\begin{array}{rcl}
-\breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
-\breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
-\breaks(\ifthen{e}{s}) & = & \breaks(s) \\
-\breaks(\ifthenelse{e}{s_1}{s_2}) & = & \breaks(s_1) \cup \breaks(s_2) \\
-\breaks(\while{e}{s}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\dowhile{s}{e}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\for{[e_1]}{[e_2]}{[e_3]}{s}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\brk) & = & \{ \epsilon \} \\
-\breaks(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
-\breaks(\lab{\mathit{lab}}{s}) & = & \breaks(s) - \{ \mathit{lab} \} \\
-\breaks(\switch{e}{\seq{\mathit{cd}}}) & = & \bigcup_i \breaks(\mathit{cd}_i) - \{ \epsilon \} \\
-\breaks(s) \mbox{ (otherwise)} & = & \emptyset \\
-\breaks(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
-\breaks(\mathjs{default:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
-\end{array}
-\]
-
-\[
 \begin{array}{lr}
-\mbox{Module checking} & \hfil \fbox{$\progjudge{\mathit{mod}}$}
+\mbox{Module validation} & \hfil \fbox{$\progjudge{\mathit{mod}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -708,7 +733,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Import checking} & \hfil \fbox{$\impjudge{[e]}{[b]}{\Delta}{\mathit{imp}}$}
+\mbox{Import validation} & \hfil \fbox{$\impjudge{[e]}{[b]}{\Delta}{\mathit{imp}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -717,8 +742,8 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
   {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \qquad
 \inferrule* [lab=\rel{T-ImportFFI}]
-  {y \not\in\dom(M), \dom(A) \\
-   \Delta(x) = \function}
+  {y \not\in\dom(M), \dom(A) \\\\
+   \Delta(x) = \funty{\ldots\extern}{\unk}}
   {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
 \\ \\
 \inferrule* [lab=\rel{T-View}]
@@ -727,7 +752,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Function checking} & \hfil \fbox{$\fnjudge{\Delta}{\mathit{fn}}$}
+\mbox{Function validation} & \hfil \fbox{$\fnjudge{\Delta}{\mathit{fn}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -741,7 +766,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Export checking} & \hfil \fbox{$\expjudge{\Delta}{\mathit{exp}}$}
+\mbox{Export validation} & \hfil \fbox{$\expjudge{\Delta}{\mathit{exp}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -759,6 +784,8 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 \]
 
+\subsection{Statement validation}
+
 \newsavebox{\switchcontrol}
 \begin{lrbox}{\switchcontrol}
 \begin{minipage}[t]{2.87in}
@@ -773,27 +800,8 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{lrbox}
 
 \[
-\begin{array}{l}
-\returns(\seq{s}) \\
-\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \mbox{ for some } m \\
-\returns(\block{\mathit{ss}}) \\
-\qquad \mbox{if } \returns(ss) \\
-\returns(\ifthenelse{e}{s_1}{s_2}) \\
-\qquad \mbox{if } \returns(s_1) \land \returns(s_2) \\
-\returns(\dowhile{s}{e}) \\
-\qquad \mbox{if } \returns(s) \\
-\returns(\switch{e}{\seq{\mathit{cd}}}) \\
-\qquad \mbox{if } \returns(cd_n) \land \forall i . \breaks(cd_i) = \emptyset \\
-\returns(\mathjs{case }v\mathjs{:}\,\mathit{ss}) \\
-\qquad \mbox{if } \returns(\mathit{ss}) \\
-\returns(\mathjs{default:}\,\mathit{ss}) \\
-\qquad \mbox{if } \returns(\mathit{ss})
-\end{array}
-\]
-
-\[
 \begin{array}{lr}
-\mbox{Statement list checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{ss}}$}
+\mbox{Statement list validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{ss}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -803,7 +811,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 }
 \\ \\
-\mbox{Statement checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{s}$}
+\mbox{Statement validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{s}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -822,13 +830,13 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-If}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
    \sjudge{\Delta}{\Gamma}{s}}
-  {\sjudge{\Delta}{\Gamma}{\ifthen{e}{s}}}
+  {\sjudge{\Delta}{\Gamma}{\ifone{e}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
    \sjudge{\Delta}{\Gamma}{s_1} \\
    \sjudge{\Delta}{\Gamma}{s_2}}
-  {\sjudge{\Delta}{\Gamma}{\ifthenelse{e}{s_1}{s_2}}}
+  {\sjudge{\Delta}{\Gamma}{\iftwo{e}{s_1}{s_2}}}
 \\ \\
 \inferrule* [lab=\rel{T-ReturnExpr}]
   {\exprjudge{\Delta}{\Gamma}{\mathit{re}}{\tau} \\\\
@@ -886,7 +894,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Case checking} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{cd}}$}
+\mbox{Case validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{cd}}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -902,6 +910,48 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{array}
 \]
 
+\subsection{Must-return analysis}
+
+\[
+\begin{array}{rcl}
+\breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
+\breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
+\breaks(\ifone{e}{s}) & = & \breaks(s) \\
+\breaks(\iftwo{e}{s_1}{s_2}) & = & \breaks(s_1) \cup \breaks(s_2) \\
+\breaks(\while{e}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\dowhile{s}{e}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\for{[e_1]}{[e_2]}{[e_3]}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+\breaks(\brk) & = & \{ \epsilon \} \\
+\breaks(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
+\breaks(\lab{\mathit{lab}}{s}) & = & \breaks(s) - \{ \mathit{lab} \} \\
+\breaks(\switch{e}{\seq{\mathit{cd}}}) & = & \bigcup_i \breaks(\mathit{cd}_i) - \{ \epsilon \} \\
+\breaks(s) \mbox{ (otherwise)} & = & \emptyset \\
+\breaks(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+\breaks(\mathjs{default:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+\returns(\seq{s}) \\
+\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \mbox{ for some } m \\
+\returns(\block{\mathit{ss}}) \\
+\qquad \mbox{if } \returns(ss) \\
+\returns(\iftwo{e}{s_1}{s_2}) \\
+\qquad \mbox{if } \returns(s_1) \land \returns(s_2) \\
+\returns(\dowhile{s}{e}) \\
+\qquad \mbox{if } \returns(s) \\
+\returns(\switch{e}{\seq{\mathit{cd}}}) \\
+\qquad \mbox{if } \returns(cd_n) \land \forall i . \breaks(cd_i) = \emptyset \\
+\returns(\mathjs{case }v\mathjs{:}\,\mathit{ss}) \\
+\qquad \mbox{if } \returns(\mathit{ss}) \\
+\returns(\mathjs{default:}\,\mathit{ss}) \\
+\qquad \mbox{if } \returns(\mathit{ss})
+\end{array}
+\]
+
+\subsection{Expression validation}
+
 \[
 (\Delta\cdot\Gamma)(x) = \left\{\begin{array}{ll}
                                 \Gamma(x) & \mbox{if}\ x \in\dom(\Gamma) \\
@@ -911,7 +961,7 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 
 \[
 \begin{array}{lr}
-\mbox{Expression checking} & \hfil \fbox{$\exprjudge{\Delta}{\Gamma}{e}{\tau}$}
+\mbox{Expression validation} & \hfil \fbox{$\exprjudge{\Delta}{\Gamma}{e}{\tau}$}
 \rulebreak
 \multicolumn{2}{c}{
 \begin{array}{c}
@@ -953,20 +1003,15 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
    \exprjudge{\Delta}{\Gamma}{e_2}{\tau}}
   {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
 \\ \\
-\inferrule* [lab=\rel{T-IMul}]
-  {(\Delta\cdot\Gamma)(f) = \imul \\\\
-   \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\intish}}
-  {\exprjudge{\Delta}{\Gamma}{\funcall{f}{e_1, e_2}}{\signed}}
-\qquad
 \inferrule* [lab=\rel{T-FunCall}]
-  {(\Delta\cdot\Gamma)(f) = \funty{\seq{\sigma}}{\tau} \\\\
+  {(\Delta\cdot\Gamma)(f) = \_ \land \funty{\seq{\sigma}}{\tau} \land \_ \\\\
    \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\sigma_i}}
   {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
 \qquad
-\inferrule* [lab=\rel{T-FFI}]
-  {(\Delta\cdot\Gamma)(f) = \function \\\\
-   \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\extern}}
-  {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\unk}}
+\inferrule* [lab=\rel{T-VarArgsCall}]
+  {(\Delta\cdot\Gamma)(f) = \_ \land \funty{\ldots\sigma}{\tau} \land \_ \\\\
+   \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\sigma}}
+  {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Unop}]
   {\mathit{unop} : \_ \land \funty{\sigma}{\tau} \land \_ \\
@@ -995,5 +1040,8 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 }
 \end{array}
 \]
+
+\section{Implementation strategies}
+
 
 \end{document}
