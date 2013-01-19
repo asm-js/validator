@@ -7,15 +7,15 @@ A Mozilla Research project to specify and develop the extremely optimizable subs
 ## Example
 
 ```javascript
-function mymodule(env, buffer) {
+function mymodule(global, foreign, buffer) {
     "use asm";
 
     // -------------------------------------------------------------------------
     // SECTION 1: imports
 
-    var H32 = new env.Int32Array(buffer);
-    var HU32 = new env.Uint32Array(buffer);
-    var log = env.consoleDotLog;
+    var H32 = new global.Int32Array(buffer);
+    var HU32 = new global.Uint32Array(buffer);
+    var log = foreign.consoleDotLog;
 
     // -------------------------------------------------------------------------
     // SECTION 2: functions

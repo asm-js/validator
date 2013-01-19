@@ -6,18 +6,24 @@
 \RequirePackage{algorithm}
 \RequirePackage[noend]{algpseudocode}
 
+\newcommand{\mod}{\mathrel{\mathrm{mod}}}
+\newcommand{\imm}{\mathtt{imm}}
+\newcommand{\mut}{\mathtt{mut}}
 \newcommand{\funcall}[2]{{#1}\mathjs{(}{#2}\mathjs{)}}
 \newcommand{\paren}[1]{\mathjs{(}{#1}\mathjs{)}}
 \newcommand{\dom}{\mathit{dom}}
 \newcommand{\funtype}{\mathit{fun}\mbox{-}\mathit{type}}
 \newcommand{\vartype}{\mathit{var}\mbox{-}\mathit{type}}
 \newcommand{\rettype}{\mathit{return}\mbox{-}\mathit{type}}
+\newcommand{\imptype}{\mathit{import}\mbox{-}\mathit{type}}
+\newcommand{\stdtype}{\mathit{std}\mbox{-}\mathit{type}}
 \newcommand{\funty}[2]{({#1}) \rightarrow {#2}}
 \newcommand{\seq}[1]{\overline{{#1}}}
 \newcommand{\mathjs}[1]{\mbox{\texttt{{#1}}}}
 \newcommand{\mathjssm}[1]{\mbox{\texttt{\scriptsize {#1}}}}
 \newcommand{\return}[1]{\mathjs{return }{#1}\mathjs{;}}
 \newcommand{\fun}[3]{\mathjs{function }{#1}\mathjs{(}{#2}\mathjs{) \char123{} }{#3}\mathjs{ \char125{}}}
+\newcommand{\ternary}[3]{{#1}\,\mathjs{?}\,{#2}\,\mathjs{:}{#3}}
 \newcommand{\afun}[2]{\mathjs{function}\mathjs{(}{#1}\mathjs{) \char123{} }{#2}\mathjs{ \char125{}}}
 \newcommand{\var}[1]{\mathjs{var }{#1}\mathjs{;}}
 \newcommand{\rel}[1]{\scriptsize [\textsc{#1}]}
@@ -39,8 +45,8 @@
 \newcommand{\rulebreak}{\vspace{.1in}\\}
 \newcommand{\bit}{\mathtt{bit}}
 \newcommand{\unsigned}{\mathtt{unsigned}}
-\newcommand{\intsm}{\mathjssm{int}}
-\newcommand{\doublesm}{\mathjssm{double}}
+\newcommand{\intsm}{\mathjssm{intish}}
+\newcommand{\doublesm}{\mathjssm{doublish}}
 \newcommand{\signed}{\mathtt{signed}}
 \newcommand{\fixnum}{\mathtt{fixnum}}
 \newcommand{\double}{\mathtt{double}}
@@ -68,15 +74,18 @@
 \newcommand{\floor}{\mathtt{floor}}
 \newcommand{\imul}{\mathtt{imul}}
 \newcommand{\intish}{\mathtt{intish}}
+\newcommand{\doublish}{\mathtt{doublish}}
+\newcommand{\Fun}{\mathtt{Function}}
 
 \newcommand{\progjudge}[1]{\vdash {#1}\ \ok}
-\newcommand{\impjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
+\newcommand{\impjudge}[5]{{#1};{#2};{#3};{#4} \vdash {#5}\ \ok}
+\newcommand{\iejudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
 \newcommand{\fnjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\expjudge}[2]{{#1} \vdash {#2}\ \ok}
 \newcommand{\stmtjudge}[5]{{#1};{#2} \vdash {#3} : {#4} / {#5}}
 \newcommand{\exprjudge}[4]{{#1};{#2} \vdash {#3} : {#4}}
 \newcommand{\stmtretjudge}[2]{\vdash {#1} \hookrightarrow {#2}}
-\newcommand{\sjudge}[3]{{#1};{#2} \vdash {#3}\ \ok}
+\newcommand{\sjudge}[4]{{#1};{#2};{#3} \vdash {#4}\ \ok}
 
 \newcommand{\returns}{\mathit{returns}}
 \newcommand{\breaks}{\mathit{breaks}}
@@ -124,18 +133,18 @@ generator to state the intention explicitly that the code should be
 recognized as $\mathjs{asm.js}$, it allows user agents to report
 validation errors or performance faults to developer consoles.
 
-An $\mathjs{asm.js}$ module takes two optional parameters: an {\it
-environment}, containing imported functions and constants from
-external JavaScript (serving as one side of a kind of foreign-function
-interface), and a JavaScript $\mathjs{ArrayBuffer}$ representing a
+An $\mathjs{asm.js}$ module takes three optional parameters: a global
+object, containing standard ECMAScript libraries, an {\it FFI object},
+containing custom imported functions and constants from external
+JavaScript, and a JavaScript $\mathjs{ArrayBuffer}$ representing a
 virtualized memory. The module can provide different views of the
 buffer by using typed array wrappers imported from the environment:
 \begin{verbatim}
-function mod(env, buffer) {
+function mod(global, foreign, buffer) {
     "use asm";
 
-    var HEAP_I32 = new env.Int32Array(buffer);
-    var HEAP_F64 = new env.Float64Array(buffer);
+    var HEAP_I32 = new global.Int32Array(buffer);
+    var HEAP_F64 = new global.Float64Array(buffer);
     // ...
 }
 \end{verbatim}
@@ -209,21 +218,21 @@ a closure with an empty lexical environment. The module can be {\it
 linked} by calling the function with an object representing the
 imported environment and an optional buffer:
 \begin{verbatim}
-function mod(env, buffer) {
+function mod(global, foreign, buffer) {
     "use asm";
     // ...
     return { f: foo, g: bar };
 }
 
-var env = {
-    Int32Array: Int32Array,
-    Uint32Array: Uint32Array,
+var foreign = {
+    consoleDotLog: console.log,
     // ...
 };
-var buf = new ArrayBuffer(0x100000);
+
+var buffer = new ArrayBuffer(0x100000);
 
 // link the module
-var m = mod(env, buf);
+var m = mod(window, foreign, buffer);
 \end{verbatim}
 
 This linking phase may need to perform additional, dynamic
@@ -241,7 +250,12 @@ statically and dynamically) and optimized.
 The following notation conventions are used in this document. Optional
 items in a grammar are presented in $[\mbox{square
 brackets}]$. Sequences are presented with a $\seq{\mbox{horizontal
-overbar}}$. The empty sequence is denoted by $\epsilon$.
+overbar}}$. The empty sequence is denoted by $\epsilon$. Integers and
+integer literals are ranged over by the metavariables $i, j$;
+these may also serve as sequence indices, in which case they are
+natural numbers. Natural numbers are otherwise ranged over by the
+metavariables $m, n$. Floating-point literals are ranged over by the
+metavariable $r$.
 
 \subsection{Document outline}
 
@@ -270,18 +284,32 @@ $\mathjs{asm.js}$ abstract syntax trees:
   appears anywhere, static validation must fail.
 \end{enumerate}
 
-In various places in this document, the meta-variables $b$, $c$, $f$,
-$g$, $x$, $y$, and $z$ are used to range over JavaScript identifiers.
+In various places in this document, the meta-variables $f$, $g$, $x$,
+$y$, and $z$ are used to range over JavaScript identifiers.
+
+We syntactically distinguish integer literals $i, j$ from
+floating-point literals $r$. A floating-point literal is a JavaScript
+number literal that contains a $\mathjs{.}$ character.
 
 \subsection{Modules}
 
 An $\mathjs{asm.js}$ module has the following syntax:
 \[
-\mathit{mod} ::= \fun{[g]}{[c[, b]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}
+\begin{array}{rcl}
+\mathit{mod} & ::= & \mathjs{function }[f]\mathjs{(}[\mathit{global}[, \mathit{foreign}[, \mathit{buffer}]]]\mathjs{) \char123{}} \\
+             &     & \qquad\mathjs{"use asm";} \\
+             &     & \qquad\seq{\var{\seq{x \mathjs{ = } \mathit{imp}}}} \\
+             &     & \qquad\seq{\mathit{fn}_g} \\
+             &     & \qquad\seq{\var{\seq{y \mathjs{ = } v}}} \\
+             &     & \qquad\mathit{exp} \\
+             &     & \mathjs{\char125{}} \\
+%%                     \fun{[m]}{[g[, e[, b]]]}{\mathjs{"use asm"; } \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}
+\end{array}
 \]
 The syntax consists of:
 \begin{enumerate}
-\item up to two optional parameters;
+\item an optional module name;
+\item up to three optional parameters;
 \item a $\mathjs{"use asm";}$ prologue directive;
 \item a sequence of import statements;
 \item a sequence of function declarations;
@@ -289,16 +317,21 @@ The syntax consists of:
 \item a single export statement.
 \end{enumerate}
 
-An import statement is either an FFI function binding, a
-type-annotated (coerced) constant binding, or a heap view declaration:
+An import expression is either an FFI function binding, a
+type-annotated (coerced) FFI value, or a heap view:
 \[
 \begin{array}{rcl}
-\mathit{imp}_x  & ::= & \var{x \mathjs{ = } c\mathjs{.}y} \\
-                &  |  & \var{x \mathjs{ = } c\mathjs{.}y\mathjs{|0}} \\
-                &  |  & \var{x \mathjs{ = } \mathjs{+}c\mathjs{.}y} \\
-                &  |  & \var{x \mathjs{ = } \mathjs{new }\funcall{c\mathjs{.}y}{b}} \\
+\mathit{imp}  & ::= & \mathit{global}\mathjs{.}x \\
+              &  |  & \mathit{global}\mathjs{.Math.}x \\
+              &  |  & \mathjs{new }\funcall{\mathit{global}\mathjs{.}x}{\mathit{buffer}} \\
+              &  |  & \mathit{foreign}\mathjs{.}x\mathjs{|0} \\
+              &  |  & \mathjs{+}\mathit{foreign}\mathjs{.}x \\
+              &  |  & \mathit{foreign}\mathjs{.}x \\
 \end{array}
 \]
+(We assume that the metavariables $\mathit{global}$,
+$\mathit{foreign}$, and $\mathit{buffer}$ stand for fixed variables
+names used consistently throughout the imports.)
 
 A function declaration has the following syntax:
 \[
@@ -376,6 +409,7 @@ e & ::= & v \\
   &  |  & \funcall{f}{\seq{e}} \\
   &  |  & \mathit{unop}\ e \\
   &  |  & e\ \mathit{binop}\ e \\
+  &  |  & \ternary{e}{e}{e} \\
   &  |  & \paren{\seq{e}} \\
 \\
 \mathit{unop} & ::= & \mathjs{+} ~|~ \mathjs{\~{}} ~|~ \mathjs{!} \\
@@ -388,7 +422,7 @@ e & ::= & v \\
 
 Literals are either doubles or integers:
 \[
-v ::= r ~|~ n
+v ::= r ~|~ i
 \]
 
 Lvalues are either variables or typed array dereference
@@ -396,8 +430,11 @@ expressions. The latter requires a mask to force the byte offset into
 a valid range and a shift to convert the offset into a proper index
 for the size of the typed array.
 \[
-\mathit{lval} ::= x ~|~ \getprop{x}{\paren{e\mathjs{ \& }m}\mathjs{ >> }n}
+\mathit{lval} ::= x ~|~ \getprop{x}{i} ~|~ \getprop{x}{e\mathjs{ \& }\mathit{mask}} ~|~ \getprop{x}{\paren{e\mathjs{ \& }\mathit{mask}}\mathjs{ >> }i}
 \]
+The $\mathit{mask}$ is a non-negative integer $2^k - 1$ where $k \in
+[3, 31]$.  The same $\mathit{mask}$ must be used consistently
+throughout the program.
 
 \section{Types}
 \label{sec:types}
@@ -411,8 +448,10 @@ The set of {\it expression types} classifies the results of expression
 evaluation and constrains the allowable values of variables.
 \[
 \begin{array}{rcl}
-\sigma, \tau & ::= & \double ~|~ \signed ~|~ \unsigned ~|~ \fixnum ~|~ \extern \\
-             &  |  & \bit ~|~ \int ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk \\
+\sigma, \tau & ::= & \fixnum ~|~ \signed ~|~ \unsigned ~|~ \int ~|~ \intish \\
+             &  |  & \double ~|~ \doublish ~|~ \extern ~|~ \unk ~|~ \void \\
+%% \sigma, \tau & ::= & \double ~|~ \signed ~|~ \unsigned ~|~ \fixnum ~|~ \extern \\
+%%              &  |  & \bit ~|~ \int ~|~ \boolish ~|~ \intish ~|~ \void ~|~ \unk \\
 \end{array}
 \]
 
@@ -421,9 +460,9 @@ These types are arranged in a subtyping hierarchy, defined by:
 \begin{array}{rcl}
 \fixnum            & <: & \signed, \unsigned \\
 \signed, \unsigned & <: & \int, \extern \\
-\bit, \int         & <: & \boolish \\
-\double            & <: & \extern \\
-\unk, \bit, \int   & <: & \intish \\
+\double            & <: & \extern, \doublish \\
+\unk               & <: & \intish, \doublish \\
+\int               & <: & \intish \\
 \end{array}
 \]
 
@@ -472,7 +511,9 @@ $\mathjs{4294967295}$, depending on the signedness of the type.
 
 This type represents integers in the range $[0, 2^{31})$, which are
 both valid signed and unsigned integers. Literals in this range are
-given the type $\fixnum$.
+given the type $\fixnum$ rather than $\signed$ or $\unsigned$, since
+either way they have the same representation as an unboxed 32-bit
+integer.
 
 \subsubsection*{The $\int$ type}
 
@@ -484,6 +525,17 @@ JavaScript value they represent. While this might not seem like a very
 useful type, the JavaScript bitwise coercions can be used to force an
 $\int$ value back to $\signed$ or $\unsigned$ without any loss of
 data.
+
+The conditional operators also produce the $\int$ type, even though,
+according to the JavaScript semantics, they produce boolean
+values. Since boolean values convert to the integer values
+$\mathjs{0}$ and $\mathjs{1}$, it is sound to represent the boolean
+values in an optimizing engine as integers, even while allowing them
+to be stored in integer values and passed to integer
+arithmetic. Similarly, integer values can be treated as ``boolish'' in
+JavaScript when used in conditional contexts, so it is safe to store
+boolean values as unboxed integers even when being used in the test
+expression of an $\mathjs{if}$ statement and the like.
 
 \subsubsection*{The $\intish$ type}
 
@@ -511,26 +563,27 @@ $\mathjs{Math.imul}$ function~\cite{imul} as an FFI function is
 recommended as the proper means of implementing integer
 multiplication.
 
-\subsubsection*{The $\bit$ type}
+In short:
 
-The conditional operators produce boolean values in
-JavaScript. Booleans are interconvertible to the JavaScript integer
-values $\mathjs{0}$ and $\mathjs{1}$ via integer coercion and back via
-boolean coercion. In order to allow optimizing engines to represent
-these as untagged 32-bit integers, we disallow the $\bit$ type from
-escaping to external JavaScript. The only contexts where they can be
-used are in conditionals (such as the test expression of an
-$\mathjs{if}$ statement), or in coercions to integer.
+\begin{quote}
+The $\intish$ type represents the result of integer operations that
+must be dropped or immediately coerced via $\mathit{ToInt32}$ or
+$\mathit{ToUint32}$.
+\end{quote}
 
-\subsubsection*{The $\boolish$ type}
+\subsubsection*{The $\doublish$ type}
 
-Every type in JavaScript can be implicitly converted to a boolean for
-the sake of evaluating a conditional statement. This coercion is
-allowed in $\mathjs{asm.js}$ for the $\bit$ type as well as the
-integer types, but not for the $\double$ type. This ensures that an
-optimizing JavaScript engine only ever performs a conditional based on
-an unboxed 32-bit integer value, avoiding the need for a more
-expensive conversion.
+Similarly, the $\doublish$ type represents operations that are
+expected to produce a $\double$ but may produce additional junk that
+must be coerced back to a number via $\mathit{ToNumber}$. In
+particular, reading from the typed array may produce
+$\mathjs{undefined}$, and calling FFI functions may produce an
+arbitrary JavaScript value. Thus:
+
+\begin{quote}
+The $\doublish$ type represents the result of numeric operations that
+must be dropped or immediately coerced via $\mathit{ToNumber}$.
+\end{quote}
 
 \subsubsection*{The $\unk$ type}
 
@@ -557,17 +610,17 @@ addition to variables of expression type, globals may also be typed
 array views on the module's buffer, imported FFI constants and
 functions, and functions defined in the $\mathjs{asm.js}$ module.
 \[
-\gamma ::= \tau ~|~ \view{n}{\tau} ~|~ (\funty{\seq{\sigma}}{\tau}) \land \cdots \land (\funty{\seq{\sigma'}}{\tau'})
+\gamma ::= \tau ~|~ \view{n}{\tau} ~|~ (\funty{\seq{\sigma}}{\tau}) \land \cdots \land (\funty{\seq{\sigma'}}{\tau'}) ~|~ \Fun
 \]
 
-The type of a typed array tracks the number of bits per element and
-the elements' value type ($\int$ or $\double$). A function type may be
-overloaded to allow different parameter types, potentially providing
-different result types for each overloading.
+The type of a typed array tracks the number of bytes per element and
+the elements' value type ($\intish$ or $\doublish$). A function type
+may be overloaded to allow different parameter types, potentially
+providing different result types for each overloading.
 
 \subsection{Operator types}
 
-Every operator (unary or binary) has an overloaded function type.
+Every operator, unary or binary, has an overloaded function type.
 This overloading corresponds to the different machine operations used
 in an optimizing engine to implement the various cases. Whereas
 JavaScript generally needs to choose the behavior of operators
@@ -577,22 +630,36 @@ overloaded operators statically based on the types of the operands.
 The types of the arithmetic operators are as follows:
 \[
 \begin{array}{rcc@{\ }l}
-\mathjs{+}, \mathjs{-}
-                 & : &       & \funty{\double, \double}{\double} \\
-                 &   & \land & \funty{\int, \int}{\intish} \\
-\mathjs{*}       & : &       & \funty{\double, \double}{\double} \\
-\mathjs{/}, \mathjs{\%}
-                 & : &       & \funty{\double, \double}{\double} \\
+\mathjs{+}       & : &       & \funty{\double, \double}{\double} \\
+%                 &   & \land & \funty{\int, \int}{\intish} \\
+\mathjs{-}       & : &       & \funty{\doublish, \doublish}{\double} \\
+%                 &   & \land & \funty{\int, \int}{\intish} \\
+\mathjs{*}       & : &       & \funty{\doublish, \doublish}{\double} \\
+\mathjs{/}       & : &       & \funty{\doublish, \doublish}{\double} \\
                  &   & \land & \funty{\signed, \signed}{\intish}  \\
                  &   & \land & \funty{\unsigned, \unsigned}{\intish} \\
+\mathjs{\%}      & : &       & \funty{\doublish, \doublish}{\double} \\
+                 &   & \land & \funty{\signed, \signed}{\int}  \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\int} \\
 \end{array}
 \]
-Note that some operations produce the type $\intish$, indicating that
-their result must be immediately coerced back to an integer. Note also
-that multiplication is only defined on doubles; integer multiplication
-must either be performed by splitting a 32-bit integer into two 16-bit
-halves and manually performing the carry, or by using the $\imul$
-operation.
+%% Note that some operations produce the type $\intish$, indicating that
+%% their result must be immediately coerced back to an integer. Note also
+%% that some operations accept $\doublish$ arguments, because they coerce
+%% them immediately with $\mathit{ToNumber}$. (This is not the case for
+%% the binary $\mathjs{+}$ operator, which therefore requires its
+%% argument to be a true $\double$.)
+The type of addition and subtraction only deals with floating-point
+arithmetic; for integer addition and subtraction see
+Section~\ref{sec:exprjudge}. Similarly, the $\mathjs{*}$ operator
+provides only floating-point multiplication; integer multiplication
+can be implemented via the $\imul$ function. The $\mathjs{/}$ operator
+does provide both floating-point and integer division; for the latter
+it produces the type $\intish$, which requires a coercion via the
+bitwise operators to produce the proper integer result. The
+$\mathjs{\%}$ operator works as either a floating-point or integer
+operator and produces the correct result without any need for a
+coercion.
 
 The bitwise operators are one of only two places in the language that
 can consume an $\intish$ expression. Every one of these operators can
@@ -611,20 +678,25 @@ a boolean result:
 \[
 \begin{array}{rcc@{\ }l}
 \mathjs{<}, \mathjs{<=}, \mathjs{>}, \mathjs{>=}, \mathjs{==}, \mathjs{!=}
-                 & : &       & \funty{\signed, \signed}{\bit} \\
-                 &   & \land & \funty{\unsigned, \unsigned}{\bit} \\
-                 &   & \land & \funty{\double, \double}{\bit} \\
+                 & : &       & \funty{\signed, \signed}{\int} \\
+                 &   & \land & \funty{\unsigned, \unsigned}{\int} \\
+                 &   & \land & \funty{\double, \double}{\int} \\
 \end{array}
 \]
 
-Finally, the unary operators can also serve to coerce $\intish$
-expressions, similar to the bitwise operators, as well as $\boolish$
-in the case of $\mathjs{!}$:
+Finally, the unary operators have function types as well; unary
+operations can also serve as coercions: the $\mathjs{+}$ operator
+converts integers and the results of typed array reads and FFI calls
+to $\double$, and the $\mathjs{\~{}}$ operator can be used to coerce
+$\intish$ expressions, similar to the two-argument bitwise operators.
 \[
 \begin{array}{rcc@{\ }l}
-\mathjs{+}       & : &       & \funty{\intish}{\double} \\
+\mathjs{+}       & : &       & \funty{\signed}{\double} \\
+                 &   & \land & \funty{\unsigned}{\double} \\
+                 &   & \land & \funty{\doublish}{\double} \\
+\mathjs{-}       & : &       & \funty{\int}{\intish} \\
+                 &   & \land & \funty{\doublish}{\double} \\
 \mathjs{\~{}}    & : &       & \funty{\intish}{\signed} \\
-\mathjs{!}       & : &       & \funty{\boolish}{\bit} \\
 \end{array}
 \]
 
@@ -632,6 +704,58 @@ in the case of $\mathjs{!}$:
 
 This section describes the $\mathjs{asm.js}$ validation process, which
 is essentially a static type system.
+
+\subsection{Standard libraries}
+
+The JavaScript $\mathjs{Math}$ API is recognized as a typed standard
+library; most of its functions are allowed as imports with the same
+name and are given appropriate function types. These functions must be
+passed into the import environment under their respective names (e.g.,
+$\mathjs{Math.sin}$ under the name $g\mathjs{.Math.sin}$). Building in
+support for these standard functions allows optimizing engines to
+build special support for them---particularly the $\imul$ operation,
+which can be implemented with hardware multiplication instructions.
+\[
+\begin{array}{rcl}
+M(\mathtt{acos}), M(\mathtt{asin}), M(\mathtt{atan}) & = & \funty{\doublish}{\double} \\
+M(\mathtt{cos}), M(\mathtt{sin}), M(\mathtt{tan})    & = & \funty{\doublish}{\double} \\
+M(\mathtt{ceil}), M(\mathtt{floor})                  & = & \funty{\doublish}{\double} \\
+M(\mathtt{exp}), M(\mathtt{log}), M(\mathtt{sqrt})   & = & \funty{\doublish}{\double} \\
+M(\mathtt{abs}) & =     & \funty{\signed}{\unsigned} \\
+                & \land & \funty{\doublish}{\double} \\
+M(\mathtt{atan2}), M(\mathtt{pow}) & = & \funty{\doublish, \doublish}{\double} \\
+M(\imul) & = & \funty{\int, \int}{\signed} \\
+M(\mathtt{random}) & = & \funty{}{\double} \\
+M(\mathtt{E}) & = & \double \\
+M(\mathtt{LN10}), M(\mathtt{LN2}), M(\mathtt{LOG2E}), M(\mathtt{LOG10E}) & = & \double \\
+M(\mathtt{PI}) & = & \double \\
+M(\mathtt{SQRT1\_2}), M(\mathtt{SQRT2}) & = & \double \\
+\end{array}
+\]
+
+\subsection{View types}
+
+The typed array constructors are also recognized as imports in the
+import environment, each under its standard name. Calling the various
+typed arrays constructors on the buffer produces typed array views of
+various types.
+\[
+\begin{array}{rcl}
+V(\mathtt{Uint8Array}), V(\mathtt{Int8Array})   & = & \view{1}{\intsm} \\
+V(\mathtt{Uint16Array}), V(\mathtt{Int16Array}) & = & \view{2}{\intsm} \\
+V(\mathtt{Uint32Array}), V(\mathtt{Int32Array}) & = & \view{4}{\intsm} \\
+V(\mathtt{Float32Array})                        & = & \view{4}{\doublesm} \\
+V(\mathtt{Float64Array})                        & = & \view{8}{\doublesm} \\
+\end{array}
+\]
+
+\subsection{Global constants}
+
+\[
+\begin{array}{rcl}
+G(\mathtt{Infinity}), G(\mathtt{NaN}) & = & \double \\
+\end{array}
+\]
 
 \subsection{Annotations}
 
@@ -645,7 +769,7 @@ interpret the bits with.
 \[
 \begin{array}{rcl}
 \vartype(\todouble{x}), \vartype(r) & = & \double \\
-\vartype(x\mathjs{|0}), \vartype(n) & = & \int \mbox{ $(-2^{31} \leq n < 2^{32})$}
+\vartype(x\mathjs{|0}), \vartype(i) & = & \int \mbox{ $(-2^{31} \leq i < 2^{32})$}
 \end{array}
 \]
 
@@ -656,7 +780,7 @@ their sign so that they can be exported to external JavaScript.
 \[
 \begin{array}{rcl}
 \rettype(\todouble{e}), \rettype(r) & = & \double \\
-\rettype(e\mathjs{|0}), \rettype(n) & = & \signed \mbox{ $(-2^{31} \leq n < 2^{31})$} \\
+\rettype(e\mathjs{|0}), \rettype(i) & = & \signed \mbox{ $(-2^{31} \leq i < 2^{31})$} \\
 \rettype(\epsilon)                  & = & \void \\
 \end{array}
 \]
@@ -666,123 +790,215 @@ annotations and return statements.
 
 \[
 \begin{array}{l}
-\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}) = \funty{\seq{\sigma}}{\tau} \\
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}\ \return{[\mathit{re}]}}) = \funty{\seq{\sigma}}{\tau} \\
 \qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
-\qquad \mbox{and } \forall \return{[\mathit{re}]} \in \mathit{ss} . \rettype([\mathit{re}]) = \tau \\
-\qquad \mbox{or } \not\exists \return{[\mathit{re}]} \in \mathit{ss} \mbox{ and } \tau = \void \\
+\qquad \mbox{and } \rettype([\mathit{re}]) = \tau \\
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}\ s}) = \funty{\seq{\sigma}}{\void} \\
+\qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
+\qquad \mbox{and } s \not= \return{[\mathit{re}]} \\
+\funtype(\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \epsilon}) = \funty{\seq{\sigma}}{\void} \\
+\qquad \mbox{where } \forall i . \vartype(\mathit{ann}_{x_i}) = \sigma_i \\
 \end{array}
 \]
 
-\subsection{Standard libraries}
-
-The JavaScript $\mathjs{Math}$ API is recognized as a typed standard
-library; each of its functions is allowed as an import with the same
-name and is given an appropriate function type.
-\[
-\begin{array}{rcl}
-M(\mathtt{acos}), M(\mathtt{asin}), M(\mathtt{atan})                & : & \funty{\double}{\double} \\
-M(\mathtt{cos}), M(\mathtt{sin}), M(\mathtt{tan})                   & : & \funty{\double}{\double} \\
-M(\mathtt{ceil}), M(\mathtt{floor}), M(\mathtt{round})              & : & \funty{\double}{\double} \\
-M(\mathtt{exp}), M(\mathtt{log}), M(\mathtt{pow}), M(\mathtt{sqrt}) & : & \funty{\double}{\double} \\
-M(\mathtt{abs}) & :     & \funty{\signed}{\unsigned} \\
-                & \land & \funty{\unsigned}{\unsigned} \\
-                & \land & \funty{\double}{\double} \\
-M(\mathtt{atan2}) & : & \funty{\double, \double}{\double} \\
-M(\imul) & : & \funty{\int, \int}{\signed} \\
-M(\mathtt{max}), M(\mathtt{min}) & :     & \funty{\ldots\signed}{\signed} \\
-                                 & \land & \funty{\ldots\unsigned}{\unsigned} \\
-                                 & \land & \funty{\ldots\double}{\double} \\
-M(\mathtt{random}) & : & \funty{}{\double} \\
-\end{array}
-\]
-
-\subsection{View types}
+The types of import expressions are determined by the standard library
+metafunctions $G$, $M$, and $V$ or by their coercion. A foreign import
+with no coercion is assumed to be a function.
 
 \[
-\begin{array}{rcl}
-A(\mathtt{Uint8Array}), A(\mathtt{Int8Array})   & = & \view{8}{\intsm} \\
-A(\mathtt{Uint16Array}), A(\mathtt{Int16Array}) & = & \view{16}{\intsm} \\
-A(\mathtt{Uint32Array}), A(\mathtt{Int32Array}) & = & \view{32}{\intsm} \\
-A(\mathtt{Float32Array})                        & = & \view{32}{\doublesm} \\
-A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
+\begin{array}{l}
+\imptype(\mathit{global}\mathjs{.}x) = G(x) \\
+\imptype(\mathit{global}\mathjs{.Math.}x) = M(x) \\
+\imptype(\mathjs{new }\funcall{\mathit{global}\mathjs{.}x}{\mathit{buffer}}) = V(y) \\
+\imptype(\mathit{foreign}\mathjs{.}x\mathjs{|0}) = \signed \\
+\imptype(\mathjs{+}\mathit{foreign}\mathjs{.}x) = \double \\
+\imptype(\mathit{foreign}\mathjs{.}x) = \Fun \\
 \end{array}
 \]
 
 \subsection{Module validation}
 
+Module validation takes an $\mathjs{asm.js}$ module and constructs a
+{\it global environment} $\Delta$, which is used to track the types of
+all globals: imports, buffer views, global variables, and functions.
 \[
 \begin{array}{rcl}
-\Delta & ::= & \{ \seq{x : \gamma} \} \\
-\Gamma & ::= & \{ \seq{x : \tau} \} \\
+\mu    & ::= & \mut ~|~ \imm \\
+\Delta & ::= & \{ \seq{x : \mu\,\gamma} \} \\
+\end{array}
+\]
+Validation then uses this environment to check the imports, exports,
+and function definitions.
+
+\newsavebox{\modjudge}
+\begin{lrbox}{\modjudge}
+\begin{minipage}[t]{3in}
+\vspace{-.25in}
+\[
+\begin{array}{rll}
+       & \mathjs{function }[f]\mathjs{(}[\mathit{global}[, \mathit{foreign}[, \mathit{buffer}]]]\mathjs{) \char123{}} \\
+       & \qquad\mathjs{"use asm";} \\
+       & \qquad\seq{\var{\seq{x \mathjs{ = } \mathit{imp}}}} \\
+\vdash & \qquad\seq{\mathit{fn}_g} & \ok \\
+       & \qquad\seq{\var{\seq{y \mathjs{ = } v}}} \\
+       & \qquad\mathit{exp} \\
+       & \mathjs{\char125{}} \\
+\end{array}
+\]
+\end{minipage}
+\end{lrbox}
+
+\[
+\begin{array}{c}
+\multicolumn{1}{r}{\fbox{$\progjudge{\mathit{mod}}$}}
+\rulebreak
+\inferrule* [lab=\rel{T-Module}]
+  {\Delta = \{ \seq{x : \imm\,\imptype(\mathit{imp})}, \seq{g : \imm\,\funtype(\mathit{fn}_g)}, \seq{y : \mut\,\vartype(v)} \} \\\\
+   %%\forall i . \impjudge{[g]}{[e]}{[b]}{\Delta}{\mathit{imp}_x} \\
+   \seq{x}, \seq{y}, \seq{g}, [f], [\mathit{global}], [\mathit{foreign}], [\mathit{buffer}]\ \mbox{distinct} \\
+   \forall i . \fnjudge{\Delta}{\mathit{fn}_f} \\
+   \forall i . \expjudge{\Delta}{\mathit{exp}}}
+  {\usebox{\modjudge}}
+%  {\progjudge{\fun{[m]}{[g[, e[, b]]}{\mathjs{"use asm";}\ \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}}}
 \end{array}
 \]
 
+For simplicity of the specification, we leave as an assumption that
+the same $\mathit{global}$, $\mathit{foreign}$, and $\mathit{buffer}$
+variables are used consistently throughout the module. An actual
+validator must check this assumption. Similarly, we assume the
+existence of a single $\mathit{mask}$ constant used throughout the
+module, which a real validator would have to check.
+
+%% \subsection{Import validation}
+
+%% Declarations in the import section of an $\mathjs{asm.js}$ module can
+%% be known library functions, unknown FFI functions, typed array views,
+%% or imported constants.
+
+%% \[
+%% \begin{array}{c}
+%% \multicolumn{1}{r}{\fbox{$\impjudge{[g]}{[e]}{[b]}{\Delta}{\mathit{imp}}$}}
+%% \rulebreak
+%% \inferrule* [lab=\rel{T-ImportStd}]
+%%   {\iejudge{[g]}{[e]}{\mathit{ie}}{\Delta(x)}}
+%%   {\impjudge{[g]}{[e]}{[b]}{\Delta}{\var{x \mathjs{ = } \mathit{ie}}}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-ImportFFI}]
+%%   {\iejudge{[g]}{[e]}{\mathit{ie}}{\epsilon} \\\\
+%%    \Delta(x) = \Fun}
+%%   {\impjudge{[g]}{[e]}{[b]}{\Delta}{\var{x \mathjs{ = } \mathit{ie}}}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-ImportInt}]
+%%   {\iejudge{[g]}{[e]}{\mathit{ie}}{\tau} \\\\
+%%    \tau <: \intish \\
+%%    \Delta(x) = \signed}
+%%   {\impjudge{[g]}{[e]}{[b]}{\Delta}{\var{x \mathjs{ = } \mathit{ie}\mathjs{|0}}}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-ImportDouble}]
+%%   {\iejudge{[g]}{[e]}{\mathit{ie}}{\tau} \\\\
+%%    \tau <: \doublish \\
+%%    \Delta(x) = \double}
+%%   {\impjudge{[g]}{[e]}{[b]}{\Delta}{\var{x \mathjs{ = +}\mathit{ie}}}}
+%% \\ \\
+%% \inferrule* [lab=\rel{T-ImportView}]
+%%   {\Delta(x) = V(y)}
+%%   {\impjudge{g}{[e]}{b}{\Delta}{\var{x \mathjs{ = new } g\mathjs{.}y(b)}}}
+%% %% \\ \\
+%% %% \inferrule* [lab=\rel{T-ImportStd}]
+%% %%   {\Delta(x) = M(y)}
+%% %%   {\impjudge{[g]}{[e]}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
+%% %% \qquad
+%% %% \inferrule* [lab=\rel{T-ImportFFI}]
+%% %%   {y \not\in\dom(M), \dom(A) \\\\
+%% %%    \Delta(x) = \Fun}
+%% %%   {\impjudge{[g]}{e}{[b]}{\Delta}{\var{x \mathjs{ = } c\mathjs{.}y}}}
+%% %% \\ \\
+%% %% \inferrule* [lab=\rel{T-View}]
+%% %%   {\Delta(x) = \view{n}{A(y)}}
+%% %%   {\impjudge{[g]}{e}{b}{\Delta}{\var{x \mathjs{ = new } c\mathjs{.}y(b)}}}
+%% %% \\ \\
+%% %% \inferrule* [lab=\rel{T-ImportInt}]
+%% %%   {\Delta(x) = \int}
+%% %%   {\impjudge{[g]}{e}{[b]}{\Delta}{\var{x \mathjs{ = }c\mathjs{.}y\mathjs{|0}}}}
+%% %% \qquad
+%% %% \inferrule* [lab=\rel{T-ImportDouble}]
+%% %%   {\Delta(x) = \double}
+%% %%   {\impjudge{[g]}{e}{[b]}{\Delta}{\var{x \mathjs{ = +}c\mathjs{.}y}}}
+%% \end{array}
+%% \]
+
+%% \[
+%% \begin{array}{c}
+%% \multicolumn{1}{r}{\fbox{$\iejudge{[g]}{[e]}{\mathit{ie}}{[\gamma]}$}}
+%% \rulebreak
+%% \inferrule* [lab=\rel{T-Global}]
+%%   {y \in \dom(G)}
+%%   {\iejudge{g}{[e]}{g\mathjs{.}y}{G(y)}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-Math}]
+%%   {y \in \dom(M)}
+%%   {\iejudge{g}{[e]}{g\mathjs{.Math.}y}{M(y)}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-FFI}]
+%%   { }
+%%   {\iejudge{[g]}{e}{e\mathjs{.}y}{\epsilon}}
+%% \end{array}
+%% \]
+
+\subsection{Function validation}
+
+Function validation proceeds in several steps. First, a local
+environment is constructed with bindings for the parameters and local
+variables, based on their annotations and initializers,
+respectively. Next, the body of the function is checked in this
+environment. Finally, if the function has a non-$\void$ return type,
+the body is checked to ensure that all control flow paths definitely
+return a value (see Section~\ref{sec:cfa}).
+
 \[
-\begin{array}{lr}
-\mbox{Module validation} & \hfil \fbox{$\progjudge{\mathit{mod}}$}
-\rulebreak
-\multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Program}]
-  {\seq{x}, \seq{y}, \seq{f}, [g], [e], [b]\ \mbox{distinct} \\
-   \Delta = \{ \seq{f : \funtype(\mathit{fn}_f)}, \seq{y : \vartype(v)} \} \\\\
-   \forall i . \impjudge{[e]}{[b]}{\Delta}{\mathit{imp}_x} \\
-   \forall i . \fnjudge{\Delta}{\mathit{fn}_f} \\
-   \forall i . \expjudge{\Delta}{\mathit{exp}}}
-  {\progjudge{\fun{[g]}{[e[, b]]}{\mathjs{"use asm";}\ \seq{\mathit{imp}_x}\ \seq{\mathit{fn}_f}\ \seq{\var{\seq{y \mathjs{ = } v}}}\ \mathit{exp}}}}
-\end{array}
-}
-\\ \\
-\mbox{Import validation} & \hfil \fbox{$\impjudge{[e]}{[b]}{\Delta}{\mathit{imp}}$}
+\multicolumn{1}{r}{\fbox{$\fnjudge{\Delta}{\mathit{fn}}$}}
 \rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
-\inferrule* [lab=\rel{T-ImportStd}]
-  {\Delta(x) = M(y)}
-  {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
-\qquad
-\inferrule* [lab=\rel{T-ImportFFI}]
-  {y \not\in\dom(M), \dom(A) \\\\
-   \Delta(x) = \funty{\ldots\extern}{\unk}}
-  {\impjudge{e}{[b]}{\Delta}{\var{x \mathjs{ = } e\mathjs{.}y}}}
-\\ \\
-\inferrule* [lab=\rel{T-View}]
-  {\Delta(x) = \view{n}{A(y)}}
-  {\impjudge{e}{b}{\Delta}{\var{x \mathjs{ = new } e\mathjs{.}y(b)}}}
-\end{array}
-}
-\\ \\
-\mbox{Function validation} & \hfil \fbox{$\fnjudge{\Delta}{\mathit{fn}}$}
-\rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
 \inferrule* [lab=\rel{T-Function}]
   {\seq{x}, \seq{y}\ \mbox{distinct} \\
-   \Delta(f) = \funty{\seq{\sigma}}{\tau} \\
+   \Delta(f) = \imm\,\funty{\seq{\sigma}}{\tau} \\
    \seq{\sigma} = \seq{\vartype(\mathit{ann}_x)} \\\\
-   \sjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \vartype(v)} \}}{\mathit{ss}} \\
-   \tau \not=\void \Rightarrow \returns(\mathit{ss})}
+   \sjudge{\Delta}{\{ \seq{x : \sigma}, \seq{y : \vartype(v)} \}}{\tau}{\mathit{ss}}}
   {\fnjudge{\Delta}{\fun{f}{\seq{x}}{\seq{x\mathjs{ = }\mathit{ann}_x\mathjs{;}}\ \seq{\var{\seq{y\mathjs{ = }v}}}\ \mathit{ss}}}}
 \end{array}
-}
-\\ \\
-\mbox{Export validation} & \hfil \fbox{$\expjudge{\Delta}{\mathit{exp}}$}
-\rulebreak
-\multicolumn{2}{c}{
+\]
+
+\subsection{Export validation}
+
+Export validation ensures that all exports are functions.
+
+\[
 \begin{array}{c}
+\multicolumn{1}{r}{\fbox{$\expjudge{\Delta}{\mathit{exp}}$}}
+\rulebreak
 \inferrule* [lab=\rel{T-Singleton}]
-  {\Delta(f) = \funty{\seq{\sigma}}{\tau} \\
-   \tau <: \extern }
+  {\Delta(f) = \imm\,\funty{\seq{\sigma}}{\tau}}
   {\expjudge{\Delta}{\return{f}}}
 \qquad
 \inferrule* [lab=\rel{T-Module}]
-  {\forall f . \Delta(f) = \funty{\seq{\sigma}}{\tau} \land
-   \tau <: \extern}
+  {\forall f . \Delta(f) = \imm\,\funty{\seq{\sigma}}{\tau}}
   {\expjudge{\Delta}{\return{\mathjs{\char123{} } \seq{x \mathjs{:} f} \mathjs{ \char125{}}}}}
 \end{array}
-}
+\]
+
+\subsection{Statement list validation}
+
+\[
+\begin{array}{c}
+\multicolumn{1}{r}{\fbox{$\sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}}$}}
+\rulebreak
+\inferrule* [lab=\rel{T-Statements}]
+  {\forall i . \sjudge{\Delta}{\Gamma}{\tau}{s_i}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\seq{s}}}
 \end{array}
 \]
+
 
 \subsection{Statement validation}
 
@@ -800,162 +1016,148 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \end{lrbox}
 
 \[
-\begin{array}{lr}
-\mbox{Statement list validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{ss}}$}
-\rulebreak
-\multicolumn{2}{c}{
 \begin{array}{c}
-\inferrule* [lab=\rel{T-Statements}]
-  {\forall i . \sjudge{\Delta}{\Gamma}{s_i}}
-  {\sjudge{\Delta}{\Gamma}{\seq{s}}}
-\end{array}
-}
-\\ \\
-\mbox{Statement validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{s}$}
+\multicolumn{1}{r}{\fbox{$\sjudge{\Delta}{\Gamma}{\tau}{s}$}}
 \rulebreak
-\multicolumn{2}{c}{
-\begin{array}{c}
 \inferrule* [lab=\rel{T-Block}]
-  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{\block{\mathit{ss}}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\block{\mathit{ss}}}}
 \qquad
 \inferrule* [lab=\rel{T-ExprStmt}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma}}
-  {\sjudge{\Delta}{\Gamma}{e\mathjs{;}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{e\mathjs{;}}}
 \qquad
 \inferrule* [lab=\rel{T-EmptyStatement}]
   { }
-  {\sjudge{\Delta}{\Gamma}{\mathjs{;}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathjs{;}}}
 \\ \\
 \inferrule* [lab=\rel{T-If}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{s}}
-  {\sjudge{\Delta}{\Gamma}{\ifone{e}{s}}}
+   \sjudge{\Delta}{\Gamma}{\tau}{s}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\ifone{e}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-IfElse}]
   {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{s_1} \\
-   \sjudge{\Delta}{\Gamma}{s_2}}
-  {\sjudge{\Delta}{\Gamma}{\iftwo{e}{s_1}{s_2}}}
+   \sjudge{\Delta}{\Gamma}{\tau}{s_1} \\
+   \sjudge{\Delta}{\Gamma}{\tau}{s_2}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\iftwo{e}{s_1}{s_2}}}
 \\ \\
 \inferrule* [lab=\rel{T-ReturnExpr}]
   {\exprjudge{\Delta}{\Gamma}{\mathit{re}}{\tau} \\\\
    \rettype(\mathit{re}) = \tau}
-  {\sjudge{\Delta}{\Gamma}{\return{\mathit{re}}}}
-\qquad
-\inferrule* [lab=\rel{T-ReturnDouble}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\double}}
-  {\sjudge{\Delta}{\Gamma}{\return{\mathjs{+}e}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\return{\mathit{re}}}}
+%% \qquad
+%% \inferrule* [lab=\rel{T-ReturnDouble}]
+%%   {\exprjudge{\Delta}{\Gamma}{e}{\double}}
+%%   {\sjudge{\Delta}{\Gamma}{\double}{\return{\mathjs{+}e}}}
 \qquad
 \inferrule* [lab=\rel{T-ReturnVoid}]
   { }
-  {\sjudge{\Delta}{\Gamma}{\mathtt{return;}}}
+  {\sjudge{\Delta}{\Gamma}{\void}{\mathtt{return;}}}
 \\ \\
 \inferrule* [lab=\rel{T-While}]
-  {\exprjudge{\Delta}{\Gamma}{e}{\boolish} \\\\
-   \sjudge{\Delta}{\Gamma}{s}}
-  {\sjudge{\Delta}{\Gamma}{\while{e}{s}}}
+  {\exprjudge{\Delta}{\Gamma}{e}{\int} \\\\
+   \sjudge{\Delta}{\Gamma}{\tau}{s}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\while{e}{s}}}
 \qquad
 \inferrule* [lab=\rel{T-DoWhile}]
-  {\sjudge{\Delta}{\Gamma}{s} \\\\
-   \exprjudge{\Delta}{\Gamma}{e}{\boolish}}
-  {\sjudge{\Delta}{\Gamma}{\dowhile{s}{e}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{s} \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\int}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\dowhile{s}{e}}}
 \\ \\
 \inferrule* [lab=\rel{T-For}]
   {[\exprjudge{\Delta}{\Gamma}{e_1}{\sigma_1}] \\
-   [\exprjudge{\Delta}{\Gamma}{e_2}{\boolish}] \\
+   [\exprjudge{\Delta}{\Gamma}{e_2}{\int}] \\
    [\exprjudge{\Delta}{\Gamma}{e_3}{\sigma_3}] \\\\
-   \sjudge{\Delta}{\Gamma}{s}}
-  {\sjudge{\Delta}{\Gamma}{\for{[e_1]}{[e_2]}{[e_3]}{s}}}
+   \sjudge{\Delta}{\Gamma}{\tau}{s}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\for{[e_1]}{[e_2]}{[e_3]}{s}}}
 \\ \\
 \inferrule* [lab=\rel{T-Break}]
   { }
-  {\sjudge{\Delta}{\Gamma}{\brkl{[\mathit{lab}]}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\brkl{[\mathit{lab}]}}}
 \qquad
 \inferrule* [lab=\rel{T-Continue}]
   { }
-  {\sjudge{\Delta}{\Gamma}{\contl{[\mathit{lab}]}}}
-\\ \\
-\inferrule* [lab=\rel{T-Label}]
-  {\sjudge{\Delta}{\Gamma}{s}}
-  {\sjudge{\Delta}{\Gamma}{\lab{\mathit{lab}}{s}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\contl{[\mathit{lab}]}}}
 \qquad
+\inferrule* [lab=\rel{T-Label}]
+  {\sjudge{\Delta}{\Gamma}{\tau}{s}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\lab{\mathit{lab}}{s}}}
+\\ \\
 \inferrule* [lab=\rel{T-Switch}]
   {\exprjudge{\Delta}{\Gamma}{e}{\sigma} \\
-   \sigma <: \extern \\
+   \sigma \in \{ \signed, \unsigned \} \\
    \forall i . \exprjudge{\Delta}{\Gamma}{v_i}{\sigma} \\\\
-   \forall i . \sjudge{\Delta}{\Gamma}{\mathit{ss}_i} \\
-   [\sjudge{\Delta}{\Gamma}{\mathit{ss}}]}
-  {\sjudge{\Delta}{\Gamma}{\switch{e}{\seq{\mathjs{case }v_i\mathjs{:}\,\mathit{ss}_i}\ [\mathjs{default:}\,\mathit{ss}]}}}
-\end{array}
-}
+   \forall i . \sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}_i} \\
+   [\sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}}]}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\switch{e}{\seq{\mathjs{case }v_i\mathjs{:}\,\mathit{ss}_i}\ [\mathjs{default:}\,\mathit{ss}]}}}
 \end{array}
 \]
 
+\subsection{Case validation}
+
 \[
-\begin{array}{lr}
-\mbox{Case validation} & \hfil \fbox{$\sjudge{\Delta}{\Gamma}{\mathit{cd}}$}
-\rulebreak
-\multicolumn{2}{c}{
 \begin{array}{c}
+\multicolumn{1}{r}{\fbox{$\sjudge{\Delta}{\Gamma}{\tau}{\mathit{cd}}$}}
+\rulebreak
 \inferrule* [lab=\rel{T-Case}]
-  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathjs{case }v\mathjs{:}\,\mathit{ss}}}
 \qquad
 \inferrule* [lab=\rel{T-Default}]
-  {\sjudge{\Delta}{\Gamma}{\mathit{ss}}}
-  {\sjudge{\Delta}{\Gamma}{\mathjs{default:}\,\mathit{ss}}}
-\end{array}
-}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathit{ss}}}
+  {\sjudge{\Delta}{\Gamma}{\tau}{\mathjs{default:}\,\mathit{ss}}}
 \end{array}
 \]
 
-\subsection{Must-return analysis}
+%% \subsection{Must-return analysis}
+%% \label{sec:cfa}
 
-\[
-\begin{array}{rcl}
-\breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
-\breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
-\breaks(\ifone{e}{s}) & = & \breaks(s) \\
-\breaks(\iftwo{e}{s_1}{s_2}) & = & \breaks(s_1) \cup \breaks(s_2) \\
-\breaks(\while{e}{s}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\dowhile{s}{e}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\for{[e_1]}{[e_2]}{[e_3]}{s}) & = & \breaks(s) - \{ \epsilon \} \\
-\breaks(\brk) & = & \{ \epsilon \} \\
-\breaks(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
-\breaks(\lab{\mathit{lab}}{s}) & = & \breaks(s) - \{ \mathit{lab} \} \\
-\breaks(\switch{e}{\seq{\mathit{cd}}}) & = & \bigcup_i \breaks(\mathit{cd}_i) - \{ \epsilon \} \\
-\breaks(s) \mbox{ (otherwise)} & = & \emptyset \\
-\breaks(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
-\breaks(\mathjs{default:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
-\end{array}
-\]
+%% \[
+%% \begin{array}{rcl}
+%% \breaks(\seq{s}) & = & \bigcup_i \breaks(s_i) \\
+%% \breaks(\block{\mathit{ss}}) & = & \breaks(\mathit{ss}) \\
+%% \breaks(\ifone{e}{s}) & = & \breaks(s) \\
+%% \breaks(\iftwo{e}{s_1}{s_2}) & = & \breaks(s_1) \cup \breaks(s_2) \\
+%% \breaks(\while{e}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+%% \breaks(\dowhile{s}{e}) & = & \breaks(s) - \{ \epsilon \} \\
+%% \breaks(\for{[e_1]}{[e_2]}{[e_3]}{s}) & = & \breaks(s) - \{ \epsilon \} \\
+%% \breaks(\brk) & = & \{ \epsilon \} \\
+%% \breaks(\brkl{\mathit{lab}}) & = & \{ \mathit{lab} \} \\
+%% \breaks(\lab{\mathit{lab}}{s}) & = & \breaks(s) - \{ \mathit{lab} \} \\
+%% \breaks(\switch{e}{\seq{\mathit{cd}}}) & = & \bigcup_i \breaks(\mathit{cd}_i) - \{ \epsilon \} \\
+%% \breaks(s) \mbox{ (otherwise)} & = & \emptyset \\
+%% \breaks(\mathjs{case }v\mathjs{:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+%% \breaks(\mathjs{default:}\,\mathit{ss}) & = & \breaks(\mathit{ss}) \\
+%% \end{array}
+%% \]
 
-\[
-\begin{array}{l}
-\returns(\seq{s}) \\
-\qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \mbox{ for some } m \\
-\returns(\block{\mathit{ss}}) \\
-\qquad \mbox{if } \returns(ss) \\
-\returns(\iftwo{e}{s_1}{s_2}) \\
-\qquad \mbox{if } \returns(s_1) \land \returns(s_2) \\
-\returns(\dowhile{s}{e}) \\
-\qquad \mbox{if } \returns(s) \\
-\returns(\switch{e}{\seq{\mathit{cd}}}) \\
-\qquad \mbox{if } \returns(cd_n) \land \forall i . \breaks(cd_i) = \emptyset \\
-\returns(\mathjs{case }v\mathjs{:}\,\mathit{ss}) \\
-\qquad \mbox{if } \returns(\mathit{ss}) \\
-\returns(\mathjs{default:}\,\mathit{ss}) \\
-\qquad \mbox{if } \returns(\mathit{ss})
-\end{array}
-\]
+%% \[
+%% \begin{array}{l}
+%% \returns(\seq{s}) \\
+%% \qquad \mbox{if } \returns(s_m) \land \forall i < m . \breaks(s_m) = \emptyset \mbox{ for some } m \\
+%% \returns(\block{\mathit{ss}}) \\
+%% \qquad \mbox{if } \returns(ss) \\
+%% \returns(\iftwo{e}{s_1}{s_2}) \\
+%% \qquad \mbox{if } \returns(s_1) \land \returns(s_2) \\
+%% \returns(\dowhile{s}{e}) \\
+%% \qquad \mbox{if } \returns(s) \\
+%% \returns(\switch{e}{\seq{\mathit{cd}}}) \\
+%% \qquad \mbox{if } \returns(cd_n) \land \forall i . \breaks(cd_i) = \emptyset \\
+%% \returns(\mathjs{case }v\mathjs{:}\,\mathit{ss}) \\
+%% \qquad \mbox{if } \returns(\mathit{ss}) \\
+%% \returns(\mathjs{default:}\,\mathit{ss}) \\
+%% \qquad \mbox{if } \returns(\mathit{ss})
+%% \end{array}
+%% \]
 
 \subsection{Expression validation}
+\label{sec:exprjudge}
 
 \[
 (\Delta\cdot\Gamma)(x) = \left\{\begin{array}{ll}
                                 \Gamma(x) & \mbox{if}\ x \in\dom(\Gamma) \\
-                                \Delta(x) & \mbox{otherwise}
+                                \gamma & \mbox{if}\ \Delta(x) = \mu\,\gamma \\
                                 \end{array} \right.
 \]
 
@@ -966,16 +1168,16 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \multicolumn{2}{c}{
 \begin{array}{c}
 \inferrule* [lab=\rel{T-Signed}]
-  {-2^{31} \leq n < 0}
-  {\exprjudge{\Delta}{\Gamma}{n}{\signed}}
+  {-2^{31} \leq i < 0}
+  {\exprjudge{\Delta}{\Gamma}{i}{\signed}}
 \qquad
 \inferrule* [lab=\rel{T-Fixnum}]
-  {0 \leq n < 2^{31}}
-  {\exprjudge{\Delta}{\Gamma}{n}{\fixnum}}
+  {0 \leq i < 2^{31}}
+  {\exprjudge{\Delta}{\Gamma}{i}{\fixnum}}
 \qquad
 \inferrule* [lab=\rel{T-Unsigned}]
-  {2^{31} \leq n < 2^{32}}
-  {\exprjudge{\Delta}{\Gamma}{n}{\unsigned}}
+  {2^{31} \leq i < 2^{32}}
+  {\exprjudge{\Delta}{\Gamma}{i}{\unsigned}}
 \\ \\
 \inferrule* [lab=\rel{T-Double}]
   { }
@@ -984,37 +1186,83 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 \inferrule* [lab=\rel{T-VarRef}]
   {(\Delta\cdot\Gamma)(x) = \tau}
   {\exprjudge{\Delta}{\Gamma}{x}{\tau}}
-\qquad
-\inferrule* [lab=\rel{T-Assign}]
+\\ \\
+\inferrule* [lab=\rel{T-SetLocal}]
   {\exprjudge{\Delta}{\Gamma}{e}{\tau} \\
-   \tau <: (\Delta\cdot\Gamma)(x)}
+   \tau <: \Gamma(x)}
+  {\exprjudge{\Delta}{\Gamma}{x\mathjs{ = }e}{\tau}}
+\qquad
+\inferrule* [lab=\rel{T-SetGlobal}]
+  {x \not\in\dom(\Gamma) \\
+   \Delta(x) = \mut\,\sigma \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\tau} \\
+   \tau <: \sigma}
   {\exprjudge{\Delta}{\Gamma}{x\mathjs{ = }e}{\tau}}
 \\ \\
-\inferrule* [lab=\rel{T-Load}]
-  {m = 2^k - 1 \\
-   (\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+\inferrule* [lab=\rel{T-LoadImm}]
+  {(\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+   i \equiv 0 \mod n \\
+   0 \leq i \leq \mathit{mask} \\\\
    \exprjudge{\Delta}{\Gamma}{e}{\intish}}
-  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e\mathjs{ \& } m}\mathjs{ >> }n/8}}{\tau}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{i}}{\tau}}
 \qquad
-\inferrule* [lab=\rel{T-Store}]
-  {m = 2^k - 1 \\
-   (\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+\inferrule* [lab=\rel{T-StoreImm}]
+  {(\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+   i \equiv 0 \mod n \\
+   0 \leq i \leq \mathit{mask} \\\\
    \exprjudge{\Delta}{\Gamma}{e_1}{\intish} \\
    \exprjudge{\Delta}{\Gamma}{e_2}{\tau}}
-  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } m}\mathjs{ >> }n/8}\mathjs{ = }e_2}{\tau}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{i}\mathjs{ = }e_2}{\tau}}
 \\ \\
+\inferrule* [lab=\rel{T-LoadByte}]
+  {(\Delta\cdot\Gamma)(x) = \view{1}{\intsm} \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\intish}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{e\mathjs{ \& } \mathit{mask}}}{\tau}}
+\qquad
+\inferrule* [lab=\rel{T-StoreByte}]
+  {(\Delta\cdot\Gamma)(x) = \view{1}{\intsm} \\\\
+   \exprjudge{\Delta}{\Gamma}{e_1}{\intish} \\
+   \exprjudge{\Delta}{\Gamma}{e_2}{\tau}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{e_1\mathjs{ \& } \mathit{mask}}\mathjs{ = }e_2}{\tau}}
+\\ \\
+\inferrule* [lab=\rel{T-Load}]
+  {(\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+   \mathit{shift} = \log_2(n) \\
+   n > 1 \\\\
+   \exprjudge{\Delta}{\Gamma}{e}{\intish}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e\mathjs{ \& } \mathit{mask}}\mathjs{ >> } \mathit{shift}}}{\tau}}
+\qquad
+\inferrule* [lab=\rel{T-Store}]
+  {(\Delta\cdot\Gamma)(x) = \view{n}{\tau} \\\\
+   \mathit{shift} = \log_2(n) \\
+   n > 1 \\\\
+   \exprjudge{\Delta}{\Gamma}{e_1}{\intish} \\
+   \exprjudge{\Delta}{\Gamma}{e_2}{\tau}}
+  {\exprjudge{\Delta}{\Gamma}{\getprop{x}{\paren{e_1\mathjs{ \& } \mathit{mask}}\mathjs{ >> } \mathit{shift}}\mathjs{ = }e_2}{\tau}}
+\end{array}
+}
+\end{array}
+\]
+
+\[
+\begin{array}{lr}
+\mbox{Expression validation (cont'd)} & \hfil \fbox{$\exprjudge{\Delta}{\Gamma}{e}{\tau}$}
+\rulebreak
+\multicolumn{2}{c}{
+\begin{array}{c}
 \inferrule* [lab=\rel{T-FunCall}]
   {(\Delta\cdot\Gamma)(f) = \_ \land \funty{\seq{\sigma}}{\tau} \land \_ \\\\
    \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\sigma_i}}
   {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
 \qquad
-\inferrule* [lab=\rel{T-VarArgsCall}]
-  {(\Delta\cdot\Gamma)(f) = \_ \land \funty{\ldots\sigma}{\tau} \land \_ \\\\
-   \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\sigma}}
-  {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\tau}}
+\inferrule* [lab=\rel{T-FFICall}]
+  {(\Delta\cdot\Gamma)(f) = \Fun \\\\
+   %(\Delta\cdot\Gamma)(f) = \_ \land \funty{\ldots\sigma}{\tau} \land \_ \\\\
+   \forall i . \exprjudge{\Delta}{\Gamma}{e_i}{\extern}}
+  {\exprjudge{\Delta}{\Gamma}{\funcall{f}{\seq{e}}}{\unk}}
 \\ \\
 \inferrule* [lab=\rel{T-Unop}]
-  {\mathit{unop} : \_ \land \funty{\sigma}{\tau} \land \_ \\
+  {\mathit{unop} : \_ \land \funty{\sigma}{\tau} \land \_ \\\\
    \exprjudge{\Delta}{\Gamma}{e}{\sigma}}
   {\exprjudge{\Delta}{\Gamma}{\mathit{unop}\ e}{\tau}}
 \qquad
@@ -1023,6 +1271,19 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
    \exprjudge{\Delta}{\Gamma}{e_1}{\sigma_1} \\
    \exprjudge{\Delta}{\Gamma}{e_2}{\sigma_2}}
   {\exprjudge{\Delta}{\Gamma}{e_1\ \mathit{binop}\ e_2}{\tau}}
+\\ \\
+\inferrule* [lab=\rel{T-Multiary}]
+  {\forall i < n . \oplus_i \in \{ +, - \} \\
+   n \leq 2^{20} \\\\
+   \forall i \leq n . \exprjudge{\Delta}{\Gamma}{e_i}{\int}}
+  {\exprjudge{\Delta}{\Gamma}{e_1 \oplus_1 \ldots \oplus_{n-1} e_n}{\intish}}
+\qquad
+\inferrule* [lab=\rel{T-Cond}]
+  {\tau \in \{ \int, \double \} \\\\
+   \exprjudge{\Delta}{\Gamma}{e_1}{\int} \\\\
+   \exprjudge{\Delta}{\Gamma}{e_2}{\tau} \\
+   \exprjudge{\Delta}{\Gamma}{e_3}{\tau}}
+  {\exprjudge{\Delta}{\Gamma}{\ternary{e_1}{e_2}{e_3}}{\tau}}
 \\ \\
 \inferrule* [lab=\rel{T-Paren}]
   {\forall i \leq n . \exprjudge{\Delta}{\Gamma}{e_i}{\tau_i}}
@@ -1040,8 +1301,5 @@ A(\mathtt{Float64Array})                        & = & \view{64}{\doublesm} \\
 }
 \end{array}
 \]
-
-\section{Implementation strategies}
-
 
 \end{document}
