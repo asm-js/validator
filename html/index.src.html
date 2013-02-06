@@ -1,0 +1,920 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+	"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>asm.js</title>
+<!-- FIXME: eliminate this when going live -->
+<!-- link rel="stylesheet" type="text/css" href="http://www.whatwg.org/style/specification" -->
+<link rel="stylesheet" type="text/css" href="whatwg.css">
+<style>
+</style>
+
+<body class="draft">
+
+<div class="head">
+	<h1>[TITLE]</h1>
+	
+	<h2 class="no-num no-toc">Working Draft — [DATE]</h2>
+	
+	<dl>
+		<dt>Latest version:
+		<dd><!--begin-link-->http://asmjs.org/spec/latest/<!--end-link-->
+		
+		<dt>Editors:
+		<dd class="vcard">
+			<span class="fn">David Herman</span>,
+			<span class="org">Mozilla</span>,
+			<span class="email">&lt;dherman@mozilla.com&gt;</span>
+		<dd class="vcard">
+			<span class="fn">Luke Wagner</span>,
+			<span class="org">Mozilla</span>,
+			<span class="email">&lt;luke@mozilla.com&gt;</span>
+		<dd class="vcard">
+			<span class="fn">Alon Zakai</span>,
+			<span class="org">Mozilla</span>,
+			<span class="email">&lt;azakai@mozilla.com&gt;</span>
+	</dl>
+</div>
+
+<h2 class="no-num no-toc">Abstract</h2>
+
+<p>This specification defines <strong>asm.js</strong>, a strict subset
+of the ECMAScript programming language (commonly known as JavaScript)
+that can be used as a low-level, efficient target language for
+compilers. This sublanguage effectively describes a safe virtual
+machine for memory-unsafe languages like C or C++. A combination of
+static and dynamic validation allows JavaScript engines to employ an
+ahead-of-time (AOT) optimizing compilation strategy for valid asm.js
+code.
+
+<h2 class="no-num no-toc">Status</h2>
+
+<p>This specification is a candidate draft for asm.js version 1. A
+prototype implementation of an optimizing backend for asm.js is in
+progress for Mozilla's JavaScript JIT engine.
+
+<h2 class="no-num no-toc">Table of Contents</h2>
+
+<!--toc-->
+
+<h2>Introduction</h2>
+
+<p>This specification defines <dfn>asm.js</dfn>, a strict subset of
+JavaScript that can be used as a low-level, efficient target language
+for compilers. The asm.js language provides an abstraction similar to
+the C/C++ virtual machine: a large binary heap with efficient loads
+and stores, integer and floating-point arithmetic, first-order
+function definitions, and function pointers.
+
+<h3 class="no-toc no-num">Programming Model</h3>
+
+<p>The asm.js programming model is built around integer and
+floating-point arithmetic and a virtual heap represented as
+a <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays">typed
+array</a>. While JavaScript does not directly provide constructs for
+dealing with integers, they can be emulated using two tricks:
+
+<ul>
+<li>integer loads and stores can be performed using the typed arrays
+API; and
+<li>integer arithmetic is equivalent to the composition of
+JavaScript's floating-point arithmetic operators with the integer
+coercions performed by the bitwise operators.
+</ul>
+
+<p>As an example of a load from the heap, if we have a 2MB heap
+(i.e., <code>0x200000</code> bytes) and
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/Int32Array">Int32Array</a>
+view of the heap called <code>HEAP32</code>, then we can load the
+32-bit integer at byte offset <code>p</code>:
+
+<div class="example">
+<pre>HEAP32[(p & 0x1fffff) >> 2]</pre>
+</div>
+
+<p>The mask is required by asm.js in order to efficiently enforce that
+the pointer is within the heap array's bounds, and the shift converts
+the byte offset to a 32-bit word offset.
+
+<p>As an example of integer arithmetic, addition can be performed by
+taking two integer values, adding them with the built-in addition
+operator, and coercing the result back to an integer via the bitwise
+or operator:
+
+<div class="example">
+<pre>(x+y)|0</pre>
+</div>
+
+<p>This programming model is directly inspired by the techniques
+pioneered by the <a href="http://emscripten.org">Emscripten</a>
+compiler.
+
+<h3 class="no-num no-toc">Validation</h3>
+
+<p>The asm.js sub-language is defined by a
+<a href="#validation-rules">static type system</a> that can be checked
+at JavaScript parse time. Validation of asm.js code is designed to be
+"pay-as-you-go" in that it is never performed on code that does not
+request it. An asm.js <dfn>module</dfn> requests validation by means
+of a
+special <a href="http://ecma-international.org/ecma-262/5.1/#sec-14.1">prologue
+directive</a>, similar to that of ECMAScript Edition
+5's <a href="http://ecma-international.org/ecma-262/5.1/#sec-10.1.1">strict
+mode</a>:
+
+<div class="example">
+<pre>function MyAsmModule() {
+    "use asm";
+    // module body
+}</pre>
+</div>
+
+<p>This explicit directive allows JavaScript engines to avoid
+performing pointless and potentially costly validation on other
+JavaScript code, and to report validation errors in developer consoles
+only where relevant.
+
+<h3 class="no-num no-toc">Ahead-Of-Time Compilation</h3>
+
+<p>Because asm.js is a strict subset of JavaScript, this specification
+only defines the validation logic&mdash;the execution semantics is
+simply that of JavaScript. However, validated asm.js is amenable to
+ahead-of-time (AOT) compilation. Moreover, the code generated by an
+AOT compiler can be quite efficient, featuring:
+
+<ul>
+<li>unboxed representations of integers and floating-point numbers;
+<li>absence of runtime type checks;
+<li>absence of garbage collection; and
+<li>efficient heap loads and stores (with implementation strategies varying by platform).
+</ul>
+
+<p>Code that fails to validate must fall back to execution by
+traditional means, e.g., interpretation and/or just-in-time (JIT)
+compilation.
+
+<!--
+Moreover, the low-level nature of validated asm.js code makes it
+possible for AOT implementations to perform aggressive optimizations
+without profiling, heuristics, or dynamic deoptimization or
+recompilation.
+-->
+
+<h3 class="no-num no-toc">Linking</h3>
+
+<p>Using an asm.js module requires calling its function to obtain an
+object containing the module's exports; this is known
+as <dfn>linking</dfn>. An asm.js module can also be given access to
+standard libraries and custom JavaScript functions through linking. An
+AOT implementation must perform certain <a href="#linking-0">dynamic
+checks</a> to check compile-time assumptions about the linked
+libraries in order to make use of the compiled code.
+
+<p>This figure depicts a simple architecture of an AOT implementation
+that otherwise employs a simple interpreter. If either dynamic or
+static validation fails, the implementation must fall back to the
+interpreter. But if both validations succeed, calling the module
+exports executes the binary executable code generated by AOT
+compilation.
+
+<figure class="diagrams">
+<img src="aot.png" width="780" height="241">
+</figure>
+
+<h3 class="no-num no-toc">External Code and Data</h3>
+
+<p>Within an asm.js module, all code is fully statically typed and
+limited to the very restrictive asm.js dialect. However, it is
+possible to interact with recognized standard JavaScript libraries and
+even custom dynamic JavaScript functions.
+
+<p>An asm.js module can take up to three optional parameters,
+providing access to external JavaScript code and data:
+
+<ul>
+<li>a <dfn>standard library</dfn> object, providing access to a
+limited subset of the JavaScript <a href="#standard-library">standard
+libraries</a>;
+<li>a <dfn>foreign function interface</dfn> (FFI), providing access to
+custom external JavaScript functions; and
+<li>a <dfn>heap buffer</dfn>, providing a
+single <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer"><code>ArrayBuffer</code></a>
+to act as the asm.js heap.
+</ul>
+
+<p>These objects allow asm.js to call into external JavaScript (and to
+share its heap buffer with external JavaScript). Conversely, the
+exports object returned from the module allows external JavaScript to
+call into asm.js.
+
+<p>So in the general case, an asm.js module declaration looks like:
+
+<div class="example">
+<pre>function MyAsmModule(stdlib, foreign, heap) {
+    "use asm";
+
+    // module body...
+
+    return {
+        export1: f1,
+        export2: f2,
+        // ...
+    };
+}
+</div>
+
+<p>Function parameters in asm.js are provided a type annotation by
+means of an explicit coercion on function entry:
+
+<div class="example">
+<pre>function diag(x, y) {
+    x = +x; // x has type double
+    y = +y; // y has type double
+    return +sqrt(square(x) + square(y));
+}</pre>
+</div>
+
+<p>These annotations serve two purposes: first, to provide the
+function's type signature so that the validator can enforce that all
+calls to the function are well-typed; second, to ensure that even if
+the function is exported and called by external JavaScript, its
+arguments are dynamically coerced to the expected type. This ensures
+that an AOT implementation can use unboxed value representations,
+knowing that once the dynamic coercions have completed, the function
+body never needs any runtime type checks.
+
+<h3 class="no-num no-toc">Putting It All Together</h3>
+
+<p>The following is a simple but complete example of an asm.js module.
+
+<!--
+<p>As a simple example, the following module imports the
+standard <code>Math.sqrt</code> library function. At link time, the
+engine must verify that the function extracted
+from <code>global.Math.sqrt</code> is actually the original
+<code>Math.sqrt</code> function of the JavaScript standard library:
+-->
+
+<div class="example">
+<pre>function DiagModule(global) {
+    "use asm";
+
+    var sqrt = global.Math.sqrt;
+
+    function square(x) {
+        x = +x;
+        return +(x*x);
+    }
+
+    function diag(x, y) {
+        x = +x;
+        y = +y;
+        return +sqrt(square(x) + square(y));
+    }
+
+    return { diag: diag };
+}</pre>
+</div>
+
+<p>In a JavaScript engine that supports AOT compilation of asm.js,
+calling the module on a true global object would produce a fully
+compiled exports object:
+
+<div class="example">
+<pre>var fast = DiagModule(window);     // produces AOT-compiled version
+console.log(fast.diag(3, 4));      // 5</pre>
+</div>
+
+<p>By contrast, calling the module on a standard library object
+containing something other than the true <code>Math.sqrt</code> would
+fail to produce compiled code:
+
+<div class="example">
+<pre>var bogusGlobal = {
+    Math: {
+        sqrt: function(x) { return x * 2; }
+    }
+};
+
+var slow = DiagModule(bogusGlobal); // produces purely-interpreted version
+console.log(slow.diag(3, 4));       // 50</pre>
+</div>
+
+
+<h2>Types</h2>
+
+<p>Validation of an asm.js module relies on a static type system that
+classifies and constrains the syntax. This section defines the types
+used by the validation logic.
+
+<h3>Value Types</h3>
+
+<p>Validation in asm.js limits JavaScript programs to only use operations
+that can be mapped closely to efficient data representations and
+machine operations of modern architectures, such as 32-bit integers
+and integer arithmetic.
+
+<p>The types of asm.js values are inter-related by a subtyping
+relation, which can be represented pictorially:
+
+<figure class="diagrams">
+<img src="https://raw.github.com/dherman/asm.js/master/tex/subtypes.png" width="480" height="396">
+</figure>
+
+<p>The white boxes represent arbitrary JavaScript values that may flow
+freely between asm.js code and external JavaScript code.
+
+<p>The gray boxes represent types that are disallowed from escaping
+into external (i.e., non-asm.js) JavaScript code. (These values can be
+given efficient, unboxed representations in optimized asm.js
+implementations that would be unsound if they were allowed to escape.)
+
+<p>The meta-variables &sigma; and &tau; are used to stand for value
+types.
+
+<h4>void</h4>
+
+<p>The <dfn><code>void</code></dfn> type is the type of functions that
+are not supposed to return any useful value. As JavaScript functions,
+they produce the <code>undefined</code> value, but asm.js code is not
+allowed to make use of this value; functions with return
+type <code>void</code> can only be called for effect.
+
+<h4>double</h4>
+
+<p>The <dfn><code>double</code></dfn> type is the type of ordinary
+JavaScript double-precision floating-point numbers.
+
+<h4>signed</h4>
+
+<p>The <dfn><code>signed</code></dfn> type is the type of signed
+32-bit integers. While there is no direct concept of integers in
+JavaScript, 32-bit integers can be represented as doubles, and integer
+operations can be performed with JavaScript arithmetic, relational,
+and bitwise operators.
+
+<h4>unsigned</h4>
+
+<p>The <dfn><code>unsigned</code></dfn> type is the type of unsigned
+32-bit integers. Again, these are not a first-class concept in
+JavaScript, but can be represented as floating-point numbers.
+
+<h4>int</h4>
+
+<p>The <dfn><code>int</code></dfn> type is the type of 32-bit integers
+where the signedness is not known. In asm.js, the type of a variable
+never has a known signedness. This allows them to be compiled as
+32-bit integer registers and memory words. However, this
+representation creates an overlap between signed and unsigned numbers
+that cause an ambiguity in determining which JavaScript number they
+represent. For example, the bit pattern <code>0xffffffff</code> could
+represent 4294967295 or -1, depending on the signedness. For this
+reason, values of the <code>int</code> type are disallowed from
+escaping into external (non-asm.js) JavaScript code.
+
+<h4>fixnum</h4>
+
+<p>The <dfn><code>fixnum</code></dfn> type is the type of integers in the
+range [0, 2<sup>31</sup>)&mdash;that is, the range of integers such
+that an unboxed 32-bit representation has the same value whether it is
+interpreted as signed or unsigned.
+
+
+<h4>intish</h4>
+
+<p>Even though JavaScript only supports floating-point arithmetic,
+most operations can simulate integer arithmetic by coercing their
+result to an integer. For example, adding two integers may overflow
+beyond the 32-bit range, but coercing the result back to an integer
+produces the same 32-bit integer as integer addition in, say, C.
+
+<p>The <dfn><code>intish</code></dfn> type represents the result of a
+JavaScript integer operation that must be coerced back to an integer
+with an explicit coercion
+(<a href="http://ecma-international.org/ecma-262/5.1/#sec-9.5"><em>ToInt32</em></a>
+for signed integers
+and <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.6"><em>ToUint32</em></a>
+for unsigned integers). Validation requires all <code>intish</code>
+values to be immediately passed to an operator or standard library
+that performs the appropriate coercion or else dropped via an
+expression statement. This way, each integer operation can be
+compiled directly to machine operations.
+
+<p>The one operator that does not support this approach is
+multiplication. (Multiplying two large integers can result in a large
+enough double that some lower bits of precision are lost.) So asm.js
+does not support applying the multiplication operator to integer
+operands. Instead, the
+proposed <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-November/026126.html"><code>Math.imul</code></a>
+function is recommended as the proper means of implementing integer
+multiplication.
+
+
+<h4>doublish</h4>
+
+Similar to <code>intish</code>, the <dfn><code>doublish</code></dfn>
+type represents operations that are expected to produce
+a <code>double</code> but may produce additional junk that must be
+coerced back to a number
+via <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.3"><em>ToNumber</em></a>. In
+particular, reading out of bounds from a typed array
+produces <code>undefined</code>, and calling FFI functions may produce
+arbitrary JavaScript values.
+
+<h4>unknown</h4>
+
+The <dfn><code>unknown</code></dfn> type represents a value returned
+from an FFI call. Since asm.js does not allow general JavaScript
+values, the result must be immediately coerced to an integer or
+double.
+
+<h4>extern</h4>
+
+The abstract <dfn><code>extern</code></dfn> type represents the root
+of all types that can escape back into external JavaScript&mdash;in
+other words, the white boxes in the above diagram.
+
+<h3>Global Types</h3>
+
+<p>Variables and functions defined at the top-level scope of an asm.js
+module can have additional types beyond
+the <a href="#value-types">value types</a>. These include:
+
+<ul>
+<li>value types &tau;;
+<li><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
+<li>function types ((&sigma;, &hellip;) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &hellip;) &rarr; &tau;&prime;); and
+<li>the FFI function type <code>Function</code>.
+</ul>
+
+<!-- FIXME: example with link to operators -->
+The "&and;" notation for function types serves to represent overloaded functions and operators. For example...
+
+<p>The meta-variable &gamma; is used to stand for global types.
+
+<h2>Environments</h2>
+
+<p>Validating an asm.js module depends on tracking contextual
+information about the set of definitions and variables in scope. This
+section defines the <dfn>environments</dfn> used by the validation
+logic.
+
+<h3>Global Environment</h3>
+
+<p>An asm.js module is validated in the context of a <dfn>global
+environment</dfn>. The global environment maps each global variable to
+its type as well as indicating whether the variable is mutable:
+
+<p>{ x : (<tt>mut|imm</tt>) &gamma;, &hellip; }
+
+<p>The meta-variable &Delta; is used to stand for a global environment.
+
+<h3>Variable Environment</h3>
+
+<p>In addition to the <span>global environment</span>, each function
+body in an asm.js module is validated in the context of
+a <dfn>variable environment</dfn>. The variable environment maps each
+function parameter and local variable to its value type:
+
+<p>{ x : &tau;, &hellip; }
+
+<p>The meta-variable &Gamma; is used to stand for a variable environment.
+
+<h2>Syntax</h2>
+
+<p>Validation of an asm.js module is specified by reference to
+the <a href="http://ecma-international.org/ecma-262/5.1/#sec-A">ECMAScript
+grammar</a>, but conceptually operates at the level of abstract
+syntax. In particular, an asm.js validator must obey the following
+rules:
+
+<ul>
+<li>Empty statements (<code>;</code>) are always ignored, whether in
+the top level of a module or inside an asm.js function body.
+<li>No variables bound anywhere in an asm.js module (whether in the
+module function parameter list, global variable declarations, asm.js
+function names, asm.js function parameters, or local variable
+declarations) may have the name <code>eval</code>
+or <code>arguments</code>.
+</ul>
+
+<p>These rules are otherwise left implicit in the rest of the
+specification.
+
+<!-- FIXME: example -->
+<p>Where necessary, the specification also defines non-terminals that
+do not appear in
+the <a href="http://ecma-international.org/ecma-262/5.1/#sec-A">ECMAScript
+grammar</a>. These are always prefixed by the name <em>Asm</em> and
+always denote subsets of a non-terminal in the official grammar. For
+example, ...
+
+<h2>Validation Rules</h2>
+
+<p>To ensure that a JavaScript function is a proper asm.js module, it
+must first be statically validated. This section specifies the
+validation process.
+
+<h3>Modules</h3>
+
+<p>TODO
+
+<h3>Functions</h3>
+
+<p>TODO
+
+<h3>Statements</h3>
+
+<p>Each statement is validated in the context of a <span>global
+environment</span> &Delta;, a <span>variable environment</span>
+&Gamma;, and an expected return type &tau;. Unless otherwise
+explicitly stated, a recursive validation of a subterm uses the same
+context as its containing term.
+
+<h4>Block</h4>
+
+<p>A <em>Block</em> statement
+
+<div class="example">
+<em>Block</em> ::= { <em>StatementList<sub>opt</sub></em> }
+</div>
+
+<p>is valid if its <em>StatementList</em> (if any) is valid.
+
+<h4>ExpressionStatement</h4>
+
+<p>An <em>ExpressionStatement</em>
+
+<div class="example">
+<em>ExpressionStatement</em> ::= <em>Expression</em> ;
+</div>
+
+<p>is valid if its <em>Expression</em> is valid.
+
+<h4>EmptyStatement</h3>
+
+<p>An <em>EmptyStatement</em> is always valid.
+
+<h4>IfStatement</h4>
+
+<p>An <em>IfStatement</em>
+
+<div class="example">
+<em>IfStatement</em> ::= if ( <em>Expression</em> ) <em>Statement</em> else <em>Statement</em>
+</div>
+
+<p>is valid if the <em>Expression</em> validates as a subtype
+of <code>int</code> and both <em>Statement</em>s are valid.
+
+<p>An <em>IfStatement</em>
+
+<div class="example">
+<em>IfStatement</em> ::= if ( <em>Expression</em> ) <em>Statement</em>
+</div>
+
+<p>is valid if the <em>Expression</em> validates as a subtype
+of <code>int</code> and the <em>Statement</em> is valid.
+
+<h4>ReturnStatement</h4>
+
+<p>A <em>ReturnStatement</em>
+
+<div class="example">
+<em>ReturnStatement</em> ::= return <em>Expression</em> ;
+</div>
+
+<p>is valid if the <em>Expression</em> validates as a subtype of
+the expected return type &tau;.
+
+<p>A <em>ReturnStatement</em>
+
+<div class="example">
+<em>ReturnStatement</em> ::= return ;
+</div>
+
+<p>is valid if the expected return type &tau; is <code>void</code>.
+
+
+<h4>IterationStatement</h4>
+
+<p>An <em>IterationStatement</em>
+
+<div class="example">
+<em>IterationStatement</em> ::= while ( <em>Expression</em> ) <em>Statement</em>
+</div>
+
+<p>is valid if the <em>Expression</em> validates as a subtype
+of <code>int</code> and the <em>Statement</em> is valid.
+
+<p>An <em>IterationStatement</em>
+
+<div class="example">
+<em>IterationStatement</em> ::= do <em>Statement</em> while ( <em>Expression</em> ) ;
+</div>
+
+<p>is valid if the <em>Statement</em> is valid and
+the <em>Expression</em> validates as a subtype of <code>int</code>.
+
+<p>An <em>IterationStatement</em>
+
+<div class="example">
+<em>IterationStatement</em> ::= for ( <em>ExpressionNoIn<sub>opt</sub></em> ; <em>Expression<sub>opt</sub></em> ; <em>Expression<sub>opt</sub></em> ) <em>Statement</em>
+</div>
+
+<p>is valid if the <em>ExpressionNoIn</em> (if any) validates, the
+first <em>Expression</em> (if any) validates as a subtype
+of <code>int</code>, the second <em>Expression</em> (if any)
+validates, and the <em>Statement</em> is valid.
+
+<h4>BreakStatement</h4>
+
+<p>A <em>BreakStatement</em>
+
+<div class="example">
+<em>BreakStatement</em> ::= break <em>Identifier</em> ;
+</div>
+
+<p>or
+
+<div class="example">
+<em>BreakStatement</em> ::= break ;
+</div>
+
+<p>is always valid.
+
+<h4>ContinueStatement</h4>
+
+<p>A <em>ContinueStatement</em>
+
+<div class="example">
+<em>ContinueStatement</em> ::= continue <em>Identifier</em> ;
+</div>
+
+<p>or
+
+<div class="example">
+<em>ContinueStatement</em> ::= continue ;
+</div>
+
+<p>is always valid.
+
+<h4>LabelledStatement</h4>
+
+<p>A <em>LabelledStatement</em>
+
+<div class="example">
+<em>LabelledStatement</em> ::= <em>Identifier</em> : <em>Statement</em>
+</div>
+
+<p>is valid if the <em>Statement</em> is valid.
+
+<h4>SwitchStatement</h4>
+
+<p>A <em>SwitchStatement</em>
+
+<div class="example">
+<em>SwitchStatement</em> ::= switch ( <em>Expression</em> ) <em>CaseBlock</em>
+</div>
+
+<p>is valid if the <em>Expression</em> validates as a subtype of
+&sigma; where &sigma; is <code>signed</code> or <code>unsigned</code>
+and the <em>CaseBlock</em> validates with expected case type &sigma;.
+
+<h3>Statement Lists</h3>
+
+<p>Just like statements, statement lists are validated in the context
+of a <span>global environment</span> &Delta;, a <span>variable
+environment</span> &Gamma;, and an expected return type &tau;. Unless
+otherwise explicitly stated, a recursive validation of a subterm uses
+the same context as its containing term.
+
+<p>A <em>StatementList</em>
+
+<div class="example">
+<em>StatementList</em> ::= <em>StatementList<sub>opt</sub></em> <em>Statement</em>
+</div>
+
+<p>is valid if the <em>StatementList</em> (if any) is valid and the <em>Statement</em> is valid.
+
+
+<h3>Switch Cases</h3>
+
+<p>Cases in a <code>switch</code> block are validated in the context
+of a <span>global environment</span> &Delta;, a <span>variable
+environment</span> &Gamma;, an expected return type &tau;, and an
+expected case type &sigma;. Unless otherwise explicitly stated, a
+recursive validation of a subterm uses the same context as its
+containing term.
+
+<h4>CaseBlock</h4>
+
+<p>A <em>CaseBlock</em>
+
+<div class="example">
+<em>CaseBlock</em> ::= { <em>CaseClauses<sub>opt</sub></em> <em>DefaultClause<sub>opt</sub></em> }
+</div>
+
+<p>is valid if the <em>CaseClauses</em> (if any) are valid and the <em>DefaultClause</em> if any is valid.
+
+<h4>CaseClauses</h4>
+
+<p>A <em>CaseClauses</em> list
+
+<div class="example">
+<em>CaseClauses</em> ::= <em>CaseClauses<sub>opt</sub></em> <em>CaseClause</em>
+</div>
+
+<p>is valid if the <em>CaseClauses</em> (if any) are valid and the <em>CaseClause</em> is valid.
+
+<h4>CaseClause</h4>
+
+<p>A <em>CaseClause</em>
+
+<div class="example">
+<em>CaseClause</em> ::= case <em>NumericLiteral</em> : <em>StatementList<sub>opt</sub></em>
+</div>
+
+<p>is valid if the <em>NumericLiteral</em> validates as a subtype
+of the expected case case type &sigma; and
+the <em>StatementList</em> (if any) is valid.
+
+<h4>DefaultClause</h4>
+
+<p>A <em>DefaultClause</em>
+
+<div class="example">
+<em>DefaultClause</em> ::= default : <em>StatementList<sub>opt</sub></em>
+</div>
+
+<p>is valid if the <em>StatementList</em> (if any) is valid.
+
+
+<h3>Expressions</h3>
+
+<p>TODO
+
+
+<h2>Linking</h2>
+
+<p>TODO
+
+<h2>Operators</h2>
+
+<h3>Unary Operators</h3>
+
+<table>
+<tbody>
+<tr>
+  <th>Unary Operator</th>
+  <th>Type</th>
+</tr>
+<tr>
+  <td><code>+</code></td>
+  <td>
+    (<code>signed</code>) &rarr; <code>double</code> &and;<br>
+    (<code>unsigned</code>) &rarr; <code>double</code> &and;<br>
+    (<code>doublish</code>) &rarr; <code>double</code>
+  </td>
+</tr>
+<tr>
+  <td><code>-</code></td>
+  <td>
+    (<code>int</code>) &rarr; <code>intish</code> &and;<br>
+    (<code>doublish</code>) &rarr; <code>double</code>
+  </td>
+</tr>
+<tr>
+  <td><code>~</code></td>
+  <td>(<code>intish</code>) &rarr; <code>signed</code></td>
+</tr>
+</tbody>
+</table>
+
+<h3>Binary Operators</h3>
+
+<table>
+<tbody>
+<tr>
+  <th>Binary Operator</th>
+  <th>Type</th>
+</tr>
+<tr>
+  <td><code>+</code></td>
+  <td>(<code>double</code>, <code>double</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td><code>-</code></td>
+  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td><code>*</code></td>
+  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td><code>/</code></td>
+  <td>
+    (<code>signed</code>, <code>signed</code>) &rarr; <code>intish</code> &and;<br>
+    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>intish</code> &and;<br>
+    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+  </td>
+</tr>
+<tr>
+  <td><code>%</code></td>
+  <td>
+    (<code>signed</code>, <code>signed</code>) &rarr; <code>int</code> &and;<br>
+    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>int</code> &and;<br>
+    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+  </td>
+</tr>
+<tr>
+  <td><code>|</code>, <code>&amp;</code>, <code>^</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code></td>
+  <td>(<code>intish</code>, <code>intish</code>) &rarr; <code>signed</code></td>
+</tr>
+<tr>
+  <td><code>&gt;&gt;&gt;</code></td>
+  <td>(<code>intish</code>, <code>intish</code>) &rarr; <code>unsigned</code></td>
+</tr>
+<tr>
+  <td><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>==</code>, <code>!=</code></td>
+  <td>
+    (<code>signed</code>, <code>signed</code>) &rarr; <code>int</code> &and;<br>
+    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>int</code> &and;<br>
+    (<code>double</code>, <code>double</code>) &rarr; <code>int</code>
+  </td>
+</tr>
+</tbody>
+</table>
+
+<h2>Standard Library</h2>
+
+<table>
+<tbody>
+<tr>
+  <th>Standard Library</th>
+  <th>Type</th>
+</tr>
+<tr>
+  <td>
+    <code><em>global</em>.Infinity</code><br>
+    <code><em>global</em>.NaN</code>
+  </td>
+  <td><code>double</code></td>
+</tr>
+<tr>
+  <td>
+    <code><em>global</em>.Math.acos</code><br>
+    <code><em>global</em>.Math.asin</code><br>
+    <code><em>global</em>.Math.atan</code><br>
+    <code><em>global</em>.Math.cos</code><br>
+    <code><em>global</em>.Math.sin</code><br>
+    <code><em>global</em>.Math.tan</code><br>
+    <code><em>global</em>.Math.ceil</code><br>
+    <code><em>global</em>.Math.floor</code><br>
+    <code><em>global</em>.Math.exp</code><br>
+    <code><em>global</em>.Math.log</code><br>
+    <code><em>global</em>.Math.sqrt</code>
+  </td>
+  <td>(<code>doublish</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td><code><em>global</em>.Math.abs</code></td>
+  <td>
+    (<code>signed</code>) &rarr; <code>unsigned</code> &and;<br>
+    (<code>doublish</code>) &rarr; <code>double</code>
+  </td>
+</tr>
+<tr>
+  <td>
+    <code><em>global</em>.Math.atan2</code><br>
+    <code><em>global</em>.Math.pow</code>
+  </td>
+  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td><code><em>global</em>.Math.imul</code></td>
+  <td>(<code>int</code>, <code>int</code>) &rarr; <code>signed</code></td>
+</tr>
+<tr>
+  <td>
+    <code><em>global</em>.Math.E</code><br>
+    <code><em>global</em>.Math.LN10</code><br>
+    <code><em>global</em>.Math.LN2</code><br>
+    <code><em>global</em>.Math.LOG2E</code><br>
+    <code><em>global</em>.Math.LOG10E</code><br>
+    <code><em>global</em>.Math.PI</code><br>
+    <code><em>global</em>.Math.SQRT1_2</code><br>
+    <code><em>global</em>.Math.SQRT2</code><br>
+  </td>
+  <td><code>double</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>TODO
+
+<h2 class="no-num">Acknowledgements</h2>
+
+<p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, Vlad Vuki&cacute;evi&cacute;, ...
