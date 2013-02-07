@@ -1,14 +1,11 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
-	"http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-<head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html lang=en><head>
 
-<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta content="text/html; charset=utf-8" http-equiv=content-type>
 <title>asm.js</title>
-<link rel="stylesheet" type="text/css" href="whatwg.css">
-<link rel="stylesheet" type="text/css" href="github.css">
-<script src="highlight.pack.js"></script>
-<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<link href=whatwg.css rel=stylesheet type=text/css>
+<link href=github.css rel=stylesheet type=text/css>
+<script src=highlight.pack.js></script>
+<script src=http://code.jquery.com/jquery-1.9.1.min.js></script>
 <script>
 $(document).ready(function() {
     $("div.example pre").each(function(i, e) {
@@ -28,34 +25,34 @@ span.meta {
 }
 </style>
 
-<body class="draft">
+</head><body class=draft>
 
-<div class="head">
-	<h1>[TITLE]</h1>
+<div class=head>
+	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc">Working Draft — [DATE]</h2>
+	<h2 class="no-num no-toc" id=working-draft-7-february-2013>Working Draft — 7 February 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
-		<dd><!--begin-link-->http://asmjs.org/spec/latest/<!--end-link-->
+		</dt><dd><!--begin-link--><a href=http://asmjs.org/spec/latest/>http://asmjs.org/spec/latest/</a><!--end-link-->
 		
-		<dt>Editors:
-		<dd class="vcard">
-			<span class="fn">David Herman</span>,
-			<span class="org">Mozilla</span>,
-			<span class="email">&lt;dherman@mozilla.com&gt;</span>
-		<dd class="vcard">
-			<span class="fn">Luke Wagner</span>,
-			<span class="org">Mozilla</span>,
-			<span class="email">&lt;luke@mozilla.com&gt;</span>
-		<dd class="vcard">
-			<span class="fn">Alon Zakai</span>,
-			<span class="org">Mozilla</span>,
-			<span class="email">&lt;azakai@mozilla.com&gt;</span>
-	</dl>
+		</dd><dt>Editors:
+		</dt><dd class=vcard>
+			<span class=fn>David Herman</span>,
+			<span class=org>Mozilla</span>,
+			<span class=email>&lt;dherman@mozilla.com&gt;</span>
+		</dd><dd class=vcard>
+			<span class=fn>Luke Wagner</span>,
+			<span class=org>Mozilla</span>,
+			<span class=email>&lt;luke@mozilla.com&gt;</span>
+		</dd><dd class=vcard>
+			<span class=fn>Alon Zakai</span>,
+			<span class=org>Mozilla</span>,
+			<span class=email>&lt;azakai@mozilla.com&gt;</span>
+	</dd></dl>
 </div>
 
-<h2 class="no-num no-toc">Abstract</h2>
+<h2 class="no-num no-toc" id=abstract>Abstract</h2>
 
 <p>This specification defines <strong>asm.js</strong>, a strict subset
 of JavaScript that can be used as a low-level, efficient target
@@ -65,82 +62,136 @@ combination of static and dynamic validation allows JavaScript engines
 to employ an ahead-of-time (AOT) optimizing compilation strategy for
 valid asm.js code.
 
-<h2 class="no-num no-toc">Status</h2>
+</p><h2 class="no-num no-toc" id=status>Status</h2>
 
 <p>This specification is working towards a candidate draft for asm.js
 version 1. A prototype implementation of an optimizing backend for
 asm.js is in progress for Mozilla's SpiderMonkey engine.
 
-<h2 class="no-num no-toc">Table of Contents</h2>
+</p><h2 class="no-num no-toc" id=table-of-contents>Table of Contents</h2>
 
-<!--toc-->
 
-<h2>Introduction</h2>
+<!--begin-toc-->
+<ol class=toc>
+ <li><a href=#introduction><span class=secno>1 </span>Introduction</a></li>
+ <li><a href=#types><span class=secno>2 </span>Types</a>
+  <ol>
+   <li><a href=#value-types><span class=secno>2.1 </span>Value Types</a>
+    <ol>
+     <li><a href=#void><span class=secno>2.1.1 </span>void</a></li>
+     <li><a href=#double><span class=secno>2.1.2 </span>double</a></li>
+     <li><a href=#signed><span class=secno>2.1.3 </span>signed</a></li>
+     <li><a href=#unsigned><span class=secno>2.1.4 </span>unsigned</a></li>
+     <li><a href=#int><span class=secno>2.1.5 </span>int</a></li>
+     <li><a href=#fixnum><span class=secno>2.1.6 </span>fixnum</a></li>
+     <li><a href=#intish><span class=secno>2.1.7 </span>intish</a></li>
+     <li><a href=#doublish><span class=secno>2.1.8 </span>doublish</a></li>
+     <li><a href=#unknown><span class=secno>2.1.9 </span>unknown</a></li>
+     <li><a href=#extern><span class=secno>2.1.10 </span>extern</a></li></ol></li>
+   <li><a href=#global-types><span class=secno>2.2 </span>Global Types</a></li></ol></li>
+ <li><a href=#environments><span class=secno>3 </span>Environments</a>
+  <ol>
+   <li><a href=#global-environment><span class=secno>3.1 </span>Global Environment</a></li>
+   <li><a href=#variable-environment><span class=secno>3.2 </span>Variable Environment</a></li></ol></li>
+ <li><a href=#syntax><span class=secno>4 </span>Syntax</a></li>
+ <li><a href=#validation-rules><span class=secno>5 </span>Validation Rules</a>
+  <ol>
+   <li><a href=#modules><span class=secno>5.1 </span>Modules</a></li>
+   <li><a href=#global-declarations><span class=secno>5.2 </span>Global Declarations</a></li>
+   <li><a href=#functions><span class=secno>5.3 </span>Functions</a></li>
+   <li><a href=#statements><span class=secno>5.4 </span>Statements</a>
+    <ol>
+     <li><a href=#block><span class=secno>5.4.1 </span>Block</a></li>
+     <li><a href=#expressionstatement><span class=secno>5.4.2 </span>ExpressionStatement</a></li>
+     <li><a href=#emptystatement><span class=secno>5.4.3 </span>EmptyStatement</a></li>
+     <li><a href=#ifstatement><span class=secno>5.4.4 </span>IfStatement</a></li>
+     <li><a href=#returnstatement><span class=secno>5.4.5 </span>ReturnStatement</a></li>
+     <li><a href=#iterationstatement><span class=secno>5.4.6 </span>IterationStatement</a></li>
+     <li><a href=#breakstatement><span class=secno>5.4.7 </span>BreakStatement</a></li>
+     <li><a href=#continuestatement><span class=secno>5.4.8 </span>ContinueStatement</a></li>
+     <li><a href=#labelledstatement><span class=secno>5.4.9 </span>LabelledStatement</a></li>
+     <li><a href=#switchstatement><span class=secno>5.4.10 </span>SwitchStatement</a></li></ol></li>
+   <li><a href=#switch-cases><span class=secno>5.5 </span>Switch Cases</a>
+    <ol>
+     <li><a href=#caseblock><span class=secno>5.5.1 </span>CaseBlock</a></li>
+     <li><a href=#caseclause><span class=secno>5.5.2 </span>CaseClause</a></li>
+     <li><a href=#defaultclause><span class=secno>5.5.3 </span>DefaultClause</a></li></ol></li>
+   <li><a href=#expressions><span class=secno>5.6 </span>Expressions</a></li></ol></li>
+ <li><a href=#linking-0><span class=secno>6 </span>Linking</a></li>
+ <li><a href=#operators><span class=secno>7 </span>Operators</a>
+  <ol>
+   <li><a href=#unary-operators><span class=secno>7.1 </span>Unary Operators</a></li>
+   <li><a href=#binary-operators><span class=secno>7.2 </span>Binary Operators</a></li></ol></li>
+ <li><a href=#standard-library><span class=secno>8 </span>Standard Library</a></li>
+ <li><a class=no-num href=#acknowledgements>Acknowledgements</a></li></ol>
+<!--end-toc-->
 
-<p>This specification defines <dfn>asm.js</dfn>, a strict subset of
+<h2 id=introduction><span class=secno>1 </span>Introduction</h2>
+
+<p>This specification defines <dfn id=asm.js>asm.js</dfn>, a strict subset of
 JavaScript that can be used as a low-level, efficient target language
 for compilers. The asm.js language provides an abstraction similar to
 the C/C++ virtual machine: a large binary heap with efficient loads
 and stores, integer and floating-point arithmetic, first-order
 function definitions, and function pointers.
 
-<h3 class="no-toc no-num">Programming Model</h3>
+</p><h3 class="no-toc no-num" id=programming-model>Programming Model</h3>
 
 <p>The asm.js programming model is built around integer and
 floating-point arithmetic and a virtual heap represented as
-a <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays">typed
+a <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays>typed
 array</a>. While JavaScript does not directly provide constructs for
 dealing with integers, they can be emulated using two tricks:
 
-<ul>
+</p><ul>
 <li>integer loads and stores can be performed using the typed arrays
 API; and
-<li>integer arithmetic is equivalent to the composition of
+</li><li>integer arithmetic is equivalent to the composition of
 JavaScript's floating-point arithmetic operators with the integer
 coercions performed by the bitwise operators.
-</ul>
+</li></ul>
 
 <p>As an example of a load from the heap, if we have a 2MB heap
 (i.e., <code>0x200000</code> bytes) and
-an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/Int32Array">Int32Array</a>
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/Int32Array>Int32Array</a>
 view of the heap called <code>HEAP32</code>, then we can load the
 32-bit integer at byte offset <code>p</code>:
 
-<div class="example">
-<pre>HEAP32[(p & 0x1fffff) >> 2]</pre>
+</p><div class=example>
+<pre>HEAP32[(p &amp; 0x1fffff) &gt;&gt; 2]</pre>
 </div>
 
 <p>The mask is required by asm.js in order to efficiently enforce that
 the pointer is within the heap array's bounds, and the shift converts
 the byte offset to a 32-bit word offset.
 
-<p>As an example of integer arithmetic, addition can be performed by
+</p><p>As an example of integer arithmetic, addition can be performed by
 taking two integer values, adding them with the built-in addition
 operator, and coercing the result back to an integer via the bitwise
 or operator:
 
-<div class="example">
+</p><div class=example>
 <pre>(x+y)|0</pre>
 </div>
 
 <p>This programming model is directly inspired by the techniques
-pioneered by the <a href="http://emscripten.org">Emscripten</a>
+pioneered by the <a href=http://emscripten.org>Emscripten</a>
 compiler.
 
-<h3 class="no-num no-toc">Validation</h3>
+</p><h3 class="no-num no-toc" id=validation>Validation</h3>
 
 <p>The asm.js sub-language is defined by a
-<a href="#validation-rules">static type system</a> that can be checked
+<a href=#validation-rules>static type system</a> that can be checked
 at JavaScript parse time. Validation of asm.js code is designed to be
 "pay-as-you-go" in that it is never performed on code that does not
-request it. An asm.js <dfn>module</dfn> requests validation by means
+request it. An asm.js <dfn id=module>module</dfn> requests validation by means
 of a
-special <a href="http://ecma-international.org/ecma-262/5.1/#sec-14.1">prologue
+special <a href=http://ecma-international.org/ecma-262/5.1/#sec-14.1>prologue
 directive</a>, similar to that of ECMAScript Edition
-5's <a href="http://ecma-international.org/ecma-262/5.1/#sec-10.1.1">strict
+5's <a href=http://ecma-international.org/ecma-262/5.1/#sec-10.1.1>strict
 mode</a>:
 
-<div class="example">
+</p><div class=example>
 <pre>function MyAsmModule() {
     "use asm";
     // module body
@@ -152,20 +203,20 @@ performing pointless and potentially costly validation on other
 JavaScript code, and to report validation errors in developer consoles
 only where relevant.
 
-<h3 class="no-num no-toc">Ahead-Of-Time Compilation</h3>
+</p><h3 class="no-num no-toc" id=ahead-of-time-compilation>Ahead-Of-Time Compilation</h3>
 
 <p>Because asm.js is a strict subset of JavaScript, this specification
-only defines the validation logic&mdash;the execution semantics is
+only defines the validation logic—the execution semantics is
 simply that of JavaScript. However, validated asm.js is amenable to
 ahead-of-time (AOT) compilation. Moreover, the code generated by an
 AOT compiler can be quite efficient, featuring:
 
-<ul>
+</p><ul>
 <li>unboxed representations of integers and floating-point numbers;
-<li>absence of runtime type checks;
-<li>absence of garbage collection; and
-<li>efficient heap loads and stores (with implementation strategies varying by platform).
-</ul>
+</li><li>absence of runtime type checks;
+</li><li>absence of garbage collection; and
+</li><li>efficient heap loads and stores (with implementation strategies varying by platform).
+</li></ul>
 
 <p>Code that fails to validate must fall back to execution by
 traditional means, e.g., interpretation and/or just-in-time (JIT)
@@ -178,56 +229,56 @@ without profiling, heuristics, or dynamic deoptimization or
 recompilation.
 -->
 
-<h3 class="no-num no-toc">Linking</h3>
+</p><h3 class="no-num no-toc" id=linking>Linking</h3>
 
 <p>Using an asm.js module requires calling its function to obtain an
 object containing the module's exports; this is known
-as <dfn>linking</dfn>. An asm.js module can also be given access to
+as <dfn id=linking-1>linking</dfn>. An asm.js module can also be given access to
 standard libraries and custom JavaScript functions through linking. An
-AOT implementation must perform certain <a href="#linking-0">dynamic
+AOT implementation must perform certain <a href=#linking-0>dynamic
 checks</a> to check compile-time assumptions about the linked
 libraries in order to make use of the compiled code.
 
-<p>This figure depicts a simple architecture of an AOT implementation
+</p><p>This figure depicts a simple architecture of an AOT implementation
 that otherwise employs a simple interpreter. If either dynamic or
 static validation fails, the implementation must fall back to the
 interpreter. But if both validations succeed, calling the module
 exports executes the binary executable code generated by AOT
 compilation.
 
-<figure class="diagrams">
-<img src="aot.png" width="780" height="241">
+</p><figure class=diagrams>
+<img height=241 src=aot.png width=780>
 </figure>
 
-<h3 class="no-num no-toc">External Code and Data</h3>
+<h3 class="no-num no-toc" id=external-code-and-data>External Code and Data</h3>
 
 <p>Within an asm.js module, all code is fully statically typed and
 limited to the very restrictive asm.js dialect. However, it is
 possible to interact with recognized standard JavaScript libraries and
 even custom dynamic JavaScript functions.
 
-<p>An asm.js module can take up to three optional parameters,
+</p><p>An asm.js module can take up to three optional parameters,
 providing access to external JavaScript code and data:
 
-<ul>
-<li>a <dfn>standard library</dfn> object, providing access to a
-limited subset of the JavaScript <a href="#standard-library">standard
+</p><ul>
+<li>a <dfn id=standard-library-0>standard library</dfn> object, providing access to a
+limited subset of the JavaScript <a href=#standard-library>standard
 libraries</a>;
-<li>a <dfn>foreign function interface</dfn> (FFI), providing access to
+</li><li>a <dfn id=foreign-function-interface>foreign function interface</dfn> (FFI), providing access to
 custom external JavaScript functions; and
-<li>a <dfn>heap buffer</dfn>, providing a
-single <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer"><code>ArrayBuffer</code></a>
+</li><li>a <dfn id=heap-buffer>heap buffer</dfn>, providing a
+single <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer><code>ArrayBuffer</code></a>
 to act as the asm.js heap.
-</ul>
+</li></ul>
 
 <p>These objects allow asm.js to call into external JavaScript (and to
 share its heap buffer with external JavaScript). Conversely, the
 exports object returned from the module allows external JavaScript to
 call into asm.js.
 
-<p>So in the general case, an asm.js module declaration looks like:
+</p><p>So in the general case, an asm.js module declaration looks like:
 
-<div class="example">
+</p><div class=example>
 <pre>function MyAsmModule(stdlib, foreign, heap) {
     "use asm";
 
@@ -239,12 +290,12 @@ call into asm.js.
         // ...
     };
 }
-</div>
+</pre></div>
 
 <p>Function parameters in asm.js are provided a type annotation by
 means of an explicit coercion on function entry:
 
-<div class="example">
+</p><div class=example>
 <pre>function diag(x, y) {
     x = +x; // x has type double
     y = +y; // y has type double
@@ -261,7 +312,7 @@ that an AOT implementation can use unboxed value representations,
 knowing that once the dynamic coercions have completed, the function
 body never needs any runtime type checks.
 
-<h3 class="no-num no-toc">Putting It All Together</h3>
+</p><h3 class="no-num no-toc" id=putting-it-all-together>Putting It All Together</h3>
 
 <p>The following is a simple but complete example of an asm.js module.
 
@@ -273,7 +324,7 @@ from <code>stdlib.Math.sqrt</code> is actually the original
 <code>Math.sqrt</code> function of the JavaScript standard library:
 -->
 
-<div class="example">
+</p><div class=example>
 <pre>function DiagModule(stdlib) {
     "use asm";
 
@@ -298,7 +349,7 @@ from <code>stdlib.Math.sqrt</code> is actually the original
 calling the module on a true global object would produce a fully
 compiled exports object:
 
-<div class="example">
+</p><div class=example>
 <pre>var fast = DiagModule(window);     // produces AOT-compiled version
 console.log(fast.diag(3, 4));      // 5</pre>
 </div>
@@ -307,7 +358,7 @@ console.log(fast.diag(3, 4));      // 5</pre>
 containing something other than the true <code>Math.sqrt</code> would
 fail to produce compiled code:
 
-<div class="example">
+</p><div class=example>
 <pre>var bogusGlobal = {
     Math: {
         sqrt: function(x) { return x * 2; }
@@ -319,67 +370,67 @@ console.log(slow.diag(3, 4));       // 50</pre>
 </div>
 
 
-<h2>Types</h2>
+<h2 id=types><span class=secno>2 </span>Types</h2>
 
 <p>Validation of an asm.js module relies on a static type system that
 classifies and constrains the syntax. This section defines the types
 used by the validation logic.
 
-<h3>Value Types</h3>
+</p><h3 id=value-types><span class=secno>2.1 </span>Value Types</h3>
 
 <p>Validation in asm.js limits JavaScript programs to only use operations
 that can be mapped closely to efficient data representations and
 machine operations of modern architectures, such as 32-bit integers
 and integer arithmetic.
 
-<p>The types of asm.js values are inter-related by a subtyping
+</p><p>The types of asm.js values are inter-related by a subtyping
 relation, which can be represented pictorially:
 
-<figure class="diagrams">
-<img src="https://raw.github.com/dherman/asm.js/master/tex/subtypes.png" width="480" height="396">
+</p><figure class=diagrams>
+<img height=396 src=https://raw.github.com/dherman/asm.js/master/tex/subtypes.png width=480>
 </figure>
 
 <p>The white boxes represent arbitrary JavaScript values that may flow
 freely between asm.js code and external JavaScript code.
 
-<p>The gray boxes represent types that are disallowed from escaping
+</p><p>The gray boxes represent types that are disallowed from escaping
 into external (i.e., non-asm.js) JavaScript code. (These values can be
 given efficient, unboxed representations in optimized asm.js
 implementations that would be unsound if they were allowed to escape.)
 
-<p>The meta-variables &sigma; and &tau; are used to stand for value
+</p><p>The meta-variables σ and τ are used to stand for value
 types.
 
-<h4>void</h4>
+</p><h4 id=void><span class=secno>2.1.1 </span>void</h4>
 
-<p>The <dfn><code>void</code></dfn> type is the type of functions that
+<p>The <dfn id=void-0><code>void</code></dfn> type is the type of functions that
 are not supposed to return any useful value. As JavaScript functions,
 they produce the <code>undefined</code> value, but asm.js code is not
 allowed to make use of this value; functions with return
-type <code>void</code> can only be called for effect.
+type <a href=#void-0><code>void</code></a> can only be called for effect.
 
-<h4>double</h4>
+</p><h4 id=double><span class=secno>2.1.2 </span>double</h4>
 
-<p>The <dfn><code>double</code></dfn> type is the type of ordinary
+<p>The <dfn id=double-0><code>double</code></dfn> type is the type of ordinary
 JavaScript double-precision floating-point numbers.
 
-<h4>signed</h4>
+</p><h4 id=signed><span class=secno>2.1.3 </span>signed</h4>
 
-<p>The <dfn><code>signed</code></dfn> type is the type of signed
+<p>The <dfn id=signed-0><code>signed</code></dfn> type is the type of signed
 32-bit integers. While there is no direct concept of integers in
 JavaScript, 32-bit integers can be represented as doubles, and integer
 operations can be performed with JavaScript arithmetic, relational,
 and bitwise operators.
 
-<h4>unsigned</h4>
+</p><h4 id=unsigned><span class=secno>2.1.4 </span>unsigned</h4>
 
-<p>The <dfn><code>unsigned</code></dfn> type is the type of unsigned
+<p>The <dfn id=unsigned-0><code>unsigned</code></dfn> type is the type of unsigned
 32-bit integers. Again, these are not a first-class concept in
 JavaScript, but can be represented as floating-point numbers.
 
-<h4>int</h4>
+</p><h4 id=int><span class=secno>2.1.5 </span>int</h4>
 
-<p>The <dfn><code>int</code></dfn> type is the type of 32-bit integers
+<p>The <dfn id=int-0><code>int</code></dfn> type is the type of 32-bit integers
 where the signedness is not known. In asm.js, the type of a variable
 never has a known signedness. This allows them to be compiled as
 32-bit integer registers and memory words. However, this
@@ -387,18 +438,18 @@ representation creates an overlap between signed and unsigned numbers
 that cause an ambiguity in determining which JavaScript number they
 represent. For example, the bit pattern <code>0xffffffff</code> could
 represent 4294967295 or -1, depending on the signedness. For this
-reason, values of the <code>int</code> type are disallowed from
+reason, values of the <a href=#int-0><code>int</code></a> type are disallowed from
 escaping into external (non-asm.js) JavaScript code.
 
-<h4>fixnum</h4>
+</p><h4 id=fixnum><span class=secno>2.1.6 </span>fixnum</h4>
 
-<p>The <dfn><code>fixnum</code></dfn> type is the type of integers in the
-range [0, 2<sup>31</sup>)&mdash;that is, the range of integers such
+<p>The <dfn id=fixnum-0><code>fixnum</code></dfn> type is the type of integers in the
+range [0, 2<sup>31</sup>)—that is, the range of integers such
 that an unboxed 32-bit representation has the same value whether it is
 interpreted as signed or unsigned.
 
 
-<h4>intish</h4>
+</p><h4 id=intish><span class=secno>2.1.7 </span>intish</h4>
 
 <p>Even though JavaScript only supports floating-point arithmetic,
 most operations can simulate integer arithmetic by coercing their
@@ -406,157 +457,157 @@ result to an integer. For example, adding two integers may overflow
 beyond the 32-bit range, but coercing the result back to an integer
 produces the same 32-bit integer as integer addition in, say, C.
 
-<p>The <dfn><code>intish</code></dfn> type represents the result of a
+</p><p>The <dfn id=intish-0><code>intish</code></dfn> type represents the result of a
 JavaScript integer operation that must be coerced back to an integer
 with an explicit coercion
-(<a href="http://ecma-international.org/ecma-262/5.1/#sec-9.5"><em>ToInt32</em></a>
+(<a href=http://ecma-international.org/ecma-262/5.1/#sec-9.5><em>ToInt32</em></a>
 for signed integers
-and <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.6"><em>ToUint32</em></a>
-for unsigned integers). Validation requires all <code>intish</code>
+and <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.6><em>ToUint32</em></a>
+for unsigned integers). Validation requires all <a href=#intish-0><code>intish</code></a>
 values to be immediately passed to an operator or standard library
 that performs the appropriate coercion or else dropped via an
 expression statement. This way, each integer operation can be
 compiled directly to machine operations.
 
-<p>The one operator that does not support this approach is
+</p><p>The one operator that does not support this approach is
 multiplication. (Multiplying two large integers can result in a large
 enough double that some lower bits of precision are lost.) So asm.js
 does not support applying the multiplication operator to integer
 operands. Instead, the
-proposed <a href="https://mail.mozilla.org/pipermail/es-discuss/2012-November/026126.html"><code>Math.imul</code></a>
+proposed <a href=https://mail.mozilla.org/pipermail/es-discuss/2012-November/026126.html><code>Math.imul</code></a>
 function is recommended as the proper means of implementing integer
 multiplication.
 
 
-<h4>doublish</h4>
+</p><h4 id=doublish><span class=secno>2.1.8 </span>doublish</h4>
 
-Similar to <code>intish</code>, the <dfn><code>doublish</code></dfn>
+Similar to <a href=#intish-0><code>intish</code></a>, the <dfn id=doublish-0><code>doublish</code></dfn>
 type represents operations that are expected to produce
-a <code>double</code> but may produce additional junk that must be
+a <a href=#double-0><code>double</code></a> but may produce additional junk that must be
 coerced back to a number
-via <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.3"><em>ToNumber</em></a>. In
+via <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.3><em>ToNumber</em></a>. In
 particular, reading out of bounds from a typed array
 produces <code>undefined</code>, and calling FFI functions may produce
 arbitrary JavaScript values.
 
-<h4>unknown</h4>
+<h4 id=unknown><span class=secno>2.1.9 </span>unknown</h4>
 
-The <dfn><code>unknown</code></dfn> type represents a value returned
+The <dfn id=unknown-0><code>unknown</code></dfn> type represents a value returned
 from an FFI call. Since asm.js does not allow general JavaScript
 values, the result must be immediately coerced to an integer or
 double.
 
-<h4>extern</h4>
+<h4 id=extern><span class=secno>2.1.10 </span>extern</h4>
 
-The abstract <dfn><code>extern</code></dfn> type represents the root
-of all types that can escape back into external JavaScript&mdash;in
+The abstract <dfn id=extern-0><code>extern</code></dfn> type represents the root
+of all types that can escape back into external JavaScript—in
 other words, the white boxes in the above diagram.
 
-<h3>Global Types</h3>
+<h3 id=global-types><span class=secno>2.2 </span>Global Types</h3>
 
 <p>Variables and functions defined at the top-level scope of an asm.js
 module can have additional types beyond
-the <a href="#value-types">value types</a>. These include:
+the <a href=#value-types>value types</a>. These include:
 
-<ul>
-<li>value types &tau;;
-<li><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
-<li>function types ((&sigma;, &hellip;) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &hellip;) &rarr; &tau;&prime;); and
-<li>the FFI function type <code>Function</code>.
-</ul>
+</p><ul>
+<li>value types τ;
+</li><li><a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
+</li><li>function types ((σ, …) → τ) ∧ … ∧ ((σ′, …) → τ′); and
+</li><li>the FFI function type <code>Function</code>.
+</li></ul>
 
 <!-- FIXME: example with link to operators -->
-The "&and;" notation for function types serves to represent overloaded functions and operators. For example...
+The "∧" notation for function types serves to represent overloaded functions and operators. For example...
 
-<p>The meta-variable &gamma; is used to stand for global types.
+<p>The meta-variable γ is used to stand for global types.
 
-<h2>Environments</h2>
+</p><h2 id=environments><span class=secno>3 </span>Environments</h2>
 
 <p>Validating an asm.js module depends on tracking contextual
 information about the set of definitions and variables in scope. This
-section defines the <dfn>environments</dfn> used by the validation
+section defines the <dfn id=environments-0>environments</dfn> used by the validation
 logic.
 
-<h3>Global Environment</h3>
+</p><h3 id=global-environment><span class=secno>3.1 </span>Global Environment</h3>
 
-<p>An asm.js module is validated in the context of a <dfn>global
+<p>An asm.js module is validated in the context of a <dfn id=global-environment-0>global
 environment</dfn>. The global environment maps each global variable to
 its type as well as indicating whether the variable is mutable:
 
-<p>{ x : (<tt>mut|imm</tt>) &gamma;, &hellip; }
+</p><p>{ x : (<tt>mut|imm</tt>) γ, … }
 
-<p>The meta-variable &Delta; is used to stand for a global environment.
+</p><p>The meta-variable Δ is used to stand for a global environment.
 
-<h3>Variable Environment</h3>
+</p><h3 id=variable-environment><span class=secno>3.2 </span>Variable Environment</h3>
 
-<p>In addition to the <span>global environment</span>, each function
+<p>In addition to the <a href=#global-environment-0>global environment</a>, each function
 body in an asm.js module is validated in the context of
-a <dfn>variable environment</dfn>. The variable environment maps each
+a <dfn id=variable-environment-0>variable environment</dfn>. The variable environment maps each
 function parameter and local variable to its value type:
 
-<p>{ x : &tau;, &hellip; }
+</p><p>{ x : τ, … }
 
-<p>The meta-variable &Gamma; is used to stand for a variable environment.
+</p><p>The meta-variable Γ is used to stand for a variable environment.
 
-<h2>Syntax</h2>
+</p><h2 id=syntax><span class=secno>4 </span>Syntax</h2>
 
 <p>Validation of an asm.js module is specified by reference to
-the <a href="http://ecma-international.org/ecma-262/5.1/#sec-A">ECMAScript
+the <a href=http://ecma-international.org/ecma-262/5.1/#sec-A>ECMAScript
 grammar</a>, but conceptually operates at the level of abstract
 syntax. In particular, an asm.js validator must obey the following
 rules:
 
-<ul>
+</p><ul>
 <li>Empty statements (<code>;</code>) are always ignored, whether in
 the top level of a module or inside an asm.js function body.
-<li>No variables bound anywhere in an asm.js module (whether in the
+</li><li>No variables bound anywhere in an asm.js module (whether in the
 module function parameter list, global variable declarations, asm.js
 function names, asm.js function parameters, or local variable
 declarations) may have the name <code>eval</code>
 or <code>arguments</code>.
-</ul>
+</li></ul>
 
 <p>These rules are otherwise left implicit in the rest of the
 specification.
 
 <!-- FIXME: example -->
-<p>Where necessary, the specification also defines non-terminals that
+</p><p>Where necessary, the specification also defines non-terminals that
 do not appear in
-the <a href="http://ecma-international.org/ecma-262/5.1/#sec-A">ECMAScript
+the <a href=http://ecma-international.org/ecma-262/5.1/#sec-A>ECMAScript
 grammar</a>. These are always prefixed by the name <em>Asm</em> and
 always denote subsets of a non-terminal in the official grammar. For
 example, ...
 
-<h2>Validation Rules</h2>
+</p><h2 id=validation-rules><span class=secno>5 </span>Validation Rules</h2>
 
 <p>To ensure that a JavaScript function is a proper asm.js module, it
 must first be statically validated. This section specifies the
 validation process.
 
-<h3>Modules</h3>
+</p><h3 id=modules><span class=secno>5.1 </span>Modules</h3>
 
-<div class="example">
+<div class=example>
 <em>FunctionExpression</em> ::= <code>function</code> <em>Identifier<sub>opt</sub></em><code>() { "use asm";</code> <em>FunctionBody</em> <code>}</code>
 </div>
 
-<div class="example">
+<div class=example>
 <em>FunctionExpression</em> ::= <code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
 </div>
 
-<div class="example">
+<div class=example>
 <em>FunctionExpression</em> ::= <code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>,</code> <em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
 </div>
 
-<div class="example">
+<div class=example>
 <em>FunctionExpression</em> ::= <code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>,</code> <em>Identifier</em><code>,</code> <em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
 </div>
 
 <!-- FIXME: text -->
 <p>A module body...
 
-<div class="example">
+</p><div class=example>
 <em>FunctionBody</em> ::= <em>SourceElements</em> <code>return</code> <em>Identifier</em><code>;</code><br>
-<em>FunctionBody</em> ::= <em>SourceElements</em> <code>return</code> <code>{</code> <span class="meta">(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
+<em>FunctionBody</em> ::= <em>SourceElements</em> <code>return</code> <code>{</code> <span class=meta>(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class=meta>)</span>… <code> };</code>
 </div>
 
 <!--
@@ -584,9 +635,9 @@ validation process.
 -->
 
 
-<h3>Global Declarations</h3>
+<h3 id=global-declarations><span class=secno>5.2 </span>Global Declarations</h3>
 
-<div class="example">
+<div class=example>
 <em>SourceElement</em> ::= <code>var</code> <em>Identifier</em> <code>=</code> <em>Identifier</em><code>.</code><em>Identifier</em><code>;</code><br>
 <em>SourceElement</em> ::= <code>var</code> <em>Identifier</em> <code>=</code> <em>Identifier</em><code>.Math.</code><em>Identifier</em><code>;</code><br>
 <em>SourceElement</em> ::= <code>var</code> <em>Identifier</em> <code>= new</code> <em>Identifier</em><code>.</code><em>Identifier</em><code>(</code><em>Identifier</em><code>);</code><br>
@@ -594,7 +645,7 @@ validation process.
 <em>SourceElement</em> ::= <code>var</code> <em>Identifier</em> <code>=</code> <code>+</code><em>Identifier</em><code>.</code><em>Identifier</em><code>;</code><br>
 </div>
 
-<h3>Functions</h3>
+<h3 id=functions><span class=secno>5.3 </span>Functions</h3>
 
 <!--
 <div class="example">
@@ -606,156 +657,156 @@ validation process.
 </div>
 -->
 
-<div class="example">
-<em>SourceElement</em> ::= <code>function</code> <em>Identifier</em><code>(</code><em>Identifier</em>&hellip;<code>) {</code> <span class="meta">(</span><em>Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip; <em>VariableStatement</em>&hellip; <em>Statement</em>&hellip; <code>}</code>
+<div class=example>
+<em>SourceElement</em> ::= <code>function</code> <em>Identifier</em><code>(</code><em>Identifier</em>…<code>) {</code> <span class=meta>(</span><em>Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>… <em>VariableStatement</em>… <em>Statement</em>… <code>}</code>
 </div>
 
 <p>TODO
 
-<h3>Statements</h3>
+</p><h3 id=statements><span class=secno>5.4 </span>Statements</h3>
 
-<p>Each statement is validated in the context of a <span>global
-environment</span> &Delta;, a <span>variable environment</span>
-&Gamma;, and an expected return type &tau;. Unless otherwise
+<p>Each statement is validated in the context of a <a href=#global-environment-0>global
+environment</a> Δ, a <a href=#variable-environment-0>variable environment</a>
+Γ, and an expected return type τ. Unless otherwise
 explicitly stated, a recursive validation of a subterm uses the same
 context as its containing term.
 
-<h4>Block</h4>
+</p><h4 id=block><span class=secno>5.4.1 </span>Block</h4>
 
 <p>A <em>Block</em> statement
 
-<div class="example">
-<em>Block</em> ::= <code>{</code> <em>Statement</em>&hellip; <code>}</code>
+</p><div class=example>
+<em>Block</em> ::= <code>{</code> <em>Statement</em>… <code>}</code>
 </div>
 
 <p>is valid if its <em>Statement</em> list is valid.
 
-<h4>ExpressionStatement</h4>
+</p><h4 id=expressionstatement><span class=secno>5.4.2 </span>ExpressionStatement</h4>
 
 <p>An <em>ExpressionStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>ExpressionStatement</em> ::= <em>Expression</em> <code>;</code>
 </div>
 
 <p>is valid if its <em>Expression</em> is valid.
 
-<h4>EmptyStatement</h3>
+</p><h4 id=emptystatement><span class=secno>5.4.3 </span>EmptyStatement</h4>
 
 <p>An <em>EmptyStatement</em> is always valid.
 
-<h4>IfStatement</h4>
+</p><h4 id=ifstatement><span class=secno>5.4.4 </span>IfStatement</h4>
 
 <p>An <em>IfStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>IfStatement</em> ::= <code>if (</code> <em>Expression</em> <code>)</code> <em>Statement</em> <code>else</code> <em>Statement</em>
 </div>
 
 <p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and both <em>Statement</em>s are valid.
+of <a href=#int-0><code>int</code></a> and both <em>Statement</em>s are valid.
 
-<p>An <em>IfStatement</em>
+</p><p>An <em>IfStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>IfStatement</em> ::= <code>if (</code> <em>Expression</em> <code>)</code> <em>Statement</em>
 </div>
 
 <p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and the <em>Statement</em> is valid.
+of <a href=#int-0><code>int</code></a> and the <em>Statement</em> is valid.
 
-<h4>ReturnStatement</h4>
+</p><h4 id=returnstatement><span class=secno>5.4.5 </span>ReturnStatement</h4>
 
 <p>A <em>ReturnStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>ReturnStatement</em> ::= <code>return</code> <em>Expression</em> <code>;</code>
 </div>
 
 <p>is valid if the <em>Expression</em> validates as a subtype of
-the expected return type &tau;.
+the expected return type τ.
 
-<p>A <em>ReturnStatement</em>
+</p><p>A <em>ReturnStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>ReturnStatement</em> ::= <code>return ;</code>
 </div>
 
-<p>is valid if the expected return type &tau; is <code>void</code>.
+<p>is valid if the expected return type τ is <a href=#void-0><code>void</code></a>.
 
 
-<h4>IterationStatement</h4>
+</p><h4 id=iterationstatement><span class=secno>5.4.6 </span>IterationStatement</h4>
 
 <p>An <em>IterationStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>IterationStatement</em> ::= <code>while (</code> <em>Expression</em> <code>)</code> <em>Statement</em>
 </div>
 
 <p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and the <em>Statement</em> is valid.
+of <a href=#int-0><code>int</code></a> and the <em>Statement</em> is valid.
 
-<p>An <em>IterationStatement</em>
+</p><p>An <em>IterationStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>IterationStatement</em> ::= <code>do</code> <em>Statement</em> <code>while (</code> <em>Expression</em> <code>) ;</code>
 </div>
 
 <p>is valid if the <em>Statement</em> is valid and
-the <em>Expression</em> validates as a subtype of <code>int</code>.
+the <em>Expression</em> validates as a subtype of <a href=#int-0><code>int</code></a>.
 
-<p>An <em>IterationStatement</em>
+</p><p>An <em>IterationStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>IterationStatement</em> ::= <code>for (</code> <em>ExpressionNoIn<sub>opt</sub></em> <code>;</code> <em>Expression<sub>opt</sub></em> <code>;</code> <em>Expression<sub>opt</sub></em> <code>)</code> <em>Statement</em>
 </div>
 
 <p>is valid if the <em>ExpressionNoIn</em> (if any) validates, the
 first <em>Expression</em> (if any) validates as a subtype
-of <code>int</code>, the second <em>Expression</em> (if any)
+of <a href=#int-0><code>int</code></a>, the second <em>Expression</em> (if any)
 validates, and the <em>Statement</em> is valid.
 
-<h4>BreakStatement</h4>
+</p><h4 id=breakstatement><span class=secno>5.4.7 </span>BreakStatement</h4>
 
 <p>A <em>BreakStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>BreakStatement</em> ::= <code>break</code> <em>Identifier<sub>opt</sub></em> <code>;</code>
 </div>
 
 <p>is always valid.
 
-<h4>ContinueStatement</h4>
+</p><h4 id=continuestatement><span class=secno>5.4.8 </span>ContinueStatement</h4>
 
 <p>A <em>ContinueStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>ContinueStatement</em> ::= <code>continue</code> <em>Identifier<sub>opt</sub></em> <code>;</code>
 </div>
 
 <p>is always valid.
 
-<h4>LabelledStatement</h4>
+</p><h4 id=labelledstatement><span class=secno>5.4.9 </span>LabelledStatement</h4>
 
 <p>A <em>LabelledStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>LabelledStatement</em> ::= <em>Identifier</em> <code>:</code> <em>Statement</em>
 </div>
 
 <p>is valid if the <em>Statement</em> is valid.
 
-<h4>SwitchStatement</h4>
+</p><h4 id=switchstatement><span class=secno>5.4.10 </span>SwitchStatement</h4>
 
 <p>A <em>SwitchStatement</em>
 
-<div class="example">
+</p><div class=example>
 <em>SwitchStatement</em> ::= <code>switch (</code> <em>Expression</em> <code>)</code> <em>CaseBlock</em>
 </div>
 
 <p>is valid if the <em>Expression</em> validates as a subtype of
-&sigma; where &sigma; is <code>signed</code> or <code>unsigned</code>
-and the <em>CaseBlock</em> validates with expected case type &sigma;.
+σ where σ is <a href=#signed-0><code>signed</code></a> or <a href=#unsigned-0><code>unsigned</code></a>
+and the <em>CaseBlock</em> validates with expected case type σ.
 
 <!--
 <h3>Statement Lists</h3>
@@ -776,21 +827,21 @@ the same context as its containing term.
 -->
 
 
-<h3>Switch Cases</h3>
+</p><h3 id=switch-cases><span class=secno>5.5 </span>Switch Cases</h3>
 
 <p>Cases in a <code>switch</code> block are validated in the context
-of a <span>global environment</span> &Delta;, a <span>variable
-environment</span> &Gamma;, an expected return type &tau;, and an
-expected case type &sigma;. Unless otherwise explicitly stated, a
+of a <a href=#global-environment-0>global environment</a> Δ, a <a href=#variable-environment-0>variable
+environment</a> Γ, an expected return type τ, and an
+expected case type σ. Unless otherwise explicitly stated, a
 recursive validation of a subterm uses the same context as its
 containing term.
 
-<h4>CaseBlock</h4>
+</p><h4 id=caseblock><span class=secno>5.5.1 </span>CaseBlock</h4>
 
 <p>A <em>CaseBlock</em>
 
-<div class="example">
-<em>CaseBlock</em> ::= <code>{</code> <em>CaseClause</em>&hellip; <em>DefaultClause<sub>opt</sub></em> <code>}</code>
+</p><div class=example>
+<em>CaseBlock</em> ::= <code>{</code> <em>CaseClause</em>… <em>DefaultClause<sub>opt</sub></em> <code>}</code>
 </div>
 
 <p>is valid if the <em>CaseClause</em> list is valid and the <em>DefaultClause</em> (if any) is valid.
@@ -807,41 +858,41 @@ containing term.
 <p>is valid if the <em>CaseClauses</em> (if any) are valid and the <em>CaseClause</em> is valid.
 -->
 
-<h4>CaseClause</h4>
+</p><h4 id=caseclause><span class=secno>5.5.2 </span>CaseClause</h4>
 
 <p>A <em>CaseClause</em>
 
-<div class="example">
-<em>CaseClause</em> ::= <code>case</code> <em>NumericLiteral</em> <code>:</code> <em>Statement</em>&hellip;
+</p><div class=example>
+<em>CaseClause</em> ::= <code>case</code> <em>NumericLiteral</em> <code>:</code> <em>Statement</em>…
 </div>
 
 <p>is valid if the <em>NumericLiteral</em> validates as a subtype of
-the expected case case type &sigma; and the <em>Statement</em> list is
+the expected case case type σ and the <em>Statement</em> list is
 valid.
 
-<h4>DefaultClause</h4>
+</p><h4 id=defaultclause><span class=secno>5.5.3 </span>DefaultClause</h4>
 
 <p>A <em>DefaultClause</em>
 
-<div class="example">
-<em>DefaultClause</em> ::= <code>default :</code> <em>Statement</em>&hellip;
+</p><div class=example>
+<em>DefaultClause</em> ::= <code>default :</code> <em>Statement</em>…
 </div>
 
 <p>is valid if the <em>Statement</em> list is valid.
 
 
-<h3>Expressions</h3>
+</p><h3 id=expressions><span class=secno>5.6 </span>Expressions</h3>
 
 <p>TODO
 
 
-<h2>Linking</h2>
+</p><h2 id=linking-0><span class=secno>6 </span>Linking</h2>
 
 <p>TODO
 
-<h2>Operators</h2>
+</p><h2 id=operators><span class=secno>7 </span>Operators</h2>
 
-<h3>Unary Operators</h3>
+<h3 id=unary-operators><span class=secno>7.1 </span>Unary Operators</h3>
 
 <table>
 <tbody>
@@ -852,26 +903,26 @@ valid.
 <tr>
   <td><code>+</code></td>
   <td>
-    (<code>signed</code>) &rarr; <code>double</code> &and;<br>
-    (<code>unsigned</code>) &rarr; <code>double</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<a href=#signed-0><code>signed</code></a>) → <a href=#double-0><code>double</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>) → <a href=#double-0><code>double</code></a> ∧<br>
+    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>-</code></td>
   <td>
-    (<code>int</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<a href=#int-0><code>int</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
+    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>~</code></td>
-  <td>(<code>intish</code>) &rarr; <code>signed</code></td>
+  <td>(<a href=#intish-0><code>intish</code></a>) → <a href=#signed-0><code>signed</code></a></td>
 </tr>
 </tbody>
 </table>
 
-<h3>Binary Operators</h3>
+<h3 id=binary-operators><span class=secno>7.2 </span>Binary Operators</h3>
 
 <table>
 <tbody>
@@ -881,52 +932,52 @@ valid.
 </tr>
 <tr>
   <td><code>+</code></td>
-  <td>(<code>double</code>, <code>double</code>) &rarr; <code>double</code></td>
+  <td>(<a href=#double-0><code>double</code></a>, <a href=#double-0><code>double</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>-</code></td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>*</code></td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>/</code></td>
   <td>
-    (<code>signed</code>, <code>signed</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+    (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
+    (<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>%</code></td>
   <td>
-    (<code>signed</code>, <code>signed</code>) &rarr; <code>int</code> &and;<br>
-    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>int</code> &and;<br>
-    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+    (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>|</code>, <code>&amp;</code>, <code>^</code>, <code>&lt;&lt;</code>, <code>&gt;&gt;</code></td>
-  <td>(<code>intish</code>, <code>intish</code>) &rarr; <code>signed</code></td>
+  <td>(<a href=#intish-0><code>intish</code></a>, <a href=#intish-0><code>intish</code></a>) → <a href=#signed-0><code>signed</code></a></td>
 </tr>
 <tr>
   <td><code>&gt;&gt;&gt;</code></td>
-  <td>(<code>intish</code>, <code>intish</code>) &rarr; <code>unsigned</code></td>
+  <td>(<a href=#intish-0><code>intish</code></a>, <a href=#intish-0><code>intish</code></a>) → <a href=#unsigned-0><code>unsigned</code></a></td>
 </tr>
 <tr>
   <td><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>==</code>, <code>!=</code></td>
   <td>
-    (<code>signed</code>, <code>signed</code>) &rarr; <code>int</code> &and;<br>
-    (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>int</code> &and;<br>
-    (<code>double</code>, <code>double</code>) &rarr; <code>int</code>
+    (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#double-0><code>double</code></a>, <a href=#double-0><code>double</code></a>) → <a href=#int-0><code>int</code></a>
   </td>
 </tr>
 </tbody>
 </table>
 
-<h2>Standard Library</h2>
+<h2 id=standard-library><span class=secno>8 </span>Standard Library</h2>
 
 <table>
 <tbody>
@@ -939,7 +990,7 @@ valid.
     <code><em>stdlib</em>.Infinity</code><br>
     <code><em>stdlib</em>.NaN</code>
   </td>
-  <td><code>double</code></td>
+  <td><a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td>
@@ -955,13 +1006,13 @@ valid.
     <code><em>stdlib</em>.Math.log</code><br>
     <code><em>stdlib</em>.Math.sqrt</code>
   </td>
-  <td>(<code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td><code><em>stdlib</em>.Math.abs</code></td>
   <td>
-    (<code>signed</code>) &rarr; <code>unsigned</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<a href=#signed-0><code>signed</code></a>) → <a href=#unsigned-0><code>unsigned</code></a> ∧<br>
+    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
 <tr>
@@ -969,11 +1020,11 @@ valid.
     <code><em>stdlib</em>.Math.atan2</code><br>
     <code><em>stdlib</em>.Math.pow</code>
   </td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td><code><em>stdlib</em>.Math.imul</code></td>
-  <td>(<code>int</code>, <code>int</code>) &rarr; <code>signed</code></td>
+  <td>(<a href=#int-0><code>int</code></a>, <a href=#int-0><code>int</code></a>) → <a href=#signed-0><code>signed</code></a></td>
 </tr>
 <tr>
   <td>
@@ -986,15 +1037,16 @@ valid.
     <code><em>stdlib</em>.Math.SQRT1_2</code><br>
     <code><em>stdlib</em>.Math.SQRT2</code><br>
   </td>
-  <td><code>double</code></td>
+  <td><a href=#double-0><code>double</code></a></td>
 </tr>
 </tbody>
 </table>
 
 <p>TODO
 
-<h2 class="no-num">Acknowledgements</h2>
+</p><h2 class=no-num id=acknowledgements>Acknowledgements</h2>
 
-<p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, Vlad Vuki&cacute;evi&cacute;, ...
-</body>
-</html>
+<p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, Vlad Vukićević, ...
+
+
+</p></body></html>
