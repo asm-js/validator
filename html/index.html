@@ -120,20 +120,19 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
     <ol>
      <li><a href=#numericliteral><span class=secno>5.6.1 </span>NumericLiteral</a></li>
      <li><a href=#identifier><span class=secno>5.6.2 </span>Identifier</a></li>
-     <li><a href=#assignmentexpression><span class=secno>5.6.3 </span>AssignmentExpression</a></li>
-     <li><a href=#memberexpression><span class=secno>5.6.4 </span>MemberExpression</a></li>
+     <li><a href=#memberexpression><span class=secno>5.6.3 </span>MemberExpression</a></li>
+     <li><a href=#assignmentexpression><span class=secno>5.6.4 </span>AssignmentExpression</a></li>
      <li><a href=#callexpression><span class=secno>5.6.5 </span>CallExpression</a></li>
      <li><a href=#unaryexpression><span class=secno>5.6.6 </span>UnaryExpression</a></li>
      <li><a href=#multiplicativeexpression><span class=secno>5.6.7 </span>MultiplicativeExpression</a></li>
      <li><a href=#additiveexpression><span class=secno>5.6.8 </span>AdditiveExpression</a></li>
-     <li><a href=#additiveexpression-0><span class=secno>5.6.9 </span>AdditiveExpression</a></li>
-     <li><a href=#shiftexpression><span class=secno>5.6.10 </span>ShiftExpression</a></li>
-     <li><a href=#relationalexpression><span class=secno>5.6.11 </span>RelationalExpression</a></li>
-     <li><a href=#equalityexpression><span class=secno>5.6.12 </span>EqualityExpression</a></li>
-     <li><a href=#bitwiseandexpression><span class=secno>5.6.13 </span>BitwiseANDExpression</a></li>
-     <li><a href=#bitwisexorexpression><span class=secno>5.6.14 </span>BitwiseXORExpression</a></li>
-     <li><a href=#bitwiseorexpression><span class=secno>5.6.15 </span>BitwiseORExpression</a></li>
-     <li><a href=#conditionalexpression><span class=secno>5.6.16 </span>ConditionalExpression</a></li></ol></li></ol></li>
+     <li><a href=#shiftexpression><span class=secno>5.6.9 </span>ShiftExpression</a></li>
+     <li><a href=#relationalexpression><span class=secno>5.6.10 </span>RelationalExpression</a></li>
+     <li><a href=#equalityexpression><span class=secno>5.6.11 </span>EqualityExpression</a></li>
+     <li><a href=#bitwiseandexpression><span class=secno>5.6.12 </span>BitwiseANDExpression</a></li>
+     <li><a href=#bitwisexorexpression><span class=secno>5.6.13 </span>BitwiseXORExpression</a></li>
+     <li><a href=#bitwiseorexpression><span class=secno>5.6.14 </span>BitwiseORExpression</a></li>
+     <li><a href=#conditionalexpression><span class=secno>5.6.15 </span>ConditionalExpression</a></li></ol></li></ol></li>
  <li><a href=#linking-0><span class=secno>6 </span>Linking</a></li>
  <li><a href=#operators><span class=secno>7 </span>Operators</a>
   <ol>
@@ -931,20 +930,128 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 2<sup>32</sup>) cause validation errors.
 
 </p><h4 id=identifier><span class=secno>5.6.2 </span>Identifier</h4>
-<h4 id=assignmentexpression><span class=secno>5.6.3 </span>AssignmentExpression</h4>
-<h4 id=memberexpression><span class=secno>5.6.4 </span>MemberExpression</h4>
+
+<p>An <em>Identifier</em> node <em>x</em> validates
+as <em>Lookup</em>(Δ, Γ, <em>x</em>).
+
+</p><h4 id=memberexpression><span class=secno>5.6.3 </span>MemberExpression</h4>
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>]</code><br>
+<em>Identifier</em><code>[</code><em>Expression</em><code>]</code><br>
+<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>]</code><br>
+</div>
+<p>is valid if...
+
+</p><h4 id=assignmentexpression><span class=secno>5.6.4 </span>AssignmentExpression</h4>
+
+<p>An <em>AssignmentExpression</em> node
+
+</p><div class=example>
+<em>Identifier</em> <code>=</code> <em>AssignmentExpression</em>
+</div>
+
+<p>validates as type τ if the nested <em>AssignmentExpression</em>
+validates as type τ and one of the following two conditions holds:
+
+</p><ul>
+<li>the <em>Identifier</em> is bound in Γ as a supertype of τ; or
+</li><li>the <em>Identifier</em> is not bound in Γ and is bound to a mutable supertype of τ in Δ.
+</li></ul>
+
+<p>An <em>AssignmentExpression</em> node
+
+</p><div class=example>
+<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
+<em>Identifier</em><code>[</code><em>Expression</em><code>] = </code><em>AssignmentExpression</em><br>
+<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
+</div>
+
 <h4 id=callexpression><span class=secno>5.6.5 </span>CallExpression</h4>
+
+<p>A <em>CallExpression</em> node
+
+</p><div class=example>
+<em>Identifier</em><code>(</code><em>Expression</em><code>,</code>…<code>)</code>
+</div>
+
 <h4 id=unaryexpression><span class=secno>5.6.6 </span>UnaryExpression</h4>
+
+<p>A <em>UnaryExpression</em> node
+
+</p><div class=example>
+<code>+</code><em>UnaryExpression</em><br>
+<code>-</code><em>UnaryExpression</em><br>
+<code>~</code><em>UnaryExpression</em><br>
+<code>~~</code><em>UnaryExpression</em>
+</div>
+
 <h4 id=multiplicativeexpression><span class=secno>5.6.7 </span>MultiplicativeExpression</h4>
+
+<p>A <em>MultiplicativeExpression</em> node
+
+</p><div class=example>
+<em>MultiplicativeExpression</em> <code>*</code> <em>UnaryExpression</em><br>
+<em>MultiplicativeExpression</em> <code>/</code> <em>UnaryExpression</em><br>
+<em>MultiplicativeExpression</em> <code>%</code> <em>UnaryExpression</em><br>
+</div>
+
 <h4 id=additiveexpression><span class=secno>5.6.8 </span>AdditiveExpression</h4>
-<h4 id=additiveexpression-0><span class=secno>5.6.9 </span>AdditiveExpression</h4>
-<h4 id=shiftexpression><span class=secno>5.6.10 </span>ShiftExpression</h4>
-<h4 id=relationalexpression><span class=secno>5.6.11 </span>RelationalExpression</h4>
-<h4 id=equalityexpression><span class=secno>5.6.12 </span>EqualityExpression</h4>
-<h4 id=bitwiseandexpression><span class=secno>5.6.13 </span>BitwiseANDExpression</h4>
-<h4 id=bitwisexorexpression><span class=secno>5.6.14 </span>BitwiseXORExpression</h4>
-<h4 id=bitwiseorexpression><span class=secno>5.6.15 </span>BitwiseORExpression</h4>
-<h4 id=conditionalexpression><span class=secno>5.6.16 </span>ConditionalExpression</h4>
+
+<div class=example>
+<em>AdditiveExpression</em> <code>+</code> <em>MultiplicativeExpression</em><br>
+<em>AdditiveExpression</em> <code>-</code> <em>MultiplicativeExpression</em>
+</div>
+
+<h4 id=shiftexpression><span class=secno>5.6.9 </span>ShiftExpression</h4>
+
+<div class=example>
+<em>ShiftExpression</em> <code>&lt;&lt;</code> <em>AdditiveExpression</em><br>
+<em>ShiftExpression</em> <code>&gt;&gt;</code> <em>AdditiveExpression</em><br>
+<em>ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>AdditiveExpression</em><br>
+</div>
+
+<h4 id=relationalexpression><span class=secno>5.6.10 </span>RelationalExpression</h4>
+
+<div class=example>
+<em>RelationalExpression</em> <code>&lt;</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&gt;</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&lt;=</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&gt;=</code> <em>ShiftExpression</em><br>
+</div>
+
+<h4 id=equalityexpression><span class=secno>5.6.11 </span>EqualityExpression</h4>
+
+<div class=example>
+<em>EqualityExpression</em> <code>==</code> <em>RelationalExpression</em><br>
+<em>EqualityExpression</em> <code>!=</code> <em>RelationalExpression</em>
+</div>
+
+<h4 id=bitwiseandexpression><span class=secno>5.6.12 </span>BitwiseANDExpression</h4>
+
+<div class=example>
+<em>BitwiseANDExpression</em> <code>&amp;</code> <em>EqualityExpression</em><br>
+</div>
+
+<h4 id=bitwisexorexpression><span class=secno>5.6.13 </span>BitwiseXORExpression</h4>
+
+<div class=example>
+<em>BitwiseXORExpression</em> <code>^</code> <em>BitwiseANDExpression</em><br>
+</div>
+
+<h4 id=bitwiseorexpression><span class=secno>5.6.14 </span>BitwiseORExpression</h4>
+
+<div class=example>
+<em>BitwiseORExpression</em> <code>|</code> <em>BitwiseXORExpression</em><br>
+</div>
+
+<h4 id=conditionalexpression><span class=secno>5.6.15 </span>ConditionalExpression</h4>
+
+<div class=example>
+<em>LogicalORExpression</em> <code>?</code> <em>AssignmentExpression</em> <code>:</code> <em>AssignmentExpression</em>
+</div>
 
 <p>TODO
 

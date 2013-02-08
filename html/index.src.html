@@ -864,22 +864,127 @@ expression validates as type <code>unsigned</code>.
 
 <h4>Identifier</h4>
 
+<p>An <em>Identifier</em> node <em>x</em> validates
+as <em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>).
 
+<h4>MemberExpression</h4>
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>]</code><br>
+<em>Identifier</em><code>[</code><em>Expression</em><code>]</code><br>
+<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>]</code><br>
+</div>
+<p>is valid if...
 
 <h4>AssignmentExpression</h4>
-<h4>MemberExpression</h4>
+
+<p>An <em>AssignmentExpression</em> node
+
+<div class="example">
+<em>Identifier</em> <code>=</code> <em>AssignmentExpression</em>
+</div>
+
+<p>validates as type &tau; if the nested <em>AssignmentExpression</em>
+validates as type &tau; and one of the following two conditions holds:
+
+<ul>
+<li>the <em>Identifier</em> is bound in &Gamma; as a supertype of &tau;; or
+<li>the <em>Identifier</em> is not bound in &Gamma; and is bound to a mutable supertype of &tau; in &Delta;.
+</ul>
+
+<p>An <em>AssignmentExpression</em> node
+
+<div class="example">
+<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
+<em>Identifier</em><code>[</code><em>Expression</em><code>] = </code><em>AssignmentExpression</em><br>
+<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
+</div>
+
 <h4>CallExpression</h4>
+
+<p>A <em>CallExpression</em> node
+
+<div class="example">
+<em>Identifier</em><code>(</code><em>Expression</em><code>,</code>&hellip;<code>)</code>
+</div>
+
 <h4>UnaryExpression</h4>
+
+<p>A <em>UnaryExpression</em> node
+
+<div class="example">
+<code>+</code><em>UnaryExpression</em><br>
+<code>-</code><em>UnaryExpression</em><br>
+<code>~</code><em>UnaryExpression</em><br>
+<code>~~</code><em>UnaryExpression</em>
+</div>
+
 <h4>MultiplicativeExpression</h4>
+
+<p>A <em>MultiplicativeExpression</em> node
+
+<div class="example">
+<em>MultiplicativeExpression</em> <code>*</code> <em>UnaryExpression</em><br>
+<em>MultiplicativeExpression</em> <code>/</code> <em>UnaryExpression</em><br>
+<em>MultiplicativeExpression</em> <code>%</code> <em>UnaryExpression</em><br>
+</div>
+
 <h4>AdditiveExpression</h4>
-<h4>AdditiveExpression</h4>
+
+<div class="example">
+<em>AdditiveExpression</em> <code>+</code> <em>MultiplicativeExpression</em><br>
+<em>AdditiveExpression</em> <code>-</code> <em>MultiplicativeExpression</em>
+</div>
+
 <h4>ShiftExpression</h4>
+
+<div class="example">
+<em>ShiftExpression</em> <code>&lt;&lt;</code> <em>AdditiveExpression</em><br>
+<em>ShiftExpression</em> <code>&gt;&gt;</code> <em>AdditiveExpression</em><br>
+<em>ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>AdditiveExpression</em><br>
+</div>
+
 <h4>RelationalExpression</h4>
+
+<div class="example">
+<em>RelationalExpression</em> <code>&lt;</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&gt;</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&lt;=</code> <em>ShiftExpression</em><br>
+<em>RelationalExpression</em> <code>&gt;=</code> <em>ShiftExpression</em><br>
+</div>
+
 <h4>EqualityExpression</h4>
+
+<div class="example">
+<em>EqualityExpression</em> <code>==</code> <em>RelationalExpression</em><br>
+<em>EqualityExpression</em> <code>!=</code> <em>RelationalExpression</em>
+</div>
+
 <h4>BitwiseANDExpression</h4>
+
+<div class="example">
+<em>BitwiseANDExpression</em> <code>&amp;</code> <em>EqualityExpression</em><br>
+</div>
+
 <h4>BitwiseXORExpression</h4>
+
+<div class="example">
+<em>BitwiseXORExpression</em> <code>^</code> <em>BitwiseANDExpression</em><br>
+</div>
+
 <h4>BitwiseORExpression</h4>
+
+<div class="example">
+<em>BitwiseORExpression</em> <code>|</code> <em>BitwiseXORExpression</em><br>
+</div>
+
 <h4>ConditionalExpression</h4>
+
+<div class="example">
+<em>LogicalORExpression</em> <code>?</code> <em>AssignmentExpression</em> <code>:</code> <em>AssignmentExpression</em>
+</div>
 
 <p>TODO
 
