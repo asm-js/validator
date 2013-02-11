@@ -496,7 +496,7 @@ logic.
 environment</dfn>. The global environment maps each global variable to
 its type as well as indicating whether the variable is mutable:
 
-<p>{ x : (<tt>mut|imm</tt>) &gamma;, &hellip; }
+<p><div>{ <em>x</em> : <span class="meta">(</span><tt>mut<span class="meta">|</span>imm</tt><span class="meta">)</span> &gamma;, &hellip; }</div>
 
 <p>The meta-variable &Delta; is used to stand for a global environment.
 
@@ -507,9 +507,29 @@ body in an asm.js module is validated in the context of
 a <dfn>variable environment</dfn>. The variable environment maps each
 function parameter and local variable to its value type:
 
-<p>{ x : &tau;, &hellip; }
+<p>{ <em>x</em> : &tau;, &hellip; }
 
 <p>The meta-variable &Gamma; is used to stand for a variable environment.
+
+<h3>Environment Lookup</h3>
+
+<p>Looking up a variable's type
+
+<div class="example">
+<em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>)
+</div>
+
+<p>is defined by:
+
+<ul>
+<li>&tau; if <em>x</em> : &tau; occurs in &Gamma;;
+<li>&gamma; if <em>x</em> does not occur in &Gamma; and <em>x</em>
+: <code>mut</code> &gamma; or <em>x</em> : <code>imm</code> &gamma;
+occurs in &Delta;
+</ul>
+
+<p>If <em>x</em> does not occur in either environment then
+the <em>Lookup</em> function has no result.
 
 <h2>Syntax</h2>
 
@@ -553,53 +573,57 @@ of legal JavaScript programs.
 
 <h3>Modules</h3>
 
-<p>A <em>FunctionDeclaration</em> or <em>FunctionExpression</em> node
+<p>An asm.js module is a <em>FunctionDeclaration</em>
+or <em>FunctionExpression</em> node with up to three optional
+parameters:
+
+<!--
+<div class="example">
+<code>function</code> <em>Identifier<sub>opt</sub></em><code>() { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
+<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>stdlib:Identifier</em><code>) { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
+<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>stdlib:Identifier</em><code>,</code> <em>foreign:Identifier</em><code>) { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
+</div>
+-->
 
 <div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>() { "use asm";</code> <em>FunctionBody</em> <code>}</code>
+<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><span class="meta">(</span><em>stdlib:Identifier</em><code><span class="meta">(</span>,</code> <em>foreign:Identifier</em><span class="meta">(</span><code>,</code> <em>heap:Identifier</em><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><code>) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;"use asm";</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>decl:</em><span class="meta">(</span><em>VariableStatement</em> <span class="meta">|</span> <em>FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>exports:ReturnStatement</em><br>
+<code>}</code>
 </div>
 
-<div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
-</div>
+
+<h3>Export Declarations</h3>
+
+<p>An asm.js module's export declaration is a <em>ReturnStatement</em>
+returning either a single asm.js function or an object literal
+exporting multiple asm.js functions.
 
 <div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>,</code> <em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
-</div>
-
-<div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>Identifier</em><code>,</code> <em>Identifier</em><code>,</code> <em>Identifier</em><code>) { "use asm";</code> <em>FunctionBody</em> <code>}</code>
+<code>return</code> <em>Identifier</em><code>;</code><br>
+<code>return</code> <code>{</code> <span class="meta">(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
 </div>
 
 <!-- FIXME: text -->
-<p>is valid if...
-
-<p>An asm.js module's <em>FunctionBody</em> node
-
-<div class="example">
-<em>SourceElements</em> <code>return</code> <em>Identifier</em><code>;</code><br>
-<em>SourceElements</em> <code>return</code> <code>{</code> <span class="meta">(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
-</div>
-
-<!-- FIXME: text -->
-<p>is valid if...
+<p>An export declaration is valid if...
 
 
-<h3>Global Declarations</h3>
+<h3>Global Variable Declarations</h3>
 
-<p>A global declaration <em>SourceElement</em> node
+<p>A global variable declaration is a <em>VariableStatement</em> node
+in one of several allowed forms.
 
 <div class="example">
-<code>var</code> <em>Identifier</em> <code>=</code> <em>Identifier</em><code>.</code><em>Identifier</em><code>;</code><br>
-<code>var</code> <em>Identifier</em> <code>=</code> <em>Identifier</em><code>.Math.</code><em>Identifier</em><code>;</code><br>
-<code>var</code> <em>Identifier</em> <code>= new</code> <em>Identifier</em><code>.</code><em>Identifier</em><code>(</code><em>Identifier</em><code>);</code><br>
-<code>var</code> <em>Identifier</em> <code>=</code> <em>Identifier</em><code>.</code><em>Identifier</em><code>|0;</code><br>
-<code>var</code> <em>Identifier</em> <code>=</code> <code>+</code><em>Identifier</em><code>.</code><em>Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.Math.</code><em>y:Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>= new</code> <em>stdlib:Identifier</em><code>.</code><em>view:Identifier</em><code>(</code><em>heap:Identifier</em><code>);</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>|0;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <code>+</code><em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
 </div>
 
-<p>is valid if...
-
-<h3>Functions</h3>
+<h3>Function Declarations</h3>
 
 <!--
 <div class="example">
@@ -611,10 +635,14 @@ of legal JavaScript programs.
 </div>
 -->
 
-<p>An asm.js function <em>SourceElement</em> node
+<p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
 
 <div class="example">
-<code>function</code> <em>Identifier</em><code>(</code><em>Identifier</em>&hellip;<code>) {</code> <span class="meta">(</span><em>Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip; <em>VariableStatement</em>&hellip; <em>Statement</em>&hellip; <code>}</code>
+<code>function</code> <em>Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>VariableStatement</em>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>Statement</em>&hellip;<br>
+<code>}</code>
 </div>
 
 <p>is valid if...
@@ -634,20 +662,20 @@ context as its containing term.
 <p>A <em>Block</em> statement node
 
 <div class="example">
-<code>{</code> <em>Statement</em>&hellip; <code>}</code>
+<code>{</code> <em>stmt:Statement</em>&hellip; <code>}</code>
 </div>
 
-<p>is valid if its <em>Statement</em> list is valid.
+<p>is valid if each <em>stmt</em> is valid.
 
 <h4>ExpressionStatement</h4>
 
 <p>An <em>ExpressionStatement</em> node
 
 <div class="example">
-<em>Expression</em> <code>;</code>
+<em>expr:Expression</em> <code>;</code>
 </div>
 
-<p>is valid if its <em>Expression</em> is valid.
+<p>is valid if <em>expr</em> is valid.
 
 <h4>EmptyStatement</h3>
 
@@ -658,31 +686,32 @@ context as its containing term.
 <p>An <em>IfStatement</em> node
 
 <div class="example">
-<code>if (</code> <em>Expression</em> <code>)</code> <em>Statement</em> <code>else</code> <em>Statement</em>
+<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt1:Statement</em> <code>else</code> <em>stmt2:Statement</em>
 </div>
 
-<p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and both <em>Statement</em>s are valid.
+<p>is valid if <em>expr</em> validates as a subtype
+of <code>int</code> and <em>stmt1</em> and <em>stmt2</em> are both
+valid.
 
 <p>An <em>IfStatement</em> node
 
 <div class="example">
-<code>if (</code> <em>Expression</em> <code>)</code> <em>Statement</em>
+<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt:Statement</em>
 </div>
 
-<p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and the <em>Statement</em> is valid.
+<p>is valid if <em>expr</em> validates as a subtype
+of <code>int</code> and <em>stmt</em> is valid.
 
 <h4>ReturnStatement</h4>
 
 <p>A <em>ReturnStatement</em> node
 
 <div class="example">
-<code>return</code> <em>Expression</em> <code>;</code>
+<code>return</code> <em>expr:Expression</em> <code>;</code>
 </div>
 
-<p>is valid if the <em>Expression</em> validates as a subtype of
-the expected return type &tau;.
+<p>is valid if <em>expr</em> validates as a subtype of the expected
+return type &tau;.
 
 <p>A <em>ReturnStatement</em> node
 
@@ -698,31 +727,31 @@ the expected return type &tau;.
 <p>An <em>IterationStatement</em> node
 
 <div class="example">
-<code>while (</code> <em>Expression</em> <code>)</code> <em>Statement</em>
+<code>while (</code> <em>expr:Expression</em> <code>)</code> <em>stmt:Statement</em>
 </div>
 
-<p>is valid if the <em>Expression</em> validates as a subtype
-of <code>int</code> and the <em>Statement</em> is valid.
+<p>is valid if <em>expr</em> validates as a subtype
+of <code>int</code> and <em>stmt</em> is valid.
 
 <p>An <em>IterationStatement</em> node
 
 <div class="example">
-<code>do</code> <em>Statement</em> <code>while (</code> <em>Expression</em> <code>) ;</code>
+<code>do</code> <em>stmt:Statement</em> <code>while (</code> <em>expr:Expression</em> <code>) ;</code>
 </div>
 
-<p>is valid if the <em>Statement</em> is valid and
-the <em>Expression</em> validates as a subtype of <code>int</code>.
+<p>is valid if <em>stmt</em> is valid and <em>expr</em> validates as a
+subtype of <code>int</code>.
 
 <p>An <em>IterationStatement</em> node
 
 <div class="example">
-<code>for (</code> <em>ExpressionNoIn<sub>opt</sub></em> <code>;</code> <em>Expression<sub>opt</sub></em> <code>;</code> <em>Expression<sub>opt</sub></em> <code>)</code> <em>Statement</em>
+<code>for (</code> <em>init:ExpressionNoIn<sub>opt</sub></em> <code>;</code> <em>test:Expression<sub>opt</sub></em> <code>;</code> <em>update:Expression<sub>opt</sub></em> <code>)</code> <em>body:Statement</em>
 </div>
 
-<p>is valid if the <em>ExpressionNoIn</em> (if any) validates, the
-first <em>Expression</em> (if any) validates as a subtype
-of <code>int</code>, the second <em>Expression</em> (if any)
-validates, and the <em>Statement</em> is valid.
+<p>is valid if <em>init</em> validates (if present),
+<em>test</em> validates as a subtype of <code>int</code> (if
+present), <em>update</em> validates (if present), and <em>body</em> is
+valid.
 
 <h4>BreakStatement</h4>
 
@@ -749,22 +778,23 @@ validates, and the <em>Statement</em> is valid.
 <p>A <em>LabelledStatement</em> node
 
 <div class="example">
-<em>Identifier</em> <code>:</code> <em>Statement</em>
+<em>Identifier</em> <code>:</code> <em>body:Statement</em>
 </div>
 
-<p>is valid if the <em>Statement</em> is valid.
+<p>is valid if <em>body</em> is valid.
 
 <h4>SwitchStatement</h4>
 
 <p>A <em>SwitchStatement</em> node
 
 <div class="example">
-<code>switch (</code> <em>Expression</em> <code>)</code> <em>CaseBlock</em>
+<code>switch (</code> <em>test:Expression</em> <code>)</code> <code>{</code> <em>case:CaseClause</em>&hellip; <em>default:DefaultClause<sub>opt</sub></em> <code>}</code>
 </div>
 
-<p>is valid if the <em>Expression</em> validates as a subtype of
-&sigma; where &sigma; is <code>signed</code> or <code>unsigned</code>
-and the <em>CaseBlock</em> validates with expected case type &sigma;.
+<p>is valid if <em>test</em> validates as a subtype of &sigma; where
+&sigma; is <code>signed</code> or <code>unsigned</code>,
+each <em>case</em> validates with expected case type &sigma;,
+and <em>default</em> is valid.
 
 <!--
 <h3>Statement Lists</h3>
@@ -794,6 +824,7 @@ expected case type &sigma;. Unless otherwise explicitly stated, a
 recursive validation of a subterm uses the same context as its
 containing term.
 
+<!--
 <h4>CaseBlock</h4>
 
 <p>A <em>CaseBlock</em> node
@@ -803,6 +834,7 @@ containing term.
 </div>
 
 <p>is valid if the <em>CaseClause</em> list is valid and the <em>DefaultClause</em> (if any) is valid.
+-->
 
 <!--
 <h4>CaseClauses</h4>
@@ -821,22 +853,21 @@ containing term.
 <p>A <em>CaseClause</em> node
 
 <div class="example">
-<code>case</code> <em>NumericLiteral</em> <code>:</code> <em>Statement</em>&hellip;
+<code>case</code> <em>n:NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>&hellip;
 </div>
 
-<p>is valid if the <em>NumericLiteral</em> validates as a subtype of
-the expected case case type &sigma; and the <em>Statement</em> list is
-valid.
+<p>is valid if <em>n</em> validates as a subtype of the expected case
+case type &sigma; and <em>stmt</em> list is valid.
 
 <h4>DefaultClause</h4>
 
 <p>A <em>DefaultClause</em> node
 
 <div class="example">
-<code>default :</code> <em>Statement</em>&hellip;
+<code>default :</code> <em>stmt:Statement</em>&hellip;
 </div>
 
-<p>is valid if the <em>Statement</em> list is valid.
+<p>is valid if each <em>stmt</em> is valid.
 
 
 <h3>Expressions</h3>
@@ -860,21 +891,26 @@ expression validates as type <code>unsigned</code>.
 </ul>
 
 <p>Note that integer literals outside the range [-2<sup>31</sup>,
-2<sup>32</sup>) cause validation errors.
+2<sup>32</sup>) are invalid, i.e., fail to validate.
 
 <h4>Identifier</h4>
 
-<p>An <em>Identifier</em> node <em>x</em> validates
-as <em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>).
+<p>An <em>Identifier</em> node
+
+<div class="example">
+<em>x:Identifier</em>
+</div>
+
+<p>validates as <em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>).
 
 <h4>MemberExpression</h4>
 
 <p>A <em>MemberExpression</em> node
 
 <div class="example">
-<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>]</code><br>
-<em>Identifier</em><code>[</code><em>Expression</em><code>]</code><br>
-<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>]</code><br>
+<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code><br>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code><br>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code><br>
 </div>
 <p>is valid if...
 
@@ -883,23 +919,23 @@ as <em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>).
 <p>An <em>AssignmentExpression</em> node
 
 <div class="example">
-<em>Identifier</em> <code>=</code> <em>AssignmentExpression</em>
+<em>x:Identifier</em> <code>=</code> <em>expr:AssignmentExpression</em>
 </div>
 
 <p>validates as type &tau; if the nested <em>AssignmentExpression</em>
 validates as type &tau; and one of the following two conditions holds:
 
 <ul>
-<li>the <em>Identifier</em> is bound in &Gamma; as a supertype of &tau;; or
-<li>the <em>Identifier</em> is not bound in &Gamma; and is bound to a mutable supertype of &tau; in &Delta;.
+<li><em>x</em> is bound in &Gamma; as a supertype of &tau;; or
+<li><em>x</em> is not bound in &Gamma; and is bound to a mutable supertype of &tau; in &Delta;.
 </ul>
 
 <p>An <em>AssignmentExpression</em> node
 
 <div class="example">
-<em>Identifier</em><code>[</code><em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
-<em>Identifier</em><code>[</code><em>Expression</em><code>] = </code><em>AssignmentExpression</em><br>
-<em>Identifier</em><code>[</code><em>Expression</em> <code>&gt;&gt;</code> <em>NumericLiteral</em><code>] = </code><em>AssignmentExpression</em><br>
+<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 </div>
 
 <h4>CallExpression</h4>
@@ -907,7 +943,7 @@ validates as type &tau; and one of the following two conditions holds:
 <p>A <em>CallExpression</em> node
 
 <div class="example">
-<em>Identifier</em><code>(</code><em>Expression</em><code>,</code>&hellip;<code>)</code>
+<em>x:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
 </div>
 
 <h4>UnaryExpression</h4>
@@ -915,10 +951,10 @@ validates as type &tau; and one of the following two conditions holds:
 <p>A <em>UnaryExpression</em> node
 
 <div class="example">
-<code>+</code><em>UnaryExpression</em><br>
-<code>-</code><em>UnaryExpression</em><br>
-<code>~</code><em>UnaryExpression</em><br>
-<code>~~</code><em>UnaryExpression</em>
+<code>+</code><em>arg:UnaryExpression</em><br>
+<code>-</code><em>arg:UnaryExpression</em><br>
+<code>~</code><em>arg:UnaryExpression</em><br>
+<code>~~</code><em>arg:UnaryExpression</em>
 </div>
 
 <h4>MultiplicativeExpression</h4>
@@ -926,68 +962,71 @@ validates as type &tau; and one of the following two conditions holds:
 <p>A <em>MultiplicativeExpression</em> node
 
 <div class="example">
-<em>MultiplicativeExpression</em> <code>*</code> <em>UnaryExpression</em><br>
-<em>MultiplicativeExpression</em> <code>/</code> <em>UnaryExpression</em><br>
-<em>MultiplicativeExpression</em> <code>%</code> <em>UnaryExpression</em><br>
+<em>lhs:MultiplicativeExpression</em> <code>*</code> <em>rhs:UnaryExpression</em><br>
+<em>lhs:MultiplicativeExpression</em> <code>/</code> <em>rhs:UnaryExpression</em><br>
+<em>lhs:MultiplicativeExpression</em> <code>%</code> <em>rhs:UnaryExpression</em><br>
 </div>
 
 <h4>AdditiveExpression</h4>
 
 <div class="example">
-<em>AdditiveExpression</em> <code>+</code> <em>MultiplicativeExpression</em><br>
-<em>AdditiveExpression</em> <code>-</code> <em>MultiplicativeExpression</em>
+<em>lhs:AdditiveExpression</em> <code>+</code> <em>rhs:MultiplicativeExpression</em><br>
+<em>lhs:AdditiveExpression</em> <code>-</code> <em>rhs:MultiplicativeExpression</em>
 </div>
 
 <h4>ShiftExpression</h4>
 
 <div class="example">
-<em>ShiftExpression</em> <code>&lt;&lt;</code> <em>AdditiveExpression</em><br>
-<em>ShiftExpression</em> <code>&gt;&gt;</code> <em>AdditiveExpression</em><br>
-<em>ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>AdditiveExpression</em><br>
+<em>lhs:ShiftExpression</em> <code>&lt;&lt;</code> <em>rhs:AdditiveExpression</em><br>
+<em>lhs:ShiftExpression</em> <code>&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
+<em>lhs:ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
 </div>
 
 <h4>RelationalExpression</h4>
 
 <div class="example">
-<em>RelationalExpression</em> <code>&lt;</code> <em>ShiftExpression</em><br>
-<em>RelationalExpression</em> <code>&gt;</code> <em>ShiftExpression</em><br>
-<em>RelationalExpression</em> <code>&lt;=</code> <em>ShiftExpression</em><br>
-<em>RelationalExpression</em> <code>&gt;=</code> <em>ShiftExpression</em><br>
+<em>lhs:RelationalExpression</em> <code>&lt;</code> <em>rhs:ShiftExpression</em><br>
+<em>lhs:RelationalExpression</em> <code>&gt;</code> <em>rhs:ShiftExpression</em><br>
+<em>lhs:RelationalExpression</em> <code>&lt;=</code> <em>rhs:ShiftExpression</em><br>
+<em>lhs:RelationalExpression</em> <code>&gt;=</code> <em>rhs:ShiftExpression</em><br>
 </div>
 
 <h4>EqualityExpression</h4>
 
 <div class="example">
-<em>EqualityExpression</em> <code>==</code> <em>RelationalExpression</em><br>
-<em>EqualityExpression</em> <code>!=</code> <em>RelationalExpression</em>
+<em>lhs:EqualityExpression</em> <code>==</code> <em>rhs:RelationalExpression</em><br>
+<em>lhs:EqualityExpression</em> <code>!=</code> <em>rhs:RelationalExpression</em>
 </div>
 
 <h4>BitwiseANDExpression</h4>
 
 <div class="example">
-<em>BitwiseANDExpression</em> <code>&amp;</code> <em>EqualityExpression</em><br>
+<em>lhs:BitwiseANDExpression</em> <code>&amp;</code> <em>rhs:EqualityExpression</em><br>
 </div>
 
 <h4>BitwiseXORExpression</h4>
 
 <div class="example">
-<em>BitwiseXORExpression</em> <code>^</code> <em>BitwiseANDExpression</em><br>
+<em>lhs:BitwiseXORExpression</em> <code>^</code> <em>rhs:BitwiseANDExpression</em><br>
 </div>
 
 <h4>BitwiseORExpression</h4>
 
 <div class="example">
-<em>BitwiseORExpression</em> <code>|</code> <em>BitwiseXORExpression</em><br>
+<em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
 </div>
 
 <h4>ConditionalExpression</h4>
 
 <div class="example">
-<em>LogicalORExpression</em> <code>?</code> <em>AssignmentExpression</em> <code>:</code> <em>AssignmentExpression</em>
+<em>test:LogicalORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
-<p>TODO
+<h4>Parenthesized Expression</h4>
 
+<div class="example">
+<code>(</code> <em>expr:Expression</em> <code>)</code>
+</div>
 
 <h2>Linking</h2>
 
@@ -1090,29 +1129,29 @@ validates as type &tau; and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <code><em>stdlib</em>.Infinity</code><br>
-    <code><em>stdlib</em>.NaN</code>
+    <em>stdlib</em><code>.Infinity</code><br>
+    <em>stdlib</em><code>.NaN</code>
   </td>
   <td><code>double</code></td>
 </tr>
 <tr>
   <td>
-    <code><em>stdlib</em>.Math.acos</code><br>
-    <code><em>stdlib</em>.Math.asin</code><br>
-    <code><em>stdlib</em>.Math.atan</code><br>
-    <code><em>stdlib</em>.Math.cos</code><br>
-    <code><em>stdlib</em>.Math.sin</code><br>
-    <code><em>stdlib</em>.Math.tan</code><br>
-    <code><em>stdlib</em>.Math.ceil</code><br>
-    <code><em>stdlib</em>.Math.floor</code><br>
-    <code><em>stdlib</em>.Math.exp</code><br>
-    <code><em>stdlib</em>.Math.log</code><br>
-    <code><em>stdlib</em>.Math.sqrt</code>
+    <em>stdlib</em><code>.Math.acos</code><br>
+    <em>stdlib</em><code>.Math.asin</code><br>
+    <em>stdlib</em><code>.Math.atan</code><br>
+    <em>stdlib</em><code>.Math.cos</code><br>
+    <em>stdlib</em><code>.Math.sin</code><br>
+    <em>stdlib</em><code>.Math.tan</code><br>
+    <em>stdlib</em><code>.Math.ceil</code><br>
+    <em>stdlib</em><code>.Math.floor</code><br>
+    <em>stdlib</em><code>.Math.exp</code><br>
+    <em>stdlib</em><code>.Math.log</code><br>
+    <em>stdlib</em><code>.Math.sqrt</code>
   </td>
   <td>(<code>doublish</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
-  <td><code><em>stdlib</em>.Math.abs</code></td>
+  <td><em>stdlib</em><code>.Math.abs</code></td>
   <td>
     (<code>signed</code>) &rarr; <code>unsigned</code> &and;<br>
     (<code>doublish</code>) &rarr; <code>double</code>
@@ -1120,25 +1159,25 @@ validates as type &tau; and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <code><em>stdlib</em>.Math.atan2</code><br>
-    <code><em>stdlib</em>.Math.pow</code>
+    <em>stdlib</em><code>.Math.atan2</code><br>
+    <em>stdlib</em><code>.Math.pow</code>
   </td>
   <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
-  <td><code><em>stdlib</em>.Math.imul</code></td>
+  <td><em>stdlib</em><code>.Math.imul</code></td>
   <td>(<code>int</code>, <code>int</code>) &rarr; <code>signed</code></td>
 </tr>
 <tr>
   <td>
-    <code><em>stdlib</em>.Math.E</code><br>
-    <code><em>stdlib</em>.Math.LN10</code><br>
-    <code><em>stdlib</em>.Math.LN2</code><br>
-    <code><em>stdlib</em>.Math.LOG2E</code><br>
-    <code><em>stdlib</em>.Math.LOG10E</code><br>
-    <code><em>stdlib</em>.Math.PI</code><br>
-    <code><em>stdlib</em>.Math.SQRT1_2</code><br>
-    <code><em>stdlib</em>.Math.SQRT2</code><br>
+    <em>stdlib</em><code>.Math.E</code><br>
+    <em>stdlib</em><code>.Math.LN10</code><br>
+    <em>stdlib</em><code>.Math.LN2</code><br>
+    <em>stdlib</em><code>.Math.LOG2E</code><br>
+    <em>stdlib</em><code>.Math.LOG10E</code><br>
+    <em>stdlib</em><code>.Math.PI</code><br>
+    <em>stdlib</em><code>.Math.SQRT1_2</code><br>
+    <em>stdlib</em><code>.Math.SQRT2</code><br>
   </td>
   <td><code>double</code></td>
 </tr>
