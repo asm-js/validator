@@ -30,7 +30,7 @@ span.meta {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-11-february-2013>Working Draft — 11 February 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-12-february-2013>Working Draft — 12 February 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -95,52 +95,58 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
    <li><a href=#variable-environment><span class=secno>3.2 </span>Variable Environment</a></li>
    <li><a href=#environment-lookup><span class=secno>3.3 </span>Environment Lookup</a></li></ol></li>
  <li><a href=#syntax><span class=secno>4 </span>Syntax</a></li>
- <li><a href=#validation-rules><span class=secno>5 </span>Validation Rules</a>
+ <li><a href=#annotations><span class=secno>5 </span>Annotations</a>
   <ol>
-   <li><a href=#modules><span class=secno>5.1 </span>Modules</a></li>
-   <li><a href=#export-declarations><span class=secno>5.2 </span>Export Declarations</a></li>
-   <li><a href=#global-variable-declarations><span class=secno>5.3 </span>Global Variable Declarations</a></li>
-   <li><a href=#function-declarations><span class=secno>5.4 </span>Function Declarations</a></li>
-   <li><a href=#statements><span class=secno>5.5 </span>Statements</a>
-    <ol>
-     <li><a href=#block><span class=secno>5.5.1 </span>Block</a></li>
-     <li><a href=#expressionstatement><span class=secno>5.5.2 </span>ExpressionStatement</a></li>
-     <li><a href=#emptystatement><span class=secno>5.5.3 </span>EmptyStatement</a></li>
-     <li><a href=#ifstatement><span class=secno>5.5.4 </span>IfStatement</a></li>
-     <li><a href=#returnstatement><span class=secno>5.5.5 </span>ReturnStatement</a></li>
-     <li><a href=#iterationstatement><span class=secno>5.5.6 </span>IterationStatement</a></li>
-     <li><a href=#breakstatement><span class=secno>5.5.7 </span>BreakStatement</a></li>
-     <li><a href=#continuestatement><span class=secno>5.5.8 </span>ContinueStatement</a></li>
-     <li><a href=#labelledstatement><span class=secno>5.5.9 </span>LabelledStatement</a></li>
-     <li><a href=#switchstatement><span class=secno>5.5.10 </span>SwitchStatement</a></li></ol></li>
-   <li><a href=#switch-cases><span class=secno>5.6 </span>Switch Cases</a>
-    <ol>
-     <li><a href=#caseclause><span class=secno>5.6.1 </span>CaseClause</a></li>
-     <li><a href=#defaultclause><span class=secno>5.6.2 </span>DefaultClause</a></li></ol></li>
-   <li><a href=#expressions><span class=secno>5.7 </span>Expressions</a>
-    <ol>
-     <li><a href=#numericliteral><span class=secno>5.7.1 </span>NumericLiteral</a></li>
-     <li><a href=#identifier><span class=secno>5.7.2 </span>Identifier</a></li>
-     <li><a href=#memberexpression><span class=secno>5.7.3 </span>MemberExpression</a></li>
-     <li><a href=#assignmentexpression><span class=secno>5.7.4 </span>AssignmentExpression</a></li>
-     <li><a href=#callexpression><span class=secno>5.7.5 </span>CallExpression</a></li>
-     <li><a href=#unaryexpression><span class=secno>5.7.6 </span>UnaryExpression</a></li>
-     <li><a href=#multiplicativeexpression><span class=secno>5.7.7 </span>MultiplicativeExpression</a></li>
-     <li><a href=#additiveexpression><span class=secno>5.7.8 </span>AdditiveExpression</a></li>
-     <li><a href=#shiftexpression><span class=secno>5.7.9 </span>ShiftExpression</a></li>
-     <li><a href=#relationalexpression><span class=secno>5.7.10 </span>RelationalExpression</a></li>
-     <li><a href=#equalityexpression><span class=secno>5.7.11 </span>EqualityExpression</a></li>
-     <li><a href=#bitwiseandexpression><span class=secno>5.7.12 </span>BitwiseANDExpression</a></li>
-     <li><a href=#bitwisexorexpression><span class=secno>5.7.13 </span>BitwiseXORExpression</a></li>
-     <li><a href=#bitwiseorexpression><span class=secno>5.7.14 </span>BitwiseORExpression</a></li>
-     <li><a href=#conditionalexpression><span class=secno>5.7.15 </span>ConditionalExpression</a></li>
-     <li><a href=#parenthesized-expression><span class=secno>5.7.16 </span>Parenthesized Expression</a></li></ol></li></ol></li>
- <li><a href=#linking-0><span class=secno>6 </span>Linking</a></li>
- <li><a href=#operators><span class=secno>7 </span>Operators</a>
+   <li><a href=#parameter-type-annotations><span class=secno>5.1 </span>Parameter Type Annotations</a></li>
+   <li><a href=#return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</a></li>
+   <li><a href=#function-type-annotations><span class=secno>5.3 </span>Function Type Annotations</a></li>
+   <li><a href=#variable-type-annotations><span class=secno>5.4 </span>Variable Type Annotations</a></li>
+   <li><a href=#global-variable-type-annotations><span class=secno>5.5 </span>Global Variable Type Annotations</a></li></ol></li>
+ <li><a href=#validation-rules><span class=secno>6 </span>Validation Rules</a>
   <ol>
-   <li><a href=#unary-operators><span class=secno>7.1 </span>Unary Operators</a></li>
-   <li><a href=#binary-operators><span class=secno>7.2 </span>Binary Operators</a></li></ol></li>
- <li><a href=#standard-library><span class=secno>8 </span>Standard Library</a></li>
+   <li><a href=#modules><span class=secno>6.1 </span>Modules</a></li>
+   <li><a href=#export-declarations><span class=secno>6.2 </span>Export Declarations</a></li>
+   <li><a href=#function-declarations><span class=secno>6.3 </span>Function Declarations</a></li>
+   <li><a href=#statements><span class=secno>6.4 </span>Statements</a>
+    <ol>
+     <li><a href=#block><span class=secno>6.4.1 </span>Block</a></li>
+     <li><a href=#expressionstatement><span class=secno>6.4.2 </span>ExpressionStatement</a></li>
+     <li><a href=#emptystatement><span class=secno>6.4.3 </span>EmptyStatement</a></li>
+     <li><a href=#ifstatement><span class=secno>6.4.4 </span>IfStatement</a></li>
+     <li><a href=#returnstatement><span class=secno>6.4.5 </span>ReturnStatement</a></li>
+     <li><a href=#iterationstatement><span class=secno>6.4.6 </span>IterationStatement</a></li>
+     <li><a href=#breakstatement><span class=secno>6.4.7 </span>BreakStatement</a></li>
+     <li><a href=#continuestatement><span class=secno>6.4.8 </span>ContinueStatement</a></li>
+     <li><a href=#labelledstatement><span class=secno>6.4.9 </span>LabelledStatement</a></li>
+     <li><a href=#switchstatement><span class=secno>6.4.10 </span>SwitchStatement</a></li></ol></li>
+   <li><a href=#switch-cases><span class=secno>6.5 </span>Switch Cases</a>
+    <ol>
+     <li><a href=#caseclause><span class=secno>6.5.1 </span>CaseClause</a></li>
+     <li><a href=#defaultclause><span class=secno>6.5.2 </span>DefaultClause</a></li></ol></li>
+   <li><a href=#expressions><span class=secno>6.6 </span>Expressions</a>
+    <ol>
+     <li><a href=#numericliteral><span class=secno>6.6.1 </span>NumericLiteral</a></li>
+     <li><a href=#identifier><span class=secno>6.6.2 </span>Identifier</a></li>
+     <li><a href=#memberexpression><span class=secno>6.6.3 </span>MemberExpression</a></li>
+     <li><a href=#assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</a></li>
+     <li><a href=#callexpression><span class=secno>6.6.5 </span>CallExpression</a></li>
+     <li><a href=#unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</a></li>
+     <li><a href=#multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</a></li>
+     <li><a href=#additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</a></li>
+     <li><a href=#shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</a></li>
+     <li><a href=#relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</a></li>
+     <li><a href=#equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</a></li>
+     <li><a href=#bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</a></li>
+     <li><a href=#bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</a></li>
+     <li><a href=#bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</a></li>
+     <li><a href=#conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</a></li>
+     <li><a href=#parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</a></li></ol></li></ol></li>
+ <li><a href=#linking-0><span class=secno>7 </span>Linking</a></li>
+ <li><a href=#operators><span class=secno>8 </span>Operators</a>
+  <ol>
+   <li><a href=#unary-operators><span class=secno>8.1 </span>Unary Operators</a></li>
+   <li><a href=#binary-operators><span class=secno>8.2 </span>Binary Operators</a></li></ol></li>
+ <li><a href=#standard-library><span class=secno>9 </span>Standard Library</a></li>
  <li><a class=no-num href=#acknowledgements>Acknowledgements</a></li></ol>
 <!--end-toc-->
 
@@ -629,7 +635,156 @@ grammar</a>. These are always prefixed by the name <em>Asm</em> and
 always denote subsets of a non-terminal in the official grammar. For
 example, ...
 
-</p><h2 id=validation-rules><span class=secno>5 </span>Validation Rules</h2>
+</p><h2 id=annotations><span class=secno>5 </span>Annotations</h2>
+
+<p>All variables in asm.js are explicitly annotated with type
+information so that their type can be statically enforced by
+validation.
+
+</p><h3 id=parameter-type-annotations><span class=secno>5.1 </span>Parameter Type Annotations</h3>
+
+<p>Every parameter in an asm.js function is provided with an explicit
+type annotation in the form of a coercion. This coercion serves two
+purposes: the first is to make the parameter type statically apparent
+for validation; the second is to ensure that if the function is
+exported, the arguments dynamically provided by external JavaScript
+callers are coerced to the expected type. For example, a bitwise OR
+coercion annotates a parameter as having type <a href=#int-0><code>int</code></a>:
+
+</p><div class=example>
+<pre>function add1(x) {
+    x = x|0; // x : int
+    return (x+1)|0;
+}</pre>
+</div>
+
+<p>In an AOT implementation, the body of the function can be
+implemented fully optimized, and the function can be given two entry
+points: an internal entry point for asm.js callers, which are
+statically known to provide the proper type, and an external dynamic
+entry point for JavaScript callers, which must perform the full
+coercions (which might involve arbitrary JavaScript computation, e.g.,
+via implicit calls to <code>valueOf</code>).
+
+</p><p>There are two recognized parameter type annotations:
+
+</p><div class=example>
+<em>x:Identifier</em> <code>=</code> <em>x:Identifier</em><code>|0;</code><br>
+<em>x:Identifier</em> <code>=</code> <code>+</code><em>x:Identifier</em><code>;</code>
+</div>
+
+<p>The first form annotates a parameter as type <a href=#int-0><code>int</code></a>, and
+the second as type <a href=#double-0><code>double</code></a>.
+
+</p><h3 id=return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</h3>
+
+<p>An asm.js function's return type is determined by the last
+statement in the function body, which is required to be
+a <em>ReturnStatement</em>. An asm.js return statement may take one
+of three forms:
+
+</p><div class=example>
+<code>return +</code><em>e:Expression</em><code>;</code><br>
+<code>return </code><em>e:Expression</em><code>|0;</code><br>
+<code>return </code><em>n:NumericLiteral</em><code>;</code><br>
+</div>
+
+<p>The first form has return type <a href=#double-0><code>double</code></a>. The second has
+type <a href=#signed-0><code>signed</code></a>. The third has return
+type <a href=#double-0><code>double</code></a> if <em>n</em> is a floating-point literal,
+i.e., a numeric literal with the character <code>.</code> in its
+source; alternatively, if <em>n</em> is an integer literal in the
+range [-2<sup>31</sup>, 2<sup>31</sup>), the return statement has
+return type <a href=#signed-0><code>signed</code></a>.
+
+</p><h3 id=function-type-annotations><span class=secno>5.3 </span>Function Type Annotations</h3>
+
+<p>The type of a function declaration
+
+</p><div class=example>
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>…<code>) {</code><br>
+<code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
+<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
+<code>    </code><em>body:Statement</em>…<br>
+<code>    </code><em>return:ReturnStatement</em><br>
+<code>}</code>
+</div>
+
+<p>is (σ,…) → τ where σ,… are the
+types of the parameters, as provided by the <a href="">parameter type
+annotations</a>, and τ is the return type, as provided by
+the <a href="">return type annotation</a>. The variable <em>f</em> is
+stored in the <a href="">global environment</a> with
+type <code>imm</code> (σ,…) → τ.
+
+</p><h3 id=variable-type-annotations><span class=secno>5.4 </span>Variable Type Annotations</h3>
+
+<p>The types of variable declarations are determined by their
+initializer. A variable initializer may be a floating-point literal,
+which is any numeric literal with the character <code>.</code> in
+their source, and has type <a href=#double-0><code>double</code></a>. Alternatively, an
+initializer may be an integer literal in the range [-2<sup>31</sup>,
+2<sup>32</sup>), which has type <a href=#int-0><code>int</code></a>.
+
+</p><h3 id=global-variable-type-annotations><span class=secno>5.5 </span>Global Variable Type Annotations</h3>
+
+<p>A global variable declaration is a <em>VariableStatement</em> node
+in one of several allowed forms.
+
+</p><p>A global program variable is initialized to a literal:
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><code>;</code>
+</div>
+
+<p>The global variable <em>x</em> is stored in the <a href="">global
+environment</a> with type <code>mut</code> τ, where τ is
+determined in the same way as local <a href="">variable type
+annotations</a>.
+
+</p><p>A standard library import is of one of the following two forms:
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.Math.</code><em>y:Identifier</em><code>;</code>
+</div>
+
+<p>The variable <em>stdlib</em> must match the first parameter of
+the <a href="">module declaration</a>. The global variable <em>x</em>
+is stored in the <a href="">global environment</a> with
+type <code>imm</code> γ, where γ is the type of
+library <em>y</em> or <code>Math.</code><em>y</em> as specified by
+the <a href="">standard library types</a>.
+
+</p><p>A foreign import is of one of the following three forms:
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>|0;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <code>+</code><em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code>
+</div>
+
+<p>The variable <em>foreign</em> must match the second parameter of
+the <a href="">module declaration</a>. The global variable <em>x</em>
+is stored in the <a href="">global environment</a> with type <code>imm
+Function</code> for the first form, <code>imm int</code> for the
+second, and <code>imm double</code> for the third.
+
+</p><p>A global heap view is of the following form:
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em> <code>= new</code> <em>stdlib:Identifier</em><code>.</code><em>view:Identifier</em><code>(</code><em>heap:Identifier</em><code>);</code>
+</div>
+
+<p>The variable <em>stdlib</em> must match the first parameter of
+the <a href="">module declaration</a> and the variable <em>heap</em>
+must match the third. The identifier <em>view</em> must be one of the
+standard <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type names. The global variable <em>x</em> is stored in
+the <a href="">global environment</a> with type <code>imm</code>
+<em>view</em>.
+
+</p><h2 id=validation-rules><span class=secno>6 </span>Validation Rules</h2>
 
 <p>To ensure that a JavaScript function is a proper asm.js module, it
 must first be statically validated. This section specifies the
@@ -640,7 +795,7 @@ the <a href=http://ecma-international.org/ecma-262/5.1/#sec-A>ECMAScript
 grammar</a>, but note that the asm.js validator only accepts a subset
 of legal JavaScript programs.
 
-</p><h3 id=modules><span class=secno>5.1 </span>Modules</h3>
+</p><h3 id=modules><span class=secno>6.1 </span>Modules</h3>
 
 <p>An asm.js module is a <em>FunctionDeclaration</em>
 or <em>FunctionExpression</em> node with up to three optional
@@ -655,44 +810,52 @@ parameters:
 -->
 
 </p><div class=example>
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><span class=meta>(</span><em>stdlib:Identifier</em><code><span class=meta>(</span>,</code> <em>foreign:Identifier</em><span class=meta>(</span><code>,</code> <em>heap:Identifier</em><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><code>) {<br>
+<code>function</code> <em>f:Identifier<sub>opt</sub></em><code>(</code><span class=meta>(</span><em>stdlib:Identifier</em><code><span class=meta>(</span>,</code> <em>foreign:Identifier</em><span class=meta>(</span><code>,</code> <em>heap:Identifier</em><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><code>) {<br>
     "use asm";</code><br>
-<code>    </code><em>decl:</em><span class=meta>(</span><em>VariableStatement</em> <span class=meta>|</span> <em>FunctionDeclaration</em><span class=meta>)</span>…<br>
+<code>    </code><span class=meta>(</span><em>var:VariableStatement</em> <span class=meta>|</span> <em>fun:FunctionDeclaration</em><span class=meta>)</span>…<br>
 <code>    </code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
 
+<p>A module is valid if:
 
-<h3 id=export-declarations><span class=secno>5.2 </span>Export Declarations</h3>
+</p><ul>
+<li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
+the <em>var</em> and <em>fun</em> variables are all mutually distinct;
+</li><li>the global environment Δ is constructed from
+the <a href="">global variable type annotations</a> in
+the <em>var</em> declarations and the <a href="">function type
+annotations</a> in the <em>fun</em> declarations;
+</li><li>each <em>fun</em> declaration is valid in Δ;
+</li><li>and <em>exports</em> is valid in Δ.
+</li></ul>
+
+<h3 id=export-declarations><span class=secno>6.2 </span>Export Declarations</h3>
 
 <p>An asm.js module's export declaration is a <em>ReturnStatement</em>
 returning either a single asm.js function or an object literal
 exporting multiple asm.js functions.
 
-</p><div class=example>
-<code>return</code> <em>Identifier</em><code>;</code><br>
-<code>return</code> <code>{</code> <span class=meta>(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class=meta>)</span>… <code> };</code>
-</div>
-
-<!-- FIXME: text -->
-<p>An export declaration is valid if...
-
-
-</p><h3 id=global-variable-declarations><span class=secno>5.3 </span>Global Variable Declarations</h3>
-
-<p>A global variable declaration is a <em>VariableStatement</em> node
-in one of several allowed forms.
+</p><p>An export declaration node
 
 </p><div class=example>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.Math.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>= new</code> <em>stdlib:Identifier</em><code>.</code><em>view:Identifier</em><code>(</code><em>heap:Identifier</em><code>);</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>|0;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <code>+</code><em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>return</code> <code>{</code> <span class=meta>(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class=meta>)</span>… <code> };</code>
 </div>
 
-<h3 id=function-declarations><span class=secno>5.4 </span>Function Declarations</h3>
+<p>is valid if for each <em>f</em>, Δ(f) = <code>imm</code>
+γ where γ is a function type (σ,…) →
+τ.
+
+</p><p>An export declaration node
+
+</p><div class=example>
+<code>return</code> <em>f:Identifier</em><code>;</code>
+</div>
+
+<p>is valid if Δ(f) = <code>imm</code> γ where γ is
+a function type (σ,…) → τ.
+
+</p><h3 id=function-declarations><span class=secno>6.3 </span>Function Declarations</h3>
 
 <!--
 <div class="example">
@@ -707,18 +870,27 @@ in one of several allowed forms.
 <p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
 
 </p><div class=example>
-<code>function</code> <em>Identifier</em><code>(</code><em>x:Identifier</em>…<code>) {</code><br>
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>…<code>) {</code><br>
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
-<code>    </code><em>VariableStatement</em>…<br>
-<code>    </code><em>Statement</em>…<br>
+<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
+<code>    </code><em>body:Statement</em>…<br>
 <code>}</code>
 </div>
 
-<p>is valid if...
+<p>A function declaration is valid if:
 
-</p><p>TODO
+</p><ul>
+<li>Δ(f) = <code>imm</code> (σ,…) → τ;
+</li><li>the <em>x</em> and <em>y</em> variables are all mutually distinct;
+</li><li>the variable environment Γ is constructed by mapping each
+parameter <em>x</em> to its <a href="">parameter type annotation</a>
+and each local variable <em>y</em> to its <a href="">variable type
+annotation</a>;
+</li><li>each <code>body</code> statement is valid in Δ and Γ
+with expected return type τ.
+</li></ul>
 
-</p><h3 id=statements><span class=secno>5.5 </span>Statements</h3>
+<h3 id=statements><span class=secno>6.4 </span>Statements</h3>
 
 <p>Each statement is validated in the context of a <a href=#global-environment-0>global
 environment</a> Δ, a <a href=#variable-environment-0>variable environment</a>
@@ -726,7 +898,7 @@ environment</a> Δ, a <a href=#variable-environment-0>variable environment</a>
 explicitly stated, a recursive validation of a subterm uses the same
 context as its containing term.
 
-</p><h4 id=block><span class=secno>5.5.1 </span>Block</h4>
+</p><h4 id=block><span class=secno>6.4.1 </span>Block</h4>
 
 <p>A <em>Block</em> statement node
 
@@ -736,7 +908,7 @@ context as its containing term.
 
 <p>is valid if each <em>stmt</em> is valid.
 
-</p><h4 id=expressionstatement><span class=secno>5.5.2 </span>ExpressionStatement</h4>
+</p><h4 id=expressionstatement><span class=secno>6.4.2 </span>ExpressionStatement</h4>
 
 <p>An <em>ExpressionStatement</em> node
 
@@ -746,11 +918,11 @@ context as its containing term.
 
 <p>is valid if <em>expr</em> is valid.
 
-</p><h4 id=emptystatement><span class=secno>5.5.3 </span>EmptyStatement</h4>
+</p><h4 id=emptystatement><span class=secno>6.4.3 </span>EmptyStatement</h4>
 
 <p>An <em>EmptyStatement</em> node is always valid.
 
-</p><h4 id=ifstatement><span class=secno>5.5.4 </span>IfStatement</h4>
+</p><h4 id=ifstatement><span class=secno>6.4.4 </span>IfStatement</h4>
 
 <p>An <em>IfStatement</em> node
 
@@ -771,7 +943,7 @@ valid.
 <p>is valid if <em>expr</em> validates as a subtype
 of <a href=#int-0><code>int</code></a> and <em>stmt</em> is valid.
 
-</p><h4 id=returnstatement><span class=secno>5.5.5 </span>ReturnStatement</h4>
+</p><h4 id=returnstatement><span class=secno>6.4.5 </span>ReturnStatement</h4>
 
 <p>A <em>ReturnStatement</em> node
 
@@ -791,7 +963,7 @@ return type τ.
 <p>is valid if the expected return type τ is <a href=#void-0><code>void</code></a>.
 
 
-</p><h4 id=iterationstatement><span class=secno>5.5.6 </span>IterationStatement</h4>
+</p><h4 id=iterationstatement><span class=secno>6.4.6 </span>IterationStatement</h4>
 
 <p>An <em>IterationStatement</em> node
 
@@ -822,7 +994,7 @@ subtype of <a href=#int-0><code>int</code></a>.
 present), <em>update</em> validates (if present), and <em>body</em> is
 valid.
 
-</p><h4 id=breakstatement><span class=secno>5.5.7 </span>BreakStatement</h4>
+</p><h4 id=breakstatement><span class=secno>6.4.7 </span>BreakStatement</h4>
 
 <p>A <em>BreakStatement</em> node
 
@@ -832,7 +1004,7 @@ valid.
 
 <p>is always valid.
 
-</p><h4 id=continuestatement><span class=secno>5.5.8 </span>ContinueStatement</h4>
+</p><h4 id=continuestatement><span class=secno>6.4.8 </span>ContinueStatement</h4>
 
 <p>A <em>ContinueStatement</em> node
 
@@ -842,7 +1014,7 @@ valid.
 
 <p>is always valid.
 
-</p><h4 id=labelledstatement><span class=secno>5.5.9 </span>LabelledStatement</h4>
+</p><h4 id=labelledstatement><span class=secno>6.4.9 </span>LabelledStatement</h4>
 
 <p>A <em>LabelledStatement</em> node
 
@@ -852,7 +1024,7 @@ valid.
 
 <p>is valid if <em>body</em> is valid.
 
-</p><h4 id=switchstatement><span class=secno>5.5.10 </span>SwitchStatement</h4>
+</p><h4 id=switchstatement><span class=secno>6.4.10 </span>SwitchStatement</h4>
 
 <p>A <em>SwitchStatement</em> node
 
@@ -884,7 +1056,7 @@ the same context as its containing term.
 -->
 
 
-</p><h3 id=switch-cases><span class=secno>5.6 </span>Switch Cases</h3>
+</p><h3 id=switch-cases><span class=secno>6.5 </span>Switch Cases</h3>
 
 <p>Cases in a <code>switch</code> block are validated in the context
 of a <a href=#global-environment-0>global environment</a> Δ, a <a href=#variable-environment-0>variable
@@ -917,7 +1089,7 @@ containing term.
 <p>is valid if the <em>CaseClauses</em> (if any) are valid and the <em>CaseClause</em> is valid.
 -->
 
-</p><h4 id=caseclause><span class=secno>5.6.1 </span>CaseClause</h4>
+</p><h4 id=caseclause><span class=secno>6.5.1 </span>CaseClause</h4>
 
 <p>A <em>CaseClause</em> node
 
@@ -928,7 +1100,7 @@ containing term.
 <p>is valid if <em>n</em> validates as a subtype of the expected case
 case type σ and <em>stmt</em> list is valid.
 
-</p><h4 id=defaultclause><span class=secno>5.6.2 </span>DefaultClause</h4>
+</p><h4 id=defaultclause><span class=secno>6.5.2 </span>DefaultClause</h4>
 
 <p>A <em>DefaultClause</em> node
 
@@ -939,9 +1111,9 @@ case type σ and <em>stmt</em> list is valid.
 <p>is valid if each <em>stmt</em> is valid.
 
 
-</p><h3 id=expressions><span class=secno>5.7 </span>Expressions</h3>
+</p><h3 id=expressions><span class=secno>6.6 </span>Expressions</h3>
 
-<h4 id=numericliteral><span class=secno>5.7.1 </span>NumericLiteral</h4>
+<h4 id=numericliteral><span class=secno>6.6.1 </span>NumericLiteral</h4>
 
 <p>For a <em>NumericLiteral</em> node:
 
@@ -962,7 +1134,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 <p>Note that integer literals outside the range [-2<sup>31</sup>,
 2<sup>32</sup>) are invalid, i.e., fail to validate.
 
-</p><h4 id=identifier><span class=secno>5.7.2 </span>Identifier</h4>
+</p><h4 id=identifier><span class=secno>6.6.2 </span>Identifier</h4>
 
 <p>An <em>Identifier</em> node
 
@@ -972,7 +1144,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 
 <p>validates as <em>Lookup</em>(Δ, Γ, <em>x</em>).
 
-</p><h4 id=memberexpression><span class=secno>5.7.3 </span>MemberExpression</h4>
+</p><h4 id=memberexpression><span class=secno>6.6.3 </span>MemberExpression</h4>
 
 <p>A <em>MemberExpression</em> node
 
@@ -983,7 +1155,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 </div>
 <p>is valid if...
 
-</p><h4 id=assignmentexpression><span class=secno>5.7.4 </span>AssignmentExpression</h4>
+</p><h4 id=assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</h4>
 
 <p>An <em>AssignmentExpression</em> node
 
@@ -1002,12 +1174,18 @@ validates as type τ and one of the following two conditions holds:
 <p>An <em>AssignmentExpression</em> node
 
 </p><div class=example>
+<em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
+</div>
+
+<!--
+<div class="example">
 <em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 <em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 <em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 </div>
+-->
 
-<h4 id=callexpression><span class=secno>5.7.5 </span>CallExpression</h4>
+<h4 id=callexpression><span class=secno>6.6.5 </span>CallExpression</h4>
 
 <p>A <em>CallExpression</em> node
 
@@ -1015,7 +1193,7 @@ validates as type τ and one of the following two conditions holds:
 <em>x:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<h4 id=unaryexpression><span class=secno>5.7.6 </span>UnaryExpression</h4>
+<h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
 
 <p>A <em>UnaryExpression</em> node
 
@@ -1026,7 +1204,7 @@ validates as type τ and one of the following two conditions holds:
 <code>~~</code><em>arg:UnaryExpression</em>
 </div>
 
-<h4 id=multiplicativeexpression><span class=secno>5.7.7 </span>MultiplicativeExpression</h4>
+<h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
 
 <p>A <em>MultiplicativeExpression</em> node
 
@@ -1036,14 +1214,14 @@ validates as type τ and one of the following two conditions holds:
 <em>lhs:MultiplicativeExpression</em> <code>%</code> <em>rhs:UnaryExpression</em><br>
 </div>
 
-<h4 id=additiveexpression><span class=secno>5.7.8 </span>AdditiveExpression</h4>
+<h4 id=additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</h4>
 
 <div class=example>
 <em>lhs:AdditiveExpression</em> <code>+</code> <em>rhs:MultiplicativeExpression</em><br>
 <em>lhs:AdditiveExpression</em> <code>-</code> <em>rhs:MultiplicativeExpression</em>
 </div>
 
-<h4 id=shiftexpression><span class=secno>5.7.9 </span>ShiftExpression</h4>
+<h4 id=shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</h4>
 
 <div class=example>
 <em>lhs:ShiftExpression</em> <code>&lt;&lt;</code> <em>rhs:AdditiveExpression</em><br>
@@ -1051,7 +1229,7 @@ validates as type τ and one of the following two conditions holds:
 <em>lhs:ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
 </div>
 
-<h4 id=relationalexpression><span class=secno>5.7.10 </span>RelationalExpression</h4>
+<h4 id=relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</h4>
 
 <div class=example>
 <em>lhs:RelationalExpression</em> <code>&lt;</code> <em>rhs:ShiftExpression</em><br>
@@ -1060,50 +1238,50 @@ validates as type τ and one of the following two conditions holds:
 <em>lhs:RelationalExpression</em> <code>&gt;=</code> <em>rhs:ShiftExpression</em><br>
 </div>
 
-<h4 id=equalityexpression><span class=secno>5.7.11 </span>EqualityExpression</h4>
+<h4 id=equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</h4>
 
 <div class=example>
 <em>lhs:EqualityExpression</em> <code>==</code> <em>rhs:RelationalExpression</em><br>
 <em>lhs:EqualityExpression</em> <code>!=</code> <em>rhs:RelationalExpression</em>
 </div>
 
-<h4 id=bitwiseandexpression><span class=secno>5.7.12 </span>BitwiseANDExpression</h4>
+<h4 id=bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</h4>
 
 <div class=example>
 <em>lhs:BitwiseANDExpression</em> <code>&amp;</code> <em>rhs:EqualityExpression</em><br>
 </div>
 
-<h4 id=bitwisexorexpression><span class=secno>5.7.13 </span>BitwiseXORExpression</h4>
+<h4 id=bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</h4>
 
 <div class=example>
 <em>lhs:BitwiseXORExpression</em> <code>^</code> <em>rhs:BitwiseANDExpression</em><br>
 </div>
 
-<h4 id=bitwiseorexpression><span class=secno>5.7.14 </span>BitwiseORExpression</h4>
+<h4 id=bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</h4>
 
 <div class=example>
 <em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
 </div>
 
-<h4 id=conditionalexpression><span class=secno>5.7.15 </span>ConditionalExpression</h4>
+<h4 id=conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</h4>
 
 <div class=example>
 <em>test:LogicalORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
-<h4 id=parenthesized-expression><span class=secno>5.7.16 </span>Parenthesized Expression</h4>
+<h4 id=parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</h4>
 
 <div class=example>
 <code>(</code> <em>expr:Expression</em> <code>)</code>
 </div>
 
-<h2 id=linking-0><span class=secno>6 </span>Linking</h2>
+<h2 id=linking-0><span class=secno>7 </span>Linking</h2>
 
 <p>TODO
 
-</p><h2 id=operators><span class=secno>7 </span>Operators</h2>
+</p><h2 id=operators><span class=secno>8 </span>Operators</h2>
 
-<h3 id=unary-operators><span class=secno>7.1 </span>Unary Operators</h3>
+<h3 id=unary-operators><span class=secno>8.1 </span>Unary Operators</h3>
 
 <table>
 <tbody>
@@ -1133,7 +1311,7 @@ validates as type τ and one of the following two conditions holds:
 </tbody>
 </table>
 
-<h3 id=binary-operators><span class=secno>7.2 </span>Binary Operators</h3>
+<h3 id=binary-operators><span class=secno>8.2 </span>Binary Operators</h3>
 
 <table>
 <tbody>
@@ -1188,7 +1366,7 @@ validates as type τ and one of the following two conditions holds:
 </tbody>
 </table>
 
-<h2 id=standard-library><span class=secno>8 </span>Standard Library</h2>
+<h2 id=standard-library><span class=secno>9 </span>Standard Library</h2>
 
 <table>
 <tbody>
@@ -1198,29 +1376,29 @@ validates as type τ and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Infinity</code><br>
-    <em>stdlib</em><code>.NaN</code>
+    <code>Infinity</code><br>
+    <code>NaN</code>
   </td>
   <td><a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.acos</code><br>
-    <em>stdlib</em><code>.Math.asin</code><br>
-    <em>stdlib</em><code>.Math.atan</code><br>
-    <em>stdlib</em><code>.Math.cos</code><br>
-    <em>stdlib</em><code>.Math.sin</code><br>
-    <em>stdlib</em><code>.Math.tan</code><br>
-    <em>stdlib</em><code>.Math.ceil</code><br>
-    <em>stdlib</em><code>.Math.floor</code><br>
-    <em>stdlib</em><code>.Math.exp</code><br>
-    <em>stdlib</em><code>.Math.log</code><br>
-    <em>stdlib</em><code>.Math.sqrt</code>
+    <code>Math.acos</code><br>
+    <code>Math.asin</code><br>
+    <code>Math.atan</code><br>
+    <code>Math.cos</code><br>
+    <code>Math.sin</code><br>
+    <code>Math.tan</code><br>
+    <code>Math.ceil</code><br>
+    <code>Math.floor</code><br>
+    <code>Math.exp</code><br>
+    <code>Math.log</code><br>
+    <code>Math.sqrt</code>
   </td>
   <td>(<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
-  <td><em>stdlib</em><code>.Math.abs</code></td>
+  <td><code>Math.abs</code></td>
   <td>
     (<a href=#signed-0><code>signed</code></a>) → <a href=#unsigned-0><code>unsigned</code></a> ∧<br>
     (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
@@ -1228,25 +1406,25 @@ validates as type τ and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.atan2</code><br>
-    <em>stdlib</em><code>.Math.pow</code>
+    <code>Math.atan2</code><br>
+    <code>Math.pow</code>
   </td>
   <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
 </tr>
 <tr>
-  <td><em>stdlib</em><code>.Math.imul</code></td>
+  <td><code>Math.imul</code></td>
   <td>(<a href=#int-0><code>int</code></a>, <a href=#int-0><code>int</code></a>) → <a href=#signed-0><code>signed</code></a></td>
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.E</code><br>
-    <em>stdlib</em><code>.Math.LN10</code><br>
-    <em>stdlib</em><code>.Math.LN2</code><br>
-    <em>stdlib</em><code>.Math.LOG2E</code><br>
-    <em>stdlib</em><code>.Math.LOG10E</code><br>
-    <em>stdlib</em><code>.Math.PI</code><br>
-    <em>stdlib</em><code>.Math.SQRT1_2</code><br>
-    <em>stdlib</em><code>.Math.SQRT2</code><br>
+    <code>Math.E</code><br>
+    <code>Math.LN10</code><br>
+    <code>Math.LN2</code><br>
+    <code>Math.LOG2E</code><br>
+    <code>Math.LOG10E</code><br>
+    <code>Math.PI</code><br>
+    <code>Math.SQRT1_2</code><br>
+    <code>Math.SQRT2</code><br>
   </td>
   <td><a href=#double-0><code>double</code></a></td>
 </tr>

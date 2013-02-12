@@ -560,6 +560,155 @@ grammar</a>. These are always prefixed by the name <em>Asm</em> and
 always denote subsets of a non-terminal in the official grammar. For
 example, ...
 
+<h2>Annotations</h2>
+
+<p>All variables in asm.js are explicitly annotated with type
+information so that their type can be statically enforced by
+validation.
+
+<h3>Parameter Type Annotations</h3>
+
+<p>Every parameter in an asm.js function is provided with an explicit
+type annotation in the form of a coercion. This coercion serves two
+purposes: the first is to make the parameter type statically apparent
+for validation; the second is to ensure that if the function is
+exported, the arguments dynamically provided by external JavaScript
+callers are coerced to the expected type. For example, a bitwise OR
+coercion annotates a parameter as having type <code>int</code>:
+
+<div class="example">
+<pre>function add1(x) {
+    x = x|0; // x : int
+    return (x+1)|0;
+}</pre>
+</div>
+
+<p>In an AOT implementation, the body of the function can be
+implemented fully optimized, and the function can be given two entry
+points: an internal entry point for asm.js callers, which are
+statically known to provide the proper type, and an external dynamic
+entry point for JavaScript callers, which must perform the full
+coercions (which might involve arbitrary JavaScript computation, e.g.,
+via implicit calls to <code>valueOf</code>).
+
+<p>There are two recognized parameter type annotations:
+
+<div class="example">
+<em>x:Identifier</em> <code>=</code> <em>x:Identifier</em><code>|0;</code><br>
+<em>x:Identifier</em> <code>=</code> <code>+</code><em>x:Identifier</em><code>;</code>
+</div>
+
+<p>The first form annotates a parameter as type <code>int</code>, and
+the second as type <code>double</code>.
+
+<h3>Return Type Annotations</h3>
+
+<p>An asm.js function's return type is determined by the last
+statement in the function body, which is required to be
+a <em>ReturnStatement</em>. An asm.js return statement may take one
+of three forms:
+
+<div class="example">
+<code>return +</code><em>e:Expression</em><code>;</code><br>
+<code>return </code><em>e:Expression</em><code>|0;</code><br>
+<code>return </code><em>n:NumericLiteral</em><code>;</code><br>
+</div>
+
+<p>The first form has return type <code>double</code>. The second has
+type <code>signed</code>. The third has return
+type <code>double</code> if <em>n</em> is a floating-point literal,
+i.e., a numeric literal with the character <code>.</code> in its
+source; alternatively, if <em>n</em> is an integer literal in the
+range [-2<sup>31</sup>, 2<sup>31</sup>), the return statement has
+return type <code>signed</code>.
+
+<h3>Function Type Annotations</h3>
+
+<p>The type of a function declaration
+
+<div class="example">
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>return:ReturnStatement</em><br>
+<code>}</code>
+</div>
+
+<p>is (&sigma;,&hellip;) &rarr; &tau; where &sigma;,&hellip; are the
+types of the parameters, as provided by the <a href="">parameter type
+annotations</a>, and &tau; is the return type, as provided by
+the <a href="">return type annotation</a>. The variable <em>f</em> is
+stored in the <a href="">global environment</a> with
+type <code>imm</code> (&sigma;,&hellip;) &rarr; &tau;.
+
+<h3>Variable Type Annotations</h3>
+
+<p>The types of variable declarations are determined by their
+initializer. A variable initializer may be a floating-point literal,
+which is any numeric literal with the character <code>.</code> in
+their source, and has type <code>double</code>. Alternatively, an
+initializer may be an integer literal in the range [-2<sup>31</sup>,
+2<sup>32</sup>), which has type <code>int</code>.
+
+<h3>Global Variable Type Annotations</h3>
+
+<p>A global variable declaration is a <em>VariableStatement</em> node
+in one of several allowed forms.
+
+<p>A global program variable is initialized to a literal:
+
+<div class="example">
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><code>;</code>
+</div>
+
+<p>The global variable <em>x</em> is stored in the <a href="">global
+environment</a> with type <code>mut</code> &tau;, where &tau; is
+determined in the same way as local <a href="">variable type
+annotations</a>.
+
+<p>A standard library import is of one of the following two forms:
+
+<div class="example">
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.Math.</code><em>y:Identifier</em><code>;</code>
+</div>
+
+<p>The variable <em>stdlib</em> must match the first parameter of
+the <a href="">module declaration</a>. The global variable <em>x</em>
+is stored in the <a href="">global environment</a> with
+type <code>imm</code> &gamma;, where &gamma; is the type of
+library <em>y</em> or <code>Math.</code><em>y</em> as specified by
+the <a href="">standard library types</a>.
+
+<p>A foreign import is of one of the following three forms:
+
+<div class="example">
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>|0;</code><br>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <code>+</code><em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code>
+</div>
+
+<p>The variable <em>foreign</em> must match the second parameter of
+the <a href="">module declaration</a>. The global variable <em>x</em>
+is stored in the <a href="">global environment</a> with type <code>imm
+Function</code> for the first form, <code>imm int</code> for the
+second, and <code>imm double</code> for the third.
+
+<p>A global heap view is of the following form:
+
+<div class="example">
+<code>var</code> <em>x:Identifier</em> <code>= new</code> <em>stdlib:Identifier</em><code>.</code><em>view:Identifier</em><code>(</code><em>heap:Identifier</em><code>);</code>
+</div>
+
+<p>The variable <em>stdlib</em> must match the first parameter of
+the <a href="">module declaration</a> and the variable <em>heap</em>
+must match the third. The identifier <em>view</em> must be one of the
+standard <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type names. The global variable <em>x</em> is stored in
+the <a href="">global environment</a> with type <code>imm</code>
+<em>view</em>.
+
 <h2>Validation Rules</h2>
 
 <p>To ensure that a JavaScript function is a proper asm.js module, it
@@ -586,13 +735,25 @@ parameters:
 -->
 
 <div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><span class="meta">(</span><em>stdlib:Identifier</em><code><span class="meta">(</span>,</code> <em>foreign:Identifier</em><span class="meta">(</span><code>,</code> <em>heap:Identifier</em><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><code>) {<br>
+<code>function</code> <em>f:Identifier<sub>opt</sub></em><code>(</code><span class="meta">(</span><em>stdlib:Identifier</em><code><span class="meta">(</span>,</code> <em>foreign:Identifier</em><span class="meta">(</span><code>,</code> <em>heap:Identifier</em><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><code>) {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;"use asm";</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>decl:</em><span class="meta">(</span><em>VariableStatement</em> <span class="meta">|</span> <em>FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>var:VariableStatement</em> <span class="meta">|</span> <em>fun:FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
 
+<p>A module is valid if:
+
+<ul>
+<li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
+the <em>var</em> and <em>fun</em> variables are all mutually distinct;
+<li>the global environment &Delta; is constructed from
+the <a href="">global variable type annotations</a> in
+the <em>var</em> declarations and the <a href="">function type
+annotations</a> in the <em>fun</em> declarations;
+<li>each <em>fun</em> declaration is valid in &Delta;;
+<li>and <em>exports</em> is valid in &Delta;.
+</ul>
 
 <h3>Export Declarations</h3>
 
@@ -600,28 +761,24 @@ parameters:
 returning either a single asm.js function or an object literal
 exporting multiple asm.js functions.
 
-<div class="example">
-<code>return</code> <em>Identifier</em><code>;</code><br>
-<code>return</code> <code>{</code> <span class="meta">(</span><em>Identifier</em> <code>:</code> <em>Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
-</div>
-
-<!-- FIXME: text -->
-<p>An export declaration is valid if...
-
-
-<h3>Global Variable Declarations</h3>
-
-<p>A global variable declaration is a <em>VariableStatement</em> node
-in one of several allowed forms.
+<p>An export declaration node
 
 <div class="example">
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>stdlib:Identifier</em><code>.Math.</code><em>y:Identifier</em><code>;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>= new</code> <em>stdlib:Identifier</em><code>.</code><em>view:Identifier</em><code>(</code><em>heap:Identifier</em><code>);</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>|0;</code><br>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <code>+</code><em>foreign:Identifier</em><code>.</code><em>y:Identifier</em><code>;</code><br>
+<code>return</code> <code>{</code> <span class="meta">(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
 </div>
+
+<p>is valid if for each <em>f</em>, &Delta;(f) = <code>imm</code>
+&gamma; where &gamma; is a function type (&sigma;,&hellip;) &rarr;
+&tau;.
+
+<p>An export declaration node
+
+<div class="example">
+<code>return</code> <em>f:Identifier</em><code>;</code>
+</div>
+
+<p>is valid if &Delta;(f) = <code>imm</code> &gamma; where &gamma; is
+a function type (&sigma;,&hellip;) &rarr; &tau;.
 
 <h3>Function Declarations</h3>
 
@@ -638,16 +795,25 @@ in one of several allowed forms.
 <p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
 
 <div class="example">
-<code>function</code> <em>Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>VariableStatement</em>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>Statement</em>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
 <code>}</code>
 </div>
 
-<p>is valid if...
+<p>A function declaration is valid if:
 
-<p>TODO
+<ul>
+<li>&Delta;(f) = <code>imm</code> (&sigma;,&hellip;) &rarr; &tau;;
+<li>the <em>x</em> and <em>y</em> variables are all mutually distinct;
+<li>the variable environment &Gamma; is constructed by mapping each
+parameter <em>x</em> to its <a href="">parameter type annotation</a>
+and each local variable <em>y</em> to its <a href="">variable type
+annotation</a>;
+<li>each <code>body</code> statement is valid in &Delta; and &Gamma;
+with expected return type &tau;.
+</ul>
 
 <h3>Statements</h3>
 
@@ -933,10 +1099,16 @@ validates as type &tau; and one of the following two conditions holds:
 <p>An <em>AssignmentExpression</em> node
 
 <div class="example">
+<em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
+</div>
+
+<!--
+<div class="example">
 <em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 <em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 <em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
 </div>
+-->
 
 <h4>CallExpression</h4>
 
@@ -1129,29 +1301,29 @@ validates as type &tau; and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Infinity</code><br>
-    <em>stdlib</em><code>.NaN</code>
+    <code>Infinity</code><br>
+    <code>NaN</code>
   </td>
   <td><code>double</code></td>
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.acos</code><br>
-    <em>stdlib</em><code>.Math.asin</code><br>
-    <em>stdlib</em><code>.Math.atan</code><br>
-    <em>stdlib</em><code>.Math.cos</code><br>
-    <em>stdlib</em><code>.Math.sin</code><br>
-    <em>stdlib</em><code>.Math.tan</code><br>
-    <em>stdlib</em><code>.Math.ceil</code><br>
-    <em>stdlib</em><code>.Math.floor</code><br>
-    <em>stdlib</em><code>.Math.exp</code><br>
-    <em>stdlib</em><code>.Math.log</code><br>
-    <em>stdlib</em><code>.Math.sqrt</code>
+    <code>Math.acos</code><br>
+    <code>Math.asin</code><br>
+    <code>Math.atan</code><br>
+    <code>Math.cos</code><br>
+    <code>Math.sin</code><br>
+    <code>Math.tan</code><br>
+    <code>Math.ceil</code><br>
+    <code>Math.floor</code><br>
+    <code>Math.exp</code><br>
+    <code>Math.log</code><br>
+    <code>Math.sqrt</code>
   </td>
   <td>(<code>doublish</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
-  <td><em>stdlib</em><code>.Math.abs</code></td>
+  <td><code>Math.abs</code></td>
   <td>
     (<code>signed</code>) &rarr; <code>unsigned</code> &and;<br>
     (<code>doublish</code>) &rarr; <code>double</code>
@@ -1159,25 +1331,25 @@ validates as type &tau; and one of the following two conditions holds:
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.atan2</code><br>
-    <em>stdlib</em><code>.Math.pow</code>
+    <code>Math.atan2</code><br>
+    <code>Math.pow</code>
   </td>
   <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
-  <td><em>stdlib</em><code>.Math.imul</code></td>
+  <td><code>Math.imul</code></td>
   <td>(<code>int</code>, <code>int</code>) &rarr; <code>signed</code></td>
 </tr>
 <tr>
   <td>
-    <em>stdlib</em><code>.Math.E</code><br>
-    <em>stdlib</em><code>.Math.LN10</code><br>
-    <em>stdlib</em><code>.Math.LN2</code><br>
-    <em>stdlib</em><code>.Math.LOG2E</code><br>
-    <em>stdlib</em><code>.Math.LOG10E</code><br>
-    <em>stdlib</em><code>.Math.PI</code><br>
-    <em>stdlib</em><code>.Math.SQRT1_2</code><br>
-    <em>stdlib</em><code>.Math.SQRT2</code><br>
+    <code>Math.E</code><br>
+    <code>Math.LN10</code><br>
+    <code>Math.LN2</code><br>
+    <code>Math.LOG2E</code><br>
+    <code>Math.LOG10E</code><br>
+    <code>Math.PI</code><br>
+    <code>Math.SQRT1_2</code><br>
+    <code>Math.SQRT2</code><br>
   </td>
   <td><code>double</code></td>
 </tr>
