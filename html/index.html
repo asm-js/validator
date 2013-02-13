@@ -1460,7 +1460,30 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
 </p><h2 id=linking-0><span class=secno>7 </span>Linking</h2>
 
-<p>TODO
+<p>An AOT implementation of asm.js must perform some internal dynamic
+checks at link time to be able to safely generate AOT-compiled
+exports. If any of the dynamic checks fails, the result of linking
+cannot be an AOT-compiled module. The dynamically checked invariants
+are:
+
+</p><ul>
+<li>control must reach the module's <code>return</code> statement without throwing;
+</li><li>the <em>heap</em> object (if provided) must be an instance of <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer><code>ArrayBuffer</code></a>;
+</li><li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 8;
+</li><li>all view objects must be true instances of their
+respective <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView>typed
+array</a> types;
+</li><li>all globals taken from the <em>stdlib</em> object must implement
+the semantics of the
+corresponding <a href=http://ecma-international.org/ecma-262/5.1/#sec-15>standard
+library</a> of the same name (in practice, they must be
+the <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.12>SameValue</a>
+as the specified library function or value).
+</li></ul>
+
+<p>If any of these conditions is not met, it is generally unsafe to
+produce an AOT-compiled module object, and the engine should fall back
+to an interpreted or JIT-compiled implementation.
 
 </p><h2 id=operators><span class=secno>8 </span>Operators</h2>
 
