@@ -1074,11 +1074,56 @@ expression validates as type <code>unsigned</code>.
 <p>A <em>MemberExpression</em> node
 
 <div class="example">
-<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code><br>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code><br>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code><br>
+<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code>
 </div>
-<p>is valid if...
+
+<p>validates at type &tau; if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em>
+where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the word size of <em>view</em> is <em>bytes</em>;
+<li>the element type of <em>view</em> is &tau;;
+<li><em>n</em> &equiv; 0 mod <em>bytes</em>;
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li>0 &leq; <em>n</em> &lt; 2<sup>32</sup>.
+</ul>
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
+</div>
+
+<p>validates at type <code>intish</code> if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the word size of <em>view</em> is 1;
+<li>the element type of <em>view</em> is <code>intish</code>.
+</ul>
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates at type &tau; if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the word size of <em>view</em> is <em>bytes</em>;
+<li>the element type of <em>view</em> is &tau;;
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
+</ul>
 
 <h4>AssignmentExpression</h4>
 
@@ -1102,6 +1147,10 @@ validates as type &tau; and one of the following two conditions holds:
 <em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
 </div>
 
+<p>validates as type &tau; if <em>lhs</em> validates as type
+&tau;, <em>rhs</em> validates as type &sigma;, and &sigma; is a
+subtype of &tau;.
+
 <!--
 <div class="example">
 <em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
@@ -1115,90 +1164,208 @@ validates as type &tau; and one of the following two conditions holds:
 <p>A <em>CallExpression</em> node
 
 <div class="example">
-<em>x:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
+<em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
 </div>
+
+<p>validates as type &tau; if <em>Lookup</em>(&Delta;,
+&Gamma;, <em>f</em>) = &hellip; &and; (&sigma;,&hellip;) &rarr; &tau;
+&and; &hellip; and each <em>arg</em> validates as a subtype of its
+corresponding &sigma;.
+
+<p>Alternatively, the <em>CallExpression</em> node validates as
+type <code>unknown</code> if <em>Lookup</em>(&Delta;,
+&Gamma;, <em>f</em>) = <code>Function</code> and each <em>arg</em>
+validates as a subtype of <code>extern</code>.
 
 <h4>UnaryExpression</h4>
 
 <p>A <em>UnaryExpression</em> node
 
 <div class="example">
-<code>+</code><em>arg:UnaryExpression</em><br>
-<code>-</code><em>arg:UnaryExpression</em><br>
-<code>~</code><em>arg:UnaryExpression</em><br>
+<em>op:</em><span class="meta">(</span><code>+</code><span class="meta">|</span><code>-</code><span class="meta">|</span><code>~</code><span class="meta">)</span><em>arg:UnaryExpression</em>
+</div>
+
+<p>validates as type &tau; if the type of <em>op</em> is &hellip;
+&and; (&sigma) &rarr; &tau; &and; &hellip; and <em>arg</em> validates
+as a subtype of &sigma;.
+
+<p>A <em>UnaryExpression</em> node of the form
+
+<div class="example">
 <code>~~</code><em>arg:UnaryExpression</em>
 </div>
+
+<p>validates as type <code>signed</code> if <em>arg</em> validates as
+a subtype of <code>double</code>.
 
 <h4>MultiplicativeExpression</h4>
 
 <p>A <em>MultiplicativeExpression</em> node
 
 <div class="example">
-<em>lhs:MultiplicativeExpression</em> <code>*</code> <em>rhs:UnaryExpression</em><br>
-<em>lhs:MultiplicativeExpression</em> <code>/</code> <em>rhs:UnaryExpression</em><br>
-<em>lhs:MultiplicativeExpression</em> <code>%</code> <em>rhs:UnaryExpression</em><br>
+<em>lhs:MultiplicativeExpression</em> <em>op:</em><span class="meta">(</span><code>*</code><span class="meta">|</span><code>/</code><span class="meta">|</span><code>%</code><span class="meta">)</span> <em>rhs:UnaryExpression</em>
 </div>
+
+<p>validates as type &tau; if the type of <em>op</em> is &hellip;
+&and; (&sigma;<sub>1</sub>, &sigma;<sub>2</sub>) &rarr; &tau; &and;
+&hellip; and <em>lhs</em> validates as a subtype of
+&sigma;<sub>1</sub> and <em>rhs</em> validates as a subtype of
+&sigma;<sub>2</sub>.
+
+<p>A <em>MultiplicativeExpression</em> node
+
+<div class="example">
+<em>expr:MultiplicativeExpression</em> <code>*</code> <em>n:NumericLiteral</em><br>
+<em>n:NumericLiteral</em> <code>*</code> <em>expr:UnaryExpression</em>
+</div>
+
+<p>validates as type <code>intish</code> if the source of <em>n</em>
+does not contain a <code>.</code> character and -2<sup>20</sup>
+&lt; <em>n</em> &lt; 2<sup>20</sup> and <em>expr</em> validates as a
+subtype of <code>int</code>.
 
 <h4>AdditiveExpression</h4>
 
+<p>An <em>AdditiveExpression</em> node
+
 <div class="example">
-<em>lhs:AdditiveExpression</em> <code>+</code> <em>rhs:MultiplicativeExpression</em><br>
-<em>lhs:AdditiveExpression</em> <code>-</code> <em>rhs:MultiplicativeExpression</em>
+<em>expr<sub>1</sub></em> <span class="meta">(</span><code>+</code><span class="meta">|</span><code>-</code><span class="meta">)</span> &hellip; <span class="meta">(</span><code>+</code><span class="meta">|</span><code>-</code><span class="meta">)</span> <em>expr<sub>n</sub></em>
 </div>
+
+<p>validates as type <code>intish</code> if:
+
+<ul>
+<li>each <em>expr<sub>i</sub></em> validates as type <code>int</code>;
+<li><em>n</em> &leq; 2<sup>20</sup>.
+</ul>
+
+<p>Otherwise, an <em>AdditiveExpression</em> node
+
+<div class="example">
+<em>lhs:AdditiveExpression</em> <em>op:</em><span class="meta">(</span><code>+</code><span class="meta">|</span><code>-</code><span class="meta">)</span> <em>rhs:MultiplicativeExpression</em>
+</div>
+
+<p>validates as type <code>double</code> if the type of <em>op</em> is
+(&sigma;<sub>1</sub>, &sigma;<sub>2</sub>) &rarr; <code>double</code>
+and <em>lhs</em> validates as a subtype of &sigma;<sub>1</sub>
+and <em>rhs</em> validates as a subtype of &sigma;<sub>2</sub>.
 
 <h4>ShiftExpression</h4>
 
+<p>A <em>ShiftExpression</em> node
+
 <div class="example">
+<em>lhs:ShiftExpression</em> <em>op:</em><span class="meta">(</span><code>&lt;&lt;</code><span class="meta">|</span><code>&gt;&gt;</code><span class="meta">|</span><code>&gt;&gt;&gt;</code><span class="meta">)</span> <em>rhs:AdditiveExpression</em>
+<!--
 <em>lhs:ShiftExpression</em> <code>&lt;&lt;</code> <em>rhs:AdditiveExpression</em><br>
 <em>lhs:ShiftExpression</em> <code>&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
 <em>lhs:ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
+-->
 </div>
+
+<p>validates as type &tau; if the type of <em>op</em> is &hellip;
+&and; (&sigma;<sub>1</sub>, &sigma;<sub>2</sub>) &rarr; &tau; &and;
+&hellip; and <em>lhs</em> validates as a subtype of
+&sigma;<sub>1</sub> and <em>rhs</em> validates as a subtype of
+&sigma;<sub>2</sub>.
 
 <h4>RelationalExpression</h4>
 
+<p>A <em>RelationalExpression</em> node
+
 <div class="example">
+<em>lhs:RelationalExpression</em> <em>op:</em><span class="meta">(</span><code>&lt;</code><span class="meta">|</span><code>&gt;</code><span class="meta">|</span><code>&lt;=</code><span class="meta">|</span><code>&gt;=</code><span class="meta">)</span> <em>rhs:ShiftExpression</em>
+<!--
 <em>lhs:RelationalExpression</em> <code>&lt;</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&gt;</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&lt;=</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&gt;=</code> <em>rhs:ShiftExpression</em><br>
+-->
 </div>
+
+<p>validates as type &tau; if the type of <em>op</em> is &hellip;
+&and; (&sigma;<sub>1</sub>, &sigma;<sub>2</sub>) &rarr; &tau; &and;
+&hellip; and <em>lhs</em> validates as a subtype of
+&sigma;<sub>1</sub> and <em>rhs</em> validates as a subtype of
+&sigma;<sub>2</sub>.
 
 <h4>EqualityExpression</h4>
 
+<p>An <em>EqualityExpression</em> node
+
 <div class="example">
+<em>lhs:EqualityExpression</em> <em>op:</em><span class="meta">(</span><code>==</code><span class="meta">|</span><code>!=</code><span class="meta">)</span> <em>rhs:RelationalExpression</em>
+<!--
 <em>lhs:EqualityExpression</em> <code>==</code> <em>rhs:RelationalExpression</em><br>
 <em>lhs:EqualityExpression</em> <code>!=</code> <em>rhs:RelationalExpression</em>
+-->
 </div>
 
+<p>validates as type &tau; if the type of <em>op</em> is &hellip;
+&and; (&sigma;<sub>1</sub>, &sigma;<sub>2</sub>) &rarr; &tau; &and;
+&hellip; and <em>lhs</em> validates as a subtype of
+&sigma;<sub>1</sub> and <em>rhs</em> validates as a subtype of
+&sigma;<sub>2</sub>.
+
 <h4>BitwiseANDExpression</h4>
+
+<p>A <em>BitwiseANDExpression</em> node
 
 <div class="example">
 <em>lhs:BitwiseANDExpression</em> <code>&amp;</code> <em>rhs:EqualityExpression</em><br>
 </div>
 
+<p>validates as type <code>signed</code> if <em>lhs</em>
+and <em>rhs</em> validate as type <code>intish</code>.
+
 <h4>BitwiseXORExpression</h4>
+
+<p>A <em>BitwiseXORExpression</em> node
 
 <div class="example">
 <em>lhs:BitwiseXORExpression</em> <code>^</code> <em>rhs:BitwiseANDExpression</em><br>
 </div>
 
+<p>validates as type <code>signed</code> if <em>lhs</em>
+and <em>rhs</em> validate as type <code>intish</code>.
+
 <h4>BitwiseORExpression</h4>
+
+<p>A <em>BitwiseORExpression</em> node
 
 <div class="example">
 <em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
 </div>
 
+<p>validates as type <code>signed</code> if <em>lhs</em>
+and <em>rhs</em> validate as type <code>intish</code>.
+
 <h4>ConditionalExpression</h4>
+
+<p>A <em>ConditionalExpression</em> node
 
 <div class="example">
 <em>test:LogicalORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
+<p>validates as type &tau; if:
+
+<ul>
+<li>&tau; = <code>int</code> or &tau; = <code>double</code>;
+<li><em>test</em> validates as type <code>int</code>;
+<li><em>cons</em> and <em>alt</em> validate as subtypes of &tau;.
+</ul>
+
 <h4>Parenthesized Expression</h4>
+
+<p>A parenthesized expression node
 
 <div class="example">
 <code>(</code> <em>expr:Expression</em> <code>)</code>
 </div>
+
+<p>validates as type &tau; if <em>expr</em> validates as type &tau;
+
 
 <h2>Linking</h2>
 
@@ -1356,7 +1523,57 @@ validates as type &tau; and one of the following two conditions holds:
 </tbody>
 </table>
 
-<p>TODO
+<h2>Heap View Types</h2>
+
+<table>
+<tbody>
+<tr>
+  <th>View Type</th>
+  <th>Word Size (Bytes)</th>
+  <th>Element Type</th>
+</tr>
+<tr>
+  <td><code>Uint8Array</code></td>
+  <td>1</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Int8Array</code></td>
+  <td>1</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Uint16Array</code></td>
+  <td>2</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Int16Array</code></td>
+  <td>2</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Uint32Array</code></td>
+  <td>4</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Int32Array</code></td>
+  <td>4</td>
+  <td><code>intish</code></td>
+</tr>
+<tr>
+  <td><code>Float32Array</code></td>
+  <td>4</td>
+  <td><code>doublish</code></td>
+</tr>
+<tr>
+  <td><code>Float64Array</code></td>
+  <td>8</td>
+  <td><code>doublish</code></td>
+</tr>
+</tbody>
+</table>
 
 <h2 class="no-num">Acknowledgements</h2>
 

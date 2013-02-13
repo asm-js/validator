@@ -30,7 +30,7 @@ span.meta {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-12-february-2013>Working Draft — 12 February 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-13-february-2013>Working Draft — 13 February 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -147,6 +147,7 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
    <li><a href=#unary-operators><span class=secno>8.1 </span>Unary Operators</a></li>
    <li><a href=#binary-operators><span class=secno>8.2 </span>Binary Operators</a></li></ol></li>
  <li><a href=#standard-library><span class=secno>9 </span>Standard Library</a></li>
+ <li><a href=#heap-view-types><span class=secno>10 </span>Heap View Types</a></li>
  <li><a class=no-num href=#acknowledgements>Acknowledgements</a></li></ol>
 <!--end-toc-->
 
@@ -1149,13 +1150,58 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 <p>A <em>MemberExpression</em> node
 
 </p><div class=example>
-<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code><br>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code><br>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code><br>
+<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code>
 </div>
-<p>is valid if...
 
-</p><h4 id=assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</h4>
+<p>validates at type τ if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em>
+where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the word size of <em>view</em> is <em>bytes</em>;
+</li><li>the element type of <em>view</em> is τ;
+</li><li><em>n</em> ≡ 0 mod <em>bytes</em>;
+</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li>0 ≤ <em>n</em> &lt; 2<sup>32</sup>.
+</li></ul>
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
+</div>
+
+<p>validates at type <a href=#intish-0><code>intish</code></a> if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the word size of <em>view</em> is 1;
+</li><li>the element type of <em>view</em> is <a href=#intish-0><code>intish</code></a>.
+</li></ul>
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates at type τ if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the word size of <em>view</em> is <em>bytes</em>;
+</li><li>the element type of <em>view</em> is τ;
+</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
+</li></ul>
+
+<h4 id=assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</h4>
 
 <p>An <em>AssignmentExpression</em> node
 
@@ -1177,6 +1223,10 @@ validates as type τ and one of the following two conditions holds:
 <em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
 </div>
 
+<p>validates as type τ if <em>lhs</em> validates as type
+τ, <em>rhs</em> validates as type σ, and σ is a
+subtype of τ.
+
 <!--
 <div class="example">
 <em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>] = </code><em>rhs:AssignmentExpression</em><br>
@@ -1185,97 +1235,215 @@ validates as type τ and one of the following two conditions holds:
 </div>
 -->
 
-<h4 id=callexpression><span class=secno>6.6.5 </span>CallExpression</h4>
+</p><h4 id=callexpression><span class=secno>6.6.5 </span>CallExpression</h4>
 
 <p>A <em>CallExpression</em> node
 
 </p><div class=example>
-<em>x:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+<em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
+<p>validates as type τ if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = … ∧ (σ,…) → τ
+∧ … and each <em>arg</em> validates as a subtype of its
+corresponding σ.
+
+</p><p>Alternatively, the <em>CallExpression</em> node validates as
+type <a href=#unknown-0><code>unknown</code></a> if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = <code>Function</code> and each <em>arg</em>
+validates as a subtype of <a href=#extern-0><code>extern</code></a>.
+
+</p><h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
 
 <p>A <em>UnaryExpression</em> node
 
 </p><div class=example>
-<code>+</code><em>arg:UnaryExpression</em><br>
-<code>-</code><em>arg:UnaryExpression</em><br>
-<code>~</code><em>arg:UnaryExpression</em><br>
+<em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>|</span><code>~</code><span class=meta>)</span><em>arg:UnaryExpression</em>
+</div>
+
+<p>validates as type τ if the type of <em>op</em> is …
+∧ (&amp;sigma) → τ ∧ … and <em>arg</em> validates
+as a subtype of σ.
+
+</p><p>A <em>UnaryExpression</em> node of the form
+
+</p><div class=example>
 <code>~~</code><em>arg:UnaryExpression</em>
 </div>
 
-<h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
+<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
+a subtype of <a href=#double-0><code>double</code></a>.
+
+</p><h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
 
 <p>A <em>MultiplicativeExpression</em> node
 
 </p><div class=example>
-<em>lhs:MultiplicativeExpression</em> <code>*</code> <em>rhs:UnaryExpression</em><br>
-<em>lhs:MultiplicativeExpression</em> <code>/</code> <em>rhs:UnaryExpression</em><br>
-<em>lhs:MultiplicativeExpression</em> <code>%</code> <em>rhs:UnaryExpression</em><br>
+<em>lhs:MultiplicativeExpression</em> <em>op:</em><span class=meta>(</span><code>*</code><span class=meta>|</span><code>/</code><span class=meta>|</span><code>%</code><span class=meta>)</span> <em>rhs:UnaryExpression</em>
 </div>
 
-<h4 id=additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</h4>
+<p>validates as type τ if the type of <em>op</em> is …
+∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
+… and <em>lhs</em> validates as a subtype of
+σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
+σ<sub>2</sub>.
 
-<div class=example>
-<em>lhs:AdditiveExpression</em> <code>+</code> <em>rhs:MultiplicativeExpression</em><br>
-<em>lhs:AdditiveExpression</em> <code>-</code> <em>rhs:MultiplicativeExpression</em>
+</p><p>A <em>MultiplicativeExpression</em> node
+
+</p><div class=example>
+<em>expr:MultiplicativeExpression</em> <code>*</code> <em>n:NumericLiteral</em><br>
+<em>n:NumericLiteral</em> <code>*</code> <em>expr:UnaryExpression</em>
 </div>
 
-<h4 id=shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</h4>
+<p>validates as type <a href=#intish-0><code>intish</code></a> if the source of <em>n</em>
+does not contain a <code>.</code> character and -2<sup>20</sup>
+&lt; <em>n</em> &lt; 2<sup>20</sup> and <em>expr</em> validates as a
+subtype of <a href=#int-0><code>int</code></a>.
 
-<div class=example>
+</p><h4 id=additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</h4>
+
+<p>An <em>AdditiveExpression</em> node
+
+</p><div class=example>
+<em>expr<sub>1</sub></em> <span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> … <span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> <em>expr<sub>n</sub></em>
+</div>
+
+<p>validates as type <a href=#intish-0><code>intish</code></a> if:
+
+</p><ul>
+<li>each <em>expr<sub>i</sub></em> validates as type <a href=#int-0><code>int</code></a>;
+</li><li><em>n</em> ≤ 2<sup>20</sup>.
+</li></ul>
+
+<p>Otherwise, an <em>AdditiveExpression</em> node
+
+</p><div class=example>
+<em>lhs:AdditiveExpression</em> <em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> <em>rhs:MultiplicativeExpression</em>
+</div>
+
+<p>validates as type <a href=#double-0><code>double</code></a> if the type of <em>op</em> is
+(σ<sub>1</sub>, σ<sub>2</sub>) → <a href=#double-0><code>double</code></a>
+and <em>lhs</em> validates as a subtype of σ<sub>1</sub>
+and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
+
+</p><h4 id=shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</h4>
+
+<p>A <em>ShiftExpression</em> node
+
+</p><div class=example>
+<em>lhs:ShiftExpression</em> <em>op:</em><span class=meta>(</span><code>&lt;&lt;</code><span class=meta>|</span><code>&gt;&gt;</code><span class=meta>|</span><code>&gt;&gt;&gt;</code><span class=meta>)</span> <em>rhs:AdditiveExpression</em>
+<!--
 <em>lhs:ShiftExpression</em> <code>&lt;&lt;</code> <em>rhs:AdditiveExpression</em><br>
 <em>lhs:ShiftExpression</em> <code>&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
 <em>lhs:ShiftExpression</em> <code>&gt;&gt;&gt;</code> <em>rhs:AdditiveExpression</em><br>
+-->
 </div>
 
-<h4 id=relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</h4>
+<p>validates as type τ if the type of <em>op</em> is …
+∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
+… and <em>lhs</em> validates as a subtype of
+σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
+σ<sub>2</sub>.
 
-<div class=example>
+</p><h4 id=relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</h4>
+
+<p>A <em>RelationalExpression</em> node
+
+</p><div class=example>
+<em>lhs:RelationalExpression</em> <em>op:</em><span class=meta>(</span><code>&lt;</code><span class=meta>|</span><code>&gt;</code><span class=meta>|</span><code>&lt;=</code><span class=meta>|</span><code>&gt;=</code><span class=meta>)</span> <em>rhs:ShiftExpression</em>
+<!--
 <em>lhs:RelationalExpression</em> <code>&lt;</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&gt;</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&lt;=</code> <em>rhs:ShiftExpression</em><br>
 <em>lhs:RelationalExpression</em> <code>&gt;=</code> <em>rhs:ShiftExpression</em><br>
+-->
 </div>
 
-<h4 id=equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</h4>
+<p>validates as type τ if the type of <em>op</em> is …
+∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
+… and <em>lhs</em> validates as a subtype of
+σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
+σ<sub>2</sub>.
 
-<div class=example>
+</p><h4 id=equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</h4>
+
+<p>An <em>EqualityExpression</em> node
+
+</p><div class=example>
+<em>lhs:EqualityExpression</em> <em>op:</em><span class=meta>(</span><code>==</code><span class=meta>|</span><code>!=</code><span class=meta>)</span> <em>rhs:RelationalExpression</em>
+<!--
 <em>lhs:EqualityExpression</em> <code>==</code> <em>rhs:RelationalExpression</em><br>
 <em>lhs:EqualityExpression</em> <code>!=</code> <em>rhs:RelationalExpression</em>
+-->
 </div>
 
-<h4 id=bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</h4>
+<p>validates as type τ if the type of <em>op</em> is …
+∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
+… and <em>lhs</em> validates as a subtype of
+σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
+σ<sub>2</sub>.
 
-<div class=example>
+</p><h4 id=bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</h4>
+
+<p>A <em>BitwiseANDExpression</em> node
+
+</p><div class=example>
 <em>lhs:BitwiseANDExpression</em> <code>&amp;</code> <em>rhs:EqualityExpression</em><br>
 </div>
 
-<h4 id=bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</h4>
+<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
+and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-<div class=example>
+</p><h4 id=bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</h4>
+
+<p>A <em>BitwiseXORExpression</em> node
+
+</p><div class=example>
 <em>lhs:BitwiseXORExpression</em> <code>^</code> <em>rhs:BitwiseANDExpression</em><br>
 </div>
 
-<h4 id=bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</h4>
+<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
+and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-<div class=example>
+</p><h4 id=bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</h4>
+
+<p>A <em>BitwiseORExpression</em> node
+
+</p><div class=example>
 <em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
 </div>
 
-<h4 id=conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</h4>
+<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
+and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-<div class=example>
+</p><h4 id=conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</h4>
+
+<p>A <em>ConditionalExpression</em> node
+
+</p><div class=example>
 <em>test:LogicalORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
+<p>validates as type τ if:
+
+</p><ul>
+<li>τ = <a href=#int-0><code>int</code></a> or τ = <a href=#double-0><code>double</code></a>;
+</li><li><em>test</em> validates as type <a href=#int-0><code>int</code></a>;
+</li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
+</li></ul>
+
 <h4 id=parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</h4>
 
-<div class=example>
+<p>A parenthesized expression node
+
+</p><div class=example>
 <code>(</code> <em>expr:Expression</em> <code>)</code>
 </div>
 
-<h2 id=linking-0><span class=secno>7 </span>Linking</h2>
+<p>validates as type τ if <em>expr</em> validates as type τ
+
+
+</p><h2 id=linking-0><span class=secno>7 </span>Linking</h2>
 
 <p>TODO
 
@@ -1431,9 +1599,59 @@ validates as type τ and one of the following two conditions holds:
 </tbody>
 </table>
 
-<p>TODO
+<h2 id=heap-view-types><span class=secno>10 </span>Heap View Types</h2>
 
-</p><h2 class=no-num id=acknowledgements>Acknowledgements</h2>
+<table>
+<tbody>
+<tr>
+  <th>View Type</th>
+  <th>Word Size (Bytes)</th>
+  <th>Element Type</th>
+</tr>
+<tr>
+  <td><code>Uint8Array</code></td>
+  <td>1</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Int8Array</code></td>
+  <td>1</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Uint16Array</code></td>
+  <td>2</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Int16Array</code></td>
+  <td>2</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Uint32Array</code></td>
+  <td>4</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Int32Array</code></td>
+  <td>4</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
+</tr>
+<tr>
+  <td><code>Float32Array</code></td>
+  <td>4</td>
+  <td><a href=#doublish-0><code>doublish</code></a></td>
+</tr>
+<tr>
+  <td><code>Float64Array</code></td>
+  <td>8</td>
+  <td><a href=#doublish-0><code>doublish</code></a></td>
+</tr>
+</tbody>
+</table>
+
+<h2 class=no-num id=acknowledgements>Acknowledgements</h2>
 
 <p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, Vlad Vukićević, ...
 
