@@ -712,10 +712,12 @@ return type <a href=#signed-0><code>signed</code></a>.
 </div>
 
 <p>is (σ,…) → τ where σ,… are the
-types of the parameters, as provided by the <a href="">parameter type
+types of the parameters, as provided by
+the <a href=#parameter-type-annotations>parameter type
 annotations</a>, and τ is the return type, as provided by
-the <a href="">return type annotation</a>. The variable <em>f</em> is
-stored in the <a href="">global environment</a> with
+the <a href=#return-type-annotations>return type annotation</a>. The
+variable <em>f</em> is stored in
+the <a href=#global-environment>global environment</a> with
 type <code>imm</code> (σ,…) → τ.
 
 </p><h3 id=variable-type-annotations><span class=secno>5.4 </span>Variable Type Annotations</h3>
@@ -738,9 +740,10 @@ in one of several allowed forms.
 <code>var</code> <em>x:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><code>;</code>
 </div>
 
-<p>The global variable <em>x</em> is stored in the <a href="">global
-environment</a> with type <code>mut</code> τ, where τ is
-determined in the same way as local <a href="">variable type
+<p>The global variable <em>x</em> is stored in
+the <a href=#global-environment>global environment</a> with
+type <code>mut</code> τ, where τ is determined in the same way
+as local <a href=#variable-type-annotations>variable type
 annotations</a>.
 
 </p><p>A standard library import is of one of the following two forms:
@@ -751,11 +754,12 @@ annotations</a>.
 </div>
 
 <p>The variable <em>stdlib</em> must match the first parameter of
-the <a href="">module declaration</a>. The global variable <em>x</em>
-is stored in the <a href="">global environment</a> with
+the <a href=#modules>module declaration</a>. The global
+variable <em>x</em> is stored in
+the <a href=#global-environment>global environment</a> with
 type <code>imm</code> γ, where γ is the type of
 library <em>y</em> or <code>Math.</code><em>y</em> as specified by
-the <a href="">standard library types</a>.
+the <a href=#standard-library>standard library types</a>.
 
 </p><p>A foreign import is of one of the following three forms:
 
@@ -766,10 +770,11 @@ the <a href="">standard library types</a>.
 </div>
 
 <p>The variable <em>foreign</em> must match the second parameter of
-the <a href="">module declaration</a>. The global variable <em>x</em>
-is stored in the <a href="">global environment</a> with type <code>imm
-Function</code> for the first form, <code>imm int</code> for the
-second, and <code>imm double</code> for the third.
+the <a href=#modules>module declaration</a>. The global
+variable <em>x</em> is stored in
+the <a href=#global-environment>global environment</a> with
+type <code>imm Function</code> for the first form, <code>imm
+int</code> for the second, and <code>imm double</code> for the third.
 
 </p><p>A global heap view is of the following form:
 
@@ -778,11 +783,13 @@ second, and <code>imm double</code> for the third.
 </div>
 
 <p>The variable <em>stdlib</em> must match the first parameter of
-the <a href="">module declaration</a> and the variable <em>heap</em>
-must match the third. The identifier <em>view</em> must be one of the
+the <a href=#modules>module declaration</a> and the
+variable <em>heap</em> must match the third. The
+identifier <em>view</em> must be one of the
 standard <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
 type names. The global variable <em>x</em> is stored in
-the <a href="">global environment</a> with type <code>imm</code>
+the <a href=#global-environment>global environment</a> with
+type <code>imm</code>
 <em>view</em>.
 
 </p><h2 id=validation-rules><span class=secno>6 </span>Validation Rules</h2>
@@ -824,9 +831,10 @@ parameters:
 <li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
 the <em>var</em> and <em>fun</em> variables are all mutually distinct;
 </li><li>the global environment Δ is constructed from
-the <a href="">global variable type annotations</a> in
-the <em>var</em> declarations and the <a href="">function type
-annotations</a> in the <em>fun</em> declarations;
+the <a href=#global-variable-type-annotations>global variable type
+annotations</a> in the <em>var</em> declarations and
+the <a href=#function-type-annotations>function type annotations</a>
+in the <em>fun</em> declarations;
 </li><li>each <em>fun</em> declaration is valid in Δ;
 </li><li>and <em>exports</em> is valid in Δ.
 </li></ul>
@@ -884,9 +892,10 @@ a function type (σ,…) → τ.
 <li>Δ(f) = <code>imm</code> (σ,…) → τ;
 </li><li>the <em>x</em> and <em>y</em> variables are all mutually distinct;
 </li><li>the variable environment Γ is constructed by mapping each
-parameter <em>x</em> to its <a href="">parameter type annotation</a>
-and each local variable <em>y</em> to its <a href="">variable type
-annotation</a>;
+parameter <em>x</em> to
+its <a href=#parameter-type-annotations>parameter type
+annotation</a> and each local variable <em>y</em> to
+its <a href=#variable-type-annotations>variable type annotation</a>;
 </li><li>each <code>body</code> statement is valid in Δ and Γ
 with expected return type τ.
 </li></ul>
@@ -1114,7 +1123,13 @@ case type σ and <em>stmt</em> list is valid.
 
 </p><h3 id=expressions><span class=secno>6.6 </span>Expressions</h3>
 
-<h4 id=numericliteral><span class=secno>6.6.1 </span>NumericLiteral</h4>
+<p>Each expression is validated in the context of a <a href=#global-environment-0>global
+environment</a> Δ and a <a href=#variable-environment-0>variable environment</a>
+Γ, and validation determines the type of the expression. Unless
+otherwise explicitly stated, a recursive validation of a subterm uses
+the same context as its containing term.
+
+</p><h4 id=numericliteral><span class=secno>6.6.1 </span>NumericLiteral</h4>
 
 <p>For a <em>NumericLiteral</em> node:
 
@@ -1440,7 +1455,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <code>(</code> <em>expr:Expression</em> <code>)</code>
 </div>
 
-<p>validates as type τ if <em>expr</em> validates as type τ
+<p>validates as type τ if <em>expr</em> validates as type τ.
 
 
 </p><h2 id=linking-0><span class=secno>7 </span>Linking</h2>
