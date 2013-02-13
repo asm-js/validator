@@ -473,7 +473,7 @@ where the signedness is not known. In asm.js, the type of a variable
 never has a known signedness. This allows them to be compiled as
 32-bit integer registers and memory words. However, this
 representation creates an overlap between signed and unsigned numbers
-that cause an ambiguity in determining which JavaScript number they
+that causes an ambiguity in determining which JavaScript number they
 represent. For example, the bit pattern <code>0xffffffff</code> could
 represent 4294967295 or -1, depending on the signedness. For this
 reason, values of the <a href=#int-0><code>int</code></a> type are disallowed from
@@ -554,10 +554,14 @@ the <a href=#value-types>value types</a>. These include:
 </li><li>the FFI function type <code>Function</code>.
 </li></ul>
 
-<!-- FIXME: example with link to operators -->
-The "∧" notation for function types serves to represent overloaded functions and operators. For example...
+<p>The "∧" notation for function types serves to represent
+overloaded functions and operators. For example,
+the <a href=#standard-library><code>Math.abs</code> function</a> is
+overloaded to accept either integers or floating-point numbers, and
+returns a different type in each case. Similarly, many of
+the <a href=#operators>operators</a> have overloaded types.
 
-<p>The meta-variable γ is used to stand for global types.
+</p><p>The meta-variable γ is used to stand for global types.
 
 </p><h2 id=environments><span class=secno>3 </span>Environments</h2>
 
@@ -627,14 +631,6 @@ or <code>arguments</code>.
 
 <p>These rules are otherwise left implicit in the rest of the
 specification.
-
-<!-- FIXME: example -->
-</p><p>Where necessary, the specification also defines non-terminals that
-do not appear in
-the <a href=http://ecma-international.org/ecma-262/5.1/#sec-A>ECMAScript
-grammar</a>. These are always prefixed by the name <em>Asm</em> and
-always denote subsets of a non-terminal in the official grammar. For
-example, ...
 
 </p><h2 id=annotations><span class=secno>5 </span>Annotations</h2>
 
