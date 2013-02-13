@@ -600,14 +600,15 @@ the second as type <code>double</code>.
 <h3>Return Type Annotations</h3>
 
 <p>An asm.js function's return type is determined by the last
-statement in the function body, which is required to be
-a <em>ReturnStatement</em>. An asm.js return statement may take one
-of three forms:
+statement in the function body, which for non-<code>void</code>
+functions is required to be a <em>ReturnStatement</em>. This
+distinguished return statement may take one of four forms:
 
 <div class="example">
 <code>return +</code><em>e:Expression</em><code>;</code><br>
 <code>return </code><em>e:Expression</em><code>|0;</code><br>
 <code>return </code><em>n:NumericLiteral</em><code>;</code><br>
+<code>return;</code>
 </div>
 
 <p>The first form has return type <code>double</code>. The second has
@@ -616,7 +617,12 @@ type <code>double</code> if <em>n</em> is a floating-point literal,
 i.e., a numeric literal with the character <code>.</code> in its
 source; alternatively, if <em>n</em> is an integer literal in the
 range [-2<sup>31</sup>, 2<sup>31</sup>), the return statement has
-return type <code>signed</code>.
+return type <code>signed</code>. The fourth form has return
+type <code>void</code>.
+
+<p>If the last statement in the function body is not
+a <em>ReturnStatement</em>, the function's return type
+is <code>void</code>.
 
 <h3>Function Type Annotations</h3>
 

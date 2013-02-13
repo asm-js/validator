@@ -676,14 +676,15 @@ the second as type <a href=#double-0><code>double</code></a>.
 </p><h3 id=return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</h3>
 
 <p>An asm.js function's return type is determined by the last
-statement in the function body, which is required to be
-a <em>ReturnStatement</em>. An asm.js return statement may take one
-of three forms:
+statement in the function body, which for non-<a href=#void-0><code>void</code></a>
+functions is required to be a <em>ReturnStatement</em>. This
+distinguished return statement may take one of four forms:
 
 </p><div class=example>
 <code>return +</code><em>e:Expression</em><code>;</code><br>
 <code>return </code><em>e:Expression</em><code>|0;</code><br>
 <code>return </code><em>n:NumericLiteral</em><code>;</code><br>
+<code>return;</code>
 </div>
 
 <p>The first form has return type <a href=#double-0><code>double</code></a>. The second has
@@ -692,7 +693,12 @@ type <a href=#double-0><code>double</code></a> if <em>n</em> is a floating-point
 i.e., a numeric literal with the character <code>.</code> in its
 source; alternatively, if <em>n</em> is an integer literal in the
 range [-2<sup>31</sup>, 2<sup>31</sup>), the return statement has
-return type <a href=#signed-0><code>signed</code></a>.
+return type <a href=#signed-0><code>signed</code></a>. The fourth form has return
+type <a href=#void-0><code>void</code></a>.
+
+</p><p>If the last statement in the function body is not
+a <em>ReturnStatement</em>, the function's return type
+is <a href=#void-0><code>void</code></a>.
 
 </p><h3 id=function-type-annotations><span class=secno>5.3 </span>Function Type Annotations</h3>
 
@@ -1687,7 +1693,8 @@ to an interpreted or JIT-compiled implementation.
 
 <h2 class=no-num id=acknowledgements>Acknowledgements</h2>
 
-<p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, Vlad Vukićević, ...
+<p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, and Vlad
+Vukićević.
 
 
 </p></body></html>
