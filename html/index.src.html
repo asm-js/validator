@@ -474,7 +474,8 @@ the <a href="#value-types">value types</a>. These include:
 <ul>
 <li>value types &tau;;
 <li><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
-<li>function types ((&sigma;, &hellip;) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &hellip;) &rarr; &tau;&prime;); and
+<li>function types ((&sigma;, &hellip;) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &hellip;) &rarr; &tau;&prime;);
+<li>function table types ((&sigma;, &hellip;) &rarr; &tau;)[<em>n</em>]; and
 <li>the FFI function type <code>Function</code>.
 </ul>
 
@@ -718,6 +719,22 @@ the <a href="#global-environment">global environment</a> with
 type <code>imm</code>
 <em>view</em>.
 
+<h3>Function Table Types</h3>
+
+<p>A function table is a <em>VariableStatement</em> of the form:
+
+<div class="example">
+<code>var</code> <em>x:Identifier</em><code> = [</code><em>f:Identifier</em><code>,</code>&hellip;<code>];</code>
+</div>
+
+<p>The length of the array literal must be a power of two and all the
+identifiers <em>f</em> must map to the same type <code>imm</code>
+(&sigma;,&hellip;) &rarr; &tau; in
+the <a href="#global-environment">global environment</a>. The function
+table <em>x</em> is stored in the global environment with
+type <code>imm</code> ((&sigma;,&hellip;) &rarr; &tau;)[<em>n</em>]
+where <em>n</em> is the length of the array literal.
+
 <h2>Validation Rules</h2>
 
 <p>To ensure that a JavaScript function is a proper asm.js module, it
@@ -750,6 +767,7 @@ or <em>FunctionExpression</em> node with the following form:
 <!--
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>var:VariableStatement</em> <span class="meta">|</span> <em>fun:FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
 -->
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>table:VariableStatement</em>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
@@ -758,13 +776,23 @@ or <em>FunctionExpression</em> node with the following form:
 
 <ul>
 <li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
-the <em>var</em> and <em>fun</em> variables are all mutually distinct;
-<li>the global environment &Delta; is constructed from
-the <a href="#global-variable-type-annotations">global variable type
-annotations</a> in the <em>var</em> declarations and
-the <a href="#function-type-annotations">function type annotations</a>
-in the <em>fun</em> declarations;
+the <em>var</em>, <em>fun</em>, and <em>table</em> variables are all
+mutually distinct;
+<li>the global environment &Delta; is constructed in two stages:
+  <ol>
+  <li>the types from
+  the <a href="#global-variable-type-annotations">global variable type
+  annotations</a> in the <em>var</em> declarations and
+  the <a href="#function-type-annotations">function type
+  annotations</a> in the <em>fun</em> declarations are the initial
+  contents of &Delta;;
+  <li>the types of the <a href="#function-table-types">function
+  tables</a> in the <em>table</em> declarations</a> are extracted
+  using the initial contents of &Delta;, and their types are added to
+  &Delta;.
+  </ol>
 <li>each <em>fun</em> declaration is valid in &Delta;;
+<li>each <em>table</em> declaration is valid in &Delta;;
 <li>and <em>exports</em> is valid in &Delta;.
 </ul>
 
@@ -1196,6 +1224,19 @@ corresponding &sigma;.
 type <code>unknown</code> if <em>Lookup</em>(&Delta;,
 &Gamma;, <em>f</em>) = <code>Function</code> and each <em>arg</em>
 validates as a subtype of <code>extern</code>.
+
+<p>A <em>CallExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> & </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
+</div>
+
+<p>validates as type &tau; if <em>Lookup</em>(&Delta;,
+&Gamma;, <em>x</em>) = ((&sigma;,&hellip;) &rarr;
+&tau;)[<em>n+1</em>], <em>index</em> validates as a subtype
+of <code>intish</code>, and each <em>arg</em> validates as a subtype
+of its corresponding &sigma;.
+
 
 <h4>UnaryExpression</h4>
 

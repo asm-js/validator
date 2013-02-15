@@ -101,7 +101,8 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
    <li><a href=#return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</a></li>
    <li><a href=#function-type-annotations><span class=secno>5.3 </span>Function Type Annotations</a></li>
    <li><a href=#variable-type-annotations><span class=secno>5.4 </span>Variable Type Annotations</a></li>
-   <li><a href=#global-variable-type-annotations><span class=secno>5.5 </span>Global Variable Type Annotations</a></li></ol></li>
+   <li><a href=#global-variable-type-annotations><span class=secno>5.5 </span>Global Variable Type Annotations</a></li>
+   <li><a href=#function-table-types><span class=secno>5.6 </span>Function Table Types</a></li></ol></li>
  <li><a href=#validation-rules><span class=secno>6 </span>Validation Rules</a>
   <ol>
    <li><a href=#modules><span class=secno>6.1 </span>Modules</a></li>
@@ -550,7 +551,8 @@ the <a href=#value-types>value types</a>. These include:
 </p><ul>
 <li>value types τ;
 </li><li><a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
-</li><li>function types ((σ, …) → τ) ∧ … ∧ ((σ′, …) → τ′); and
+</li><li>function types ((σ, …) → τ) ∧ … ∧ ((σ′, …) → τ′);
+</li><li>function table types ((σ, …) → τ)[<em>n</em>]; and
 </li><li>the FFI function type <code>Function</code>.
 </li></ul>
 
@@ -794,6 +796,22 @@ the <a href=#global-environment>global environment</a> with
 type <code>imm</code>
 <em>view</em>.
 
+</p><h3 id=function-table-types><span class=secno>5.6 </span>Function Table Types</h3>
+
+<p>A function table is a <em>VariableStatement</em> of the form:
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em><code> = [</code><em>f:Identifier</em><code>,</code>…<code>];</code>
+</div>
+
+<p>The length of the array literal must be a power of two and all the
+identifiers <em>f</em> must map to the same type <code>imm</code>
+(σ,…) → τ in
+the <a href=#global-environment>global environment</a>. The function
+table <em>x</em> is stored in the global environment with
+type <code>imm</code> ((σ,…) → τ)[<em>n</em>]
+where <em>n</em> is the length of the array literal.
+
 </p><h2 id=validation-rules><span class=secno>6 </span>Validation Rules</h2>
 
 <p>To ensure that a JavaScript function is a proper asm.js module, it
@@ -826,6 +844,7 @@ or <em>FunctionExpression</em> node with the following form:
 <!--
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>var:VariableStatement</em> <span class="meta">|</span> <em>fun:FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
 -->
+<code>    </code><em>table:VariableStatement</em>…<br>
 <code>    </code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
@@ -834,13 +853,23 @@ or <em>FunctionExpression</em> node with the following form:
 
 </p><ul>
 <li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
-the <em>var</em> and <em>fun</em> variables are all mutually distinct;
-</li><li>the global environment Δ is constructed from
-the <a href=#global-variable-type-annotations>global variable type
-annotations</a> in the <em>var</em> declarations and
-the <a href=#function-type-annotations>function type annotations</a>
-in the <em>fun</em> declarations;
+the <em>var</em>, <em>fun</em>, and <em>table</em> variables are all
+mutually distinct;
+</li><li>the global environment Δ is constructed in two stages:
+  <ol>
+  <li>the types from
+  the <a href=#global-variable-type-annotations>global variable type
+  annotations</a> in the <em>var</em> declarations and
+  the <a href=#function-type-annotations>function type
+  annotations</a> in the <em>fun</em> declarations are the initial
+  contents of Δ;
+  </li><li>the types of the <a href=#function-table-types>function
+  tables</a> in the <em>table</em> declarations are extracted
+  using the initial contents of Δ, and their types are added to
+  Δ.
+  </li></ol>
 </li><li>each <em>fun</em> declaration is valid in Δ;
+</li><li>each <em>table</em> declaration is valid in Δ;
 </li><li>and <em>exports</em> is valid in Δ.
 </li></ul>
 
@@ -1272,6 +1301,19 @@ corresponding σ.
 type <a href=#unknown-0><code>unknown</code></a> if <em>Lookup</em>(Δ,
 Γ, <em>f</em>) = <code>Function</code> and each <em>arg</em>
 validates as a subtype of <a href=#extern-0><code>extern</code></a>.
+
+</p><p>A <em>CallExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+</div>
+
+<p>validates as type τ if <em>Lookup</em>(Δ,
+Γ, <em>x</em>) = ((σ,…) →
+τ)[<em>n+1</em>], <em>index</em> validates as a subtype
+of <a href=#intish-0><code>intish</code></a>, and each <em>arg</em> validates as a subtype
+of its corresponding σ.
+
 
 </p><h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
 
