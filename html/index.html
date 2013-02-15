@@ -30,7 +30,7 @@ span.meta {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-13-february-2013>Working Draft — 13 February 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-15-february-2013>Working Draft — 15 February 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -808,8 +808,7 @@ of legal JavaScript programs.
 </p><h3 id=modules><span class=secno>6.1 </span>Modules</h3>
 
 <p>An asm.js module is a <em>FunctionDeclaration</em>
-or <em>FunctionExpression</em> node with up to three optional
-parameters:
+or <em>FunctionExpression</em> node with the following form:
 
 <!--
 <div class="example">
@@ -822,7 +821,11 @@ parameters:
 </p><div class=example>
 <code>function</code> <em>f:Identifier<sub>opt</sub></em><code>(</code><span class=meta>(</span><em>stdlib:Identifier</em><code><span class=meta>(</span>,</code> <em>foreign:Identifier</em><span class=meta>(</span><code>,</code> <em>heap:Identifier</em><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><code>) {<br>
     "use asm";</code><br>
-<code>    </code><span class=meta>(</span><em>var:VariableStatement</em> <span class=meta>|</span> <em>fun:FunctionDeclaration</em><span class=meta>)</span>…<br>
+<code>    </code><em>var:VariableStatement</em>…<br>
+<code>    </code><em>fun:FunctionDeclaration</em>…<br>
+<!--
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>var:VariableStatement</em> <span class="meta">|</span> <em>fun:FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
+-->
 <code>    </code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
@@ -850,7 +853,7 @@ exporting multiple asm.js functions.
 </p><p>An export declaration node
 
 </p><div class=example>
-<code>return</code> <code>{</code> <span class=meta>(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class=meta>)</span>… <code> };</code>
+<code>return</code> <code>{</code> <span class=meta>(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class=meta>)</span><code>,</code>… <code> };</code>
 </div>
 
 <p>is valid if for each <em>f</em>, Δ(f) = <code>imm</code>
@@ -881,9 +884,9 @@ a function type (σ,…) → τ.
 <p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
 
 </p><div class=example>
-<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>…<code>) {</code><br>
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em><code>,</code>…<code>) {</code><br>
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
-<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
+<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<code>;</code><span class=meta>)</span>…<br>
 <code>    </code><em>body:Statement</em>…<br>
 <code>}</code>
 </div>

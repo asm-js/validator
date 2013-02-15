@@ -732,8 +732,7 @@ of legal JavaScript programs.
 <h3>Modules</h3>
 
 <p>An asm.js module is a <em>FunctionDeclaration</em>
-or <em>FunctionExpression</em> node with up to three optional
-parameters:
+or <em>FunctionExpression</em> node with the following form:
 
 <!--
 <div class="example">
@@ -746,7 +745,11 @@ parameters:
 <div class="example">
 <code>function</code> <em>f:Identifier<sub>opt</sub></em><code>(</code><span class="meta">(</span><em>stdlib:Identifier</em><code><span class="meta">(</span>,</code> <em>foreign:Identifier</em><span class="meta">(</span><code>,</code> <em>heap:Identifier</em><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><span class="meta">)</span><sub><em>opt</em></sub><code>) {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;"use asm";</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>var:VariableStatement</em>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>fun:FunctionDeclaration</em>&hellip;<br>
+<!--
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>var:VariableStatement</em> <span class="meta">|</span> <em>fun:FunctionDeclaration</em><span class="meta">)</span>&hellip;<br>
+-->
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>exports:ReturnStatement</em><br>
 <code>}</code>
 </div>
@@ -774,7 +777,7 @@ exporting multiple asm.js functions.
 <p>An export declaration node
 
 <div class="example">
-<code>return</code> <code>{</code> <span class="meta">(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class="meta">)</span>&hellip; <code> };</code>
+<code>return</code> <code>{</code> <span class="meta">(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class="meta">)</span><code>,</code>&hellip; <code> };</code>
 </div>
 
 <p>is valid if for each <em>f</em>, &Delta;(f) = <code>imm</code>
@@ -805,9 +808,9 @@ a function type (&sigma;,&hellip;) &rarr; &tau;.
 <p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
 
 <div class="example">
-<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
+<code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em><code>,</code>&hellip;<code>) {</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class="meta">)</span><code>,</code>&hellip;<code>;</code><span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
 <code>}</code>
 </div>
