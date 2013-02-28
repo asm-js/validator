@@ -3,8 +3,8 @@ var fail = require('../lib/fail');
 
 function explode(test) {
     var __EMPTY__ = [];
-    var __PURE__ = ["var imul = env.imul, sin = env.sin;"];
-    var __ALL__ = __PURE__.concat(["var H32 = new env.Int32Array(buffer), HU32 = new env.Uint32Array(buffer);"]);
+    var __PURE__ = ["var imul = global.imul, sin = global.sin;"];
+    var __ALL__ = __PURE__.concat(["var H32 = new global.Int32Array(buffer), HU32 = new global.Uint32Array(buffer);"]);
 
     var SEP = "\n    ";
 

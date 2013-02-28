@@ -1,7 +1,7 @@
 var types = require('./lib/types');
 var test = require('./test');
 
-function paramTypes(env, buffer) {
+function paramTypes(global, foreign, buffer) {
     "use asm";
     __ALL__
     function f(w, x, y, z) {
@@ -26,7 +26,7 @@ exports.testParamTypes = test(paramTypes, "different parameter types", {
     }
 });
 
-function add(env) {
+function add(global) {
     "use asm";
     __PURE__
     function add1(x) {
@@ -43,7 +43,7 @@ exports.testAdd = test(add, "addition", {
     }
 });
 
-function imul(env) {
+function imul(global) {
     "use asm";
     __PURE__
     function double(x) {
@@ -60,7 +60,7 @@ exports.testImul = test(imul, "multiplication", {
     }
 });
 
-function load(env, buffer) {
+function load(global, foreign, buffer) {
     "use asm";
     __ALL__
     function get(i) {
@@ -77,7 +77,7 @@ exports.testLoad = test(load, "heap load", {
     }
 });
 
-function store(env, buffer) {
+function store(global, foreign, buffer) {
     "use asm";
     __ALL__
     function set(i, x) {
