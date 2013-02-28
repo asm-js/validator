@@ -20,7 +20,7 @@ function mymodule(global, foreign, buffer) {
     // -------------------------------------------------------------------------
     // SECTION 2: functions
 
-    function f(x, y, z, w) {
+    function f(x, y) {
         // SECTION A: parameter type declarations
         x = x|0;      // int parameter
         y = +y;       // double parameter
