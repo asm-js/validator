@@ -10,7 +10,9 @@
   "license": "MIT",
   "dependencies": {
     "esprima": "0.9.9",
-    "dict": "1.1.0"
+    "dict": "1.1.0",
+    "array-extended": "0.0.4",
+    "pattern-match": "0.3.0"
   },
   "devDependencies": {
     "nodeunit": "0.7.4"
@@ -23,6 +25,8 @@
     "url": "git://github.com/dherman/asm.js.git"
   },
   "keywords": [
-    "javascript"
+    "javascript",
+    "asm.js",
+    "validator"
   ]
 }

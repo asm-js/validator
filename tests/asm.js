@@ -3,8 +3,8 @@ var fail = require('../lib/fail');
 
 function explode(test) {
     var __EMPTY__ = [];
-    var __PURE__ = ["var imul = env.imul, sin = env.sin;"];
-    var __ALL__ = __PURE__.concat(["var H32 = new env.Int32Array(buffer), HU32 = new env.Uint32Array(buffer);"]);
+    var __PURE__ = ["var imul = stdlib.Math.imul, sin = stdlib.Math.sin;"];
+    var __ALL__ = __PURE__.concat(["var H32 = new stdlib.Int32Array(heap), HU32 = new stdlib.Uint32Array(heap);"]);
 
     var SEP = "\n    ";
 
@@ -13,7 +13,7 @@ function explode(test) {
                        .replace("__ALL__", __ALL__.join(SEP));
 }
 
-function test(f, msg, expect) {
+function asm(msg, f, expect) {
     f = explode(f);
     var hasOwn = {}.hasOwnProperty;
 
@@ -24,25 +24,31 @@ function test(f, msg, expect) {
             try {
                 if (!report)
                     return;
-                var types = expect.types, exports = expect.exports;
+                var types = expect.types,
+                    singleExport = expect.export,
+                    exports = expect.exports;
                 if (types) {
                     for (var key in types) {
                         if (!hasOwn.call(types, key))
                             continue;
-                        test.ok(report.has(key), msg + ": function " + key + " not found");
-                        var actualType = report.get(key).type, expectedType = types[key];
+                        var expectedType = types[key],
+                            actualType = report.getFunction(key);
+                        test.ok(actualType, msg + ": function " + key + " not found");
                         test.ok(actualType.equals(expectedType), msg + ": " + key + " : " + actualType + ", expected " + expectedType);
                     }
+                }
+                if (singleExport) {
+                    test.ok(report.isSingleExport(), msg + ": expected single export, got multiple");
+                    var actualExport = report.getExport();
+                    test.equal(actualExport, singleExport, msg + ": expected single export " + singleExport + ", got " + actualExport);
                 }
                 if (exports) {
                     for (var key in exports) {
                         if (!hasOwn.call(exports, key))
                             continue;
-                        test.ok(report.has(key), msg + ": function " + key + " not found");
-                        var fn = report.get(key);
-                        test.deepEqual(fn && fn.exportedAs,
-                                       exports[key],
-                                       msg + ": function " + key + " exported as " + exports[key].join(", "));
+                        var actualExport = report.getExport(key);
+                        test.ok(actualExport, msg + ": function " + key + " not found");
+                        test.equal(actualExport, exports[key], msg + ": expected export " + key + " to map to " + exports[key] + ", got " + actualExport);
                     }
                 }
             } catch (e) {
@@ -63,4 +69,4 @@ function test(f, msg, expect) {
     }
 }
 
-module.exports = test;
+module.exports = asm;
