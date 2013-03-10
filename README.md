@@ -47,7 +47,7 @@ function mymodule(stdlib, foreign, heap) {
     function h(i, x) {
         i = i|0;
         x = x|0;
-        H32[i>>4] = x;       // shifted by byte count
+        H32[i>>2] = x;       // shifted by log2(byte count)
         ftable_2[(x-2)&2](); // dynamic call of functions in table 2
 
         // no return necessary when return type is void
