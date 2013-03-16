@@ -1000,10 +1000,15 @@ valid.
 <code>switch (</code> <em>test:Expression</em> <code>)</code> <code>{</code> <em>case:CaseClause</em>&hellip; <em>default:DefaultClause<sub>opt</sub></em> <code>}</code>
 </div>
 
-<p>is valid if <em>test</em> validates as a subtype of &sigma; where
-&sigma; is <code>signed</code> or <code>unsigned</code>,
-each <em>case</em> validates with expected case type &sigma;,
-and <em>default</em> is valid.
+<p>is valid if
+
+<ul>
+<li><em>test</em> validates as a subtype of <code>signed</code>;
+<li>each <em>case</em> validates with expected case type <code>signed</code>;
+<li>each <em>case</em> value is distinct;
+<li>the difference between the maximum and minimum <em>case</em> values is less than 2<sup>31</sup>;
+<li><em>default</em> is valid.
+</ul>
 
 <!--
 <h3>Statement Lists</h3>
@@ -1065,8 +1070,13 @@ containing term.
 <code>case</code> <em>n:NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>&hellip;
 </div>
 
-<p>is valid if <em>n</em> validates as a subtype of the expected case
-type &sigma; and <em>stmt</em> list is valid.
+<p>is valid if
+
+<ul>
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li><em>n</em> is in the range [-2<sup>31</sup>, 2<sup>31</sup>);
+<li>each <em>stmt</em> is valid.
+</ul>
 
 <h4>DefaultClause</h4>
 

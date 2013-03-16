@@ -1078,10 +1078,15 @@ valid.
 <code>switch (</code> <em>test:Expression</em> <code>)</code> <code>{</code> <em>case:CaseClause</em>… <em>default:DefaultClause<sub>opt</sub></em> <code>}</code>
 </div>
 
-<p>is valid if <em>test</em> validates as a subtype of σ where
-σ is <a href=#signed-0><code>signed</code></a> or <a href=#unsigned-0><code>unsigned</code></a>,
-each <em>case</em> validates with expected case type σ,
-and <em>default</em> is valid.
+<p>is valid if
+
+</p><ul>
+<li><em>test</em> validates as a subtype of <a href=#signed-0><code>signed</code></a>;
+</li><li>each <em>case</em> validates with expected case type <a href=#signed-0><code>signed</code></a>;
+</li><li>each <em>case</em> value is distinct;
+</li><li>the difference between the maximum and minimum <em>case</em> values is less than 2<sup>31</sup>;
+</li><li><em>default</em> is valid.
+</li></ul>
 
 <!--
 <h3>Statement Lists</h3>
@@ -1102,7 +1107,7 @@ the same context as its containing term.
 -->
 
 
-</p><h3 id=switch-cases><span class=secno>6.5 </span>Switch Cases</h3>
+<h3 id=switch-cases><span class=secno>6.5 </span>Switch Cases</h3>
 
 <p>Cases in a <code>switch</code> block are validated in the context
 of a <a href=#global-environment-0>global environment</a> Δ, a <a href=#variable-environment-0>variable
@@ -1143,10 +1148,15 @@ containing term.
 <code>case</code> <em>n:NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>…
 </div>
 
-<p>is valid if <em>n</em> validates as a subtype of the expected case
-type σ and <em>stmt</em> list is valid.
+<p>is valid if
 
-</p><h4 id=defaultclause><span class=secno>6.5.2 </span>DefaultClause</h4>
+</p><ul>
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li><em>n</em> is in the range [-2<sup>31</sup>, 2<sup>31</sup>);
+</li><li>each <em>stmt</em> is valid.
+</li></ul>
+
+<h4 id=defaultclause><span class=secno>6.5.2 </span>DefaultClause</h4>
 
 <p>A <em>DefaultClause</em> node
 
