@@ -1546,6 +1546,7 @@ are:
 </li><li>the <em>heap</em> object (if provided) must be an instance of <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer><code>ArrayBuffer</code></a>;
 </li><li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 4096;
 </li><li>the <em>heap</em> object's <code>byteLength</code> must be a power of 2;
+</li><li>the <em>heap</em> object's <code>byteLength</code> must be no greater than 2<sup>31</sup> (assuming the engine even allows <code>ArrayBuffer</code>s that large);
 </li><li>all view objects must be true instances of their
 respective <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView>typed
 array</a> types;
