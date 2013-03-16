@@ -30,7 +30,7 @@ span.meta {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-15-march-2013>Working Draft — 15 March 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-16-march-2013>Working Draft — 16 March 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -126,22 +126,23 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
      <li><a href=#defaultclause><span class=secno>6.5.2 </span>DefaultClause</a></li></ol></li>
    <li><a href=#expressions><span class=secno>6.6 </span>Expressions</a>
     <ol>
-     <li><a href=#numericliteral><span class=secno>6.6.1 </span>NumericLiteral</a></li>
-     <li><a href=#identifier><span class=secno>6.6.2 </span>Identifier</a></li>
-     <li><a href=#memberexpression><span class=secno>6.6.3 </span>MemberExpression</a></li>
-     <li><a href=#assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</a></li>
-     <li><a href=#callexpression><span class=secno>6.6.5 </span>CallExpression</a></li>
-     <li><a href=#unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</a></li>
-     <li><a href=#multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</a></li>
-     <li><a href=#additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</a></li>
-     <li><a href=#shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</a></li>
-     <li><a href=#relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</a></li>
-     <li><a href=#equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</a></li>
-     <li><a href=#bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</a></li>
-     <li><a href=#bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</a></li>
-     <li><a href=#bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</a></li>
-     <li><a href=#conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</a></li>
-     <li><a href=#parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</a></li></ol></li></ol></li>
+     <li><a href=#expression><span class=secno>6.6.1 </span>Expression</a></li>
+     <li><a href=#numericliteral><span class=secno>6.6.2 </span>NumericLiteral</a></li>
+     <li><a href=#identifier><span class=secno>6.6.3 </span>Identifier</a></li>
+     <li><a href=#memberexpression><span class=secno>6.6.4 </span>MemberExpression</a></li>
+     <li><a href=#assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</a></li>
+     <li><a href=#callexpression><span class=secno>6.6.6 </span>CallExpression</a></li>
+     <li><a href=#unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</a></li>
+     <li><a href=#multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</a></li>
+     <li><a href=#additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</a></li>
+     <li><a href=#shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</a></li>
+     <li><a href=#relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</a></li>
+     <li><a href=#equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</a></li>
+     <li><a href=#bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</a></li>
+     <li><a href=#bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</a></li>
+     <li><a href=#bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</a></li>
+     <li><a href=#conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</a></li>
+     <li><a href=#parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</a></li></ol></li></ol></li>
  <li><a href=#linking-0><span class=secno>7 </span>Linking</a></li>
  <li><a href=#operators><span class=secno>8 </span>Operators</a>
   <ol>
@@ -699,8 +700,10 @@ return type <a href=#signed-0><code>signed</code></a>. The fourth form has retur
 type <a href=#void-0><code>void</code></a>.
 
 </p><p>If the last statement in the function body is not
-a <em>ReturnStatement</em>, the function's return type
-is <a href=#void-0><code>void</code></a>.
+a <em>ReturnStatement</em>, or if the function body has no non-empty
+statements (other than the initial declarations and
+coercions—see <a href=#function-declarations>Function
+Declarations</a>), the function's return type is <a href=#void-0><code>void</code></a>.
 
 </p><h3 id=function-type-annotations><span class=secno>5.3 </span>Function Type Annotations</h3>
 
@@ -711,7 +714,7 @@ is <a href=#void-0><code>void</code></a>.
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
 <code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
 <code>    </code><em>body:Statement</em>…<br>
-<code>    </code><em>return:ReturnStatement</em><br>
+<code>    </code><span class=meta>(</span><em>return:ReturnStatement</em><span class=meta>)</span><sub><em>opt</em></sub><br>
 <code>}</code>
 </div>
 
@@ -1163,7 +1166,18 @@ environment</a> Δ and a <a href=#variable-environment-0>variable environment</a
 otherwise explicitly stated, a recursive validation of a subterm uses
 the same context as its containing term.
 
-</p><h4 id=numericliteral><span class=secno>6.6.1 </span>NumericLiteral</h4>
+</p><h4 id=expression><span class=secno>6.6.1 </span>Expression</h4>
+
+<p>An <em>Expression</em> node:
+
+</p><div class=example>
+<em>expr1:Expression</em> <code>,</code> <em>expr2:AssignmentExpression</em>
+</div>
+
+<p>validates at type τ if <em>expr1</em> validates at some type
+σ and <em>expr2</em> validates at type τ.</p>
+
+<h4 id=numericliteral><span class=secno>6.6.2 </span>NumericLiteral</h4>
 
 <p>For a <em>NumericLiteral</em> node:
 
@@ -1184,7 +1198,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 <p>Note that integer literals outside the range [-2<sup>31</sup>,
 2<sup>32</sup>) are invalid, i.e., fail to validate.
 
-</p><h4 id=identifier><span class=secno>6.6.2 </span>Identifier</h4>
+</p><h4 id=identifier><span class=secno>6.6.3 </span>Identifier</h4>
 
 <p>An <em>Identifier</em> node
 
@@ -1194,7 +1208,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 
 <p>validates as <em>Lookup</em>(Δ, Γ, <em>x</em>).
 
-</p><h4 id=memberexpression><span class=secno>6.6.3 </span>MemberExpression</h4>
+</p><h4 id=memberexpression><span class=secno>6.6.4 </span>MemberExpression</h4>
 
 <p>A <em>MemberExpression</em> node
 
@@ -1248,7 +1262,7 @@ type;
 </li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
 </li></ul>
 
-<h4 id=assignmentexpression><span class=secno>6.6.4 </span>AssignmentExpression</h4>
+<h4 id=assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</h4>
 
 <p>An <em>AssignmentExpression</em> node
 
@@ -1282,7 +1296,7 @@ subtype of τ.
 </div>
 -->
 
-</p><h4 id=callexpression><span class=secno>6.6.5 </span>CallExpression</h4>
+</p><h4 id=callexpression><span class=secno>6.6.6 </span>CallExpression</h4>
 
 <p>A <em>CallExpression</em> node
 
@@ -1313,7 +1327,7 @@ of <a href=#intish-0><code>intish</code></a>, and each <em>arg</em> validates as
 of its corresponding σ.
 
 
-</p><h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
+</p><h4 id=unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</h4>
 
 <p>A <em>UnaryExpression</em> node
 
@@ -1334,7 +1348,7 @@ as a subtype of σ.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
 a subtype of <a href=#double-0><code>double</code></a>.
 
-</p><h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
+</p><h4 id=multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</h4>
 
 <p>A <em>MultiplicativeExpression</em> node
 
@@ -1360,7 +1374,7 @@ does not contain a <code>.</code> character and -2<sup>20</sup>
 &lt; <em>n</em> &lt; 2<sup>20</sup> and <em>expr</em> validates as a
 subtype of <a href=#int-0><code>int</code></a>.
 
-</p><h4 id=additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</h4>
+</p><h4 id=additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</h4>
 
 <p>An <em>AdditiveExpression</em> node
 
@@ -1386,7 +1400,7 @@ subtype of <a href=#int-0><code>int</code></a>.
 and <em>lhs</em> validates as a subtype of σ<sub>1</sub>
 and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 
-</p><h4 id=shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</h4>
+</p><h4 id=shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</h4>
 
 <p>A <em>ShiftExpression</em> node
 
@@ -1405,7 +1419,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</h4>
+</p><h4 id=relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</h4>
 
 <p>A <em>RelationalExpression</em> node
 
@@ -1425,7 +1439,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</h4>
+</p><h4 id=equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</h4>
 
 <p>An <em>EqualityExpression</em> node
 
@@ -1443,7 +1457,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</h4>
+</p><h4 id=bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</h4>
 
 <p>A <em>BitwiseANDExpression</em> node
 
@@ -1454,7 +1468,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</h4>
+</p><h4 id=bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</h4>
 
 <p>A <em>BitwiseXORExpression</em> node
 
@@ -1465,7 +1479,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</h4>
+</p><h4 id=bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</h4>
 
 <p>A <em>BitwiseORExpression</em> node
 
@@ -1476,7 +1490,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</h4>
+</p><h4 id=conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</h4>
 
 <p>A <em>ConditionalExpression</em> node
 
@@ -1492,7 +1506,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 </li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
 </li></ul>
 
-<h4 id=parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</h4>
+<h4 id=parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</h4>
 
 <p>A parenthesized expression node
 
@@ -1558,6 +1572,10 @@ to an interpreted or JIT-compiled implementation.
 <tr>
   <td><code>~</code></td>
   <td>(<a href=#intish-0><code>intish</code></a>) → <a href=#signed-0><code>signed</code></a></td>
+</tr>
+<tr>
+  <td><code>!</code></td>
+  <td>(<a href=#int-0><code>int</code></a>) → <a href=#int-0><code>int</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -1737,7 +1755,10 @@ to an interpreted or JIT-compiled implementation.
 <h2 class=no-num id=acknowledgements>Acknowledgements</h2>
 
 <p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, and Vlad
-Vukićević.
+Vukićević for feedback and encouragement.</p>
+
+<p>Thanks to Michael Bebenita for improved diagrams.</p>
 
 
-</p></body></html>
+
+</body></html>

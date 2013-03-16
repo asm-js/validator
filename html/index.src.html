@@ -622,8 +622,10 @@ return type <code>signed</code>. The fourth form has return
 type <code>void</code>.
 
 <p>If the last statement in the function body is not
-a <em>ReturnStatement</em>, the function's return type
-is <code>void</code>.
+a <em>ReturnStatement</em>, or if the function body has no non-empty
+statements (other than the initial declarations and
+coercions&mdash;see <a href="#function-declarations">Function
+Declarations</a>), the function's return type is <code>void</code>.
 
 <h3>Function Type Annotations</h3>
 
@@ -634,7 +636,6 @@ is <code>void</code>.
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>return:ReturnStatement</em><br>
 <code>}</code>
 </div>
 
@@ -1086,6 +1087,17 @@ environment</span> &Delta; and a <span>variable environment</span>
 otherwise explicitly stated, a recursive validation of a subterm uses
 the same context as its containing term.
 
+<h4>Expression</h4>
+
+<p>An <em>Expression</em> node:
+
+<div class="example">
+<em>expr1:Expression</em> <code>,</code> <em>expr2:AssignmentExpression</em>
+</div>
+
+<p>validates at type &tau; if <em>expr1</em> validates at some type
+&sigma; and <em>expr2</em> validates at type &tau;.</p>
+
 <h4>NumericLiteral</h4>
 
 <p>For a <em>NumericLiteral</em> node:
@@ -1482,6 +1494,10 @@ to an interpreted or JIT-compiled implementation.
   <td><code>~</code></td>
   <td>(<code>intish</code>) &rarr; <code>signed</code></td>
 </tr>
+<tr>
+  <td><code>!</code></td>
+  <td>(<code>int</code>) &rarr; <code>int</code></td>
+</tr>
 </tbody>
 </table>
 
@@ -1660,6 +1676,9 @@ to an interpreted or JIT-compiled implementation.
 <h2 class="no-num">Acknowledgements</h2>
 
 <p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, and Vlad
-Vuki&cacute;evi&cacute;.
+Vuki&cacute;evi&cacute; for feedback and encouragement.</p>
+
+<p>Thanks to Michael Bebenita for improved diagrams.</p>
+
 </body>
 </html>
