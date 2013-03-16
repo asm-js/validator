@@ -195,14 +195,14 @@ view of the heap called <code>HEAP32</code>, then we can load the
 <pre>HEAP32[p &gt;&gt; 2]|0</pre>
 </div>
 
-<p>The shift converts the byte offset to a 32-bit word offset, and the
-bitwise coercion ensures that an out-of-bounds access is coerced
+<p>The shift converts the byte offset to a 32-bit element offset, and
+the bitwise coercion ensures that an out-of-bounds access is coerced
 from <code>undefined</code> back to an integer.
 
 <!--
 <p>The mask is required by asm.js in order to efficiently enforce that
 the pointer is within the heap array's bounds, and the shift converts
-the byte offset to a 32-bit word offset.
+the byte offset to a 32-bit element offset.
 -->
 
 </p><p>As an example of integer arithmetic, addition can be performed by
@@ -714,7 +714,6 @@ Declarations</a>), the function's return type is <a href=#void-0><code>void</cod
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
 <code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
 <code>    </code><em>body:Statement</em>…<br>
-<code>    </code><span class=meta>(</span><em>return:ReturnStatement</em><span class=meta>)</span><sub><em>opt</em></sub><br>
 <code>}</code>
 </div>
 
@@ -1240,8 +1239,9 @@ type;
 <li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
 an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
 type;
-</li><li>the word size of <em>view</em> is 1;
-</li><li>the element type of <em>view</em> is <a href=#intish-0><code>intish</code></a>.
+</li><li>the element size of <em>view</em> is 1;
+</li><li>the element type of <em>view</em> is <a href=#intish-0><code>intish</code></a>;
+</li><li><em>expr</em> validates as type <a href=#int-0><code>int</code></a>.
 </li></ul>
 
 <p>A <em>MemberExpression</em> node
@@ -1256,8 +1256,9 @@ type;
 <li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
 an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
 type;
-</li><li>the word size of <em>view</em> is <em>bytes</em>;
+</li><li>the element size of <em>view</em> is <em>bytes</em>;
 </li><li>the element type of <em>view</em> is τ;
+</li><li><em>expr</em> validates as type <a href=#intish-0><code>intish</code></a>;
 </li><li>the source of <em>n</em> does not contain a <code>.</code> character;
 </li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
 </li></ul>
@@ -1320,14 +1321,19 @@ validates as a subtype of <a href=#extern-0><code>extern</code></a>.
 <em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<p>validates as type τ if <em>Lookup</em>(Δ,
+<p>validates as type τ if:
+
+</p><ul>
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li><em>Lookup</em>(Δ,
 Γ, <em>x</em>) = ((σ,…) →
 τ)[<em>n+1</em>], <em>index</em> validates as a subtype
-of <a href=#intish-0><code>intish</code></a>, and each <em>arg</em> validates as a subtype
-of its corresponding σ.
+of <a href=#intish-0><code>intish</code></a>;
+</li><li>each <em>arg</em> validates as a subtype of its corresponding σ.
+</li></ul>
 
 
-</p><h4 id=unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</h4>
+<h4 id=unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</h4>
 
 <p>A <em>UnaryExpression</em> node
 
@@ -1706,7 +1712,7 @@ to an interpreted or JIT-compiled implementation.
 <tbody>
 <tr>
   <th>View Type</th>
-  <th>Word Size (Bytes)</th>
+  <th>Element Size (Bytes)</th>
   <th>Element Type</th>
 </tr>
 <tr>

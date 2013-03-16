@@ -117,14 +117,14 @@ view of the heap called <code>HEAP32</code>, then we can load the
 <pre>HEAP32[p >> 2]|0</pre>
 </div>
 
-<p>The shift converts the byte offset to a 32-bit word offset, and the
-bitwise coercion ensures that an out-of-bounds access is coerced
+<p>The shift converts the byte offset to a 32-bit element offset, and
+the bitwise coercion ensures that an out-of-bounds access is coerced
 from <code>undefined</code> back to an integer.
 
 <!--
 <p>The mask is required by asm.js in order to efficiently enforce that
 the pointer is within the heap array's bounds, and the shift converts
-the byte offset to a 32-bit word offset.
+the byte offset to a 32-bit element offset.
 -->
 
 <p>As an example of integer arithmetic, addition can be performed by
@@ -1161,8 +1161,9 @@ type;
 <li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
 an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
 type;
-<li>the word size of <em>view</em> is 1;
-<li>the element type of <em>view</em> is <code>intish</code>.
+<li>the element size of <em>view</em> is 1;
+<li>the element type of <em>view</em> is <code>intish</code>;
+<li><em>expr</em> validates as type <code>int</code>.
 </ul>
 
 <p>A <em>MemberExpression</em> node
@@ -1177,8 +1178,9 @@ type;
 <li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
 an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
 type;
-<li>the word size of <em>view</em> is <em>bytes</em>;
+<li>the element size of <em>view</em> is <em>bytes</em>;
 <li>the element type of <em>view</em> is &tau;;
+<li><em>expr</em> validates as type <code>intish</code>;
 <li>the source of <em>n</em> does not contain a <code>.</code> character;
 <li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
 </ul>
@@ -1238,14 +1240,19 @@ validates as a subtype of <code>extern</code>.
 <p>A <em>CallExpression</em> node
 
 <div class="example">
-<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> & </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
+<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
 </div>
 
-<p>validates as type &tau; if <em>Lookup</em>(&Delta;,
+<p>validates as type &tau; if:
+
+<ul>
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li><em>Lookup</em>(&Delta;,
 &Gamma;, <em>x</em>) = ((&sigma;,&hellip;) &rarr;
 &tau;)[<em>n+1</em>], <em>index</em> validates as a subtype
-of <code>intish</code>, and each <em>arg</em> validates as a subtype
-of its corresponding &sigma;.
+of <code>intish</code>;
+<li>each <em>arg</em> validates as a subtype of its corresponding &sigma;.
+</ul>
 
 
 <h4>UnaryExpression</h4>
@@ -1627,7 +1634,7 @@ to an interpreted or JIT-compiled implementation.
 <tbody>
 <tr>
   <th>View Type</th>
-  <th>Word Size (Bytes)</th>
+  <th>Element Size (Bytes)</th>
   <th>Element Type</th>
 </tr>
 <tr>
