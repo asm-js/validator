@@ -1534,7 +1534,8 @@ are:
 </p><ul>
 <li>control must reach the module's <code>return</code> statement without throwing;
 </li><li>the <em>heap</em> object (if provided) must be an instance of <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer><code>ArrayBuffer</code></a>;
-</li><li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 8;
+</li><li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 4096;
+</li><li>the <em>heap</em> object's <code>byteLength</code> must be a power of 2;
 </li><li>all view objects must be true instances of their
 respective <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView>typed
 array</a> types;
