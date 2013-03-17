@@ -1010,12 +1010,24 @@ valid.
 <li><em>default</em> is valid.
 </ul>
 
-<div class="performance">
-A <code>switch</code> statement in asm.js is intended to be
-implemented as a jump table. (Code that wishes to use conditionals can
-instead use <code>if</code> statements.)
+<div class="compilation">
+<p>
+A <code>switch</code> statement in asm.js is intended to be compiled
+unconditionally (i.e., regardless of its contents) to
+a <a href="http://en.wikipedia.org/wiki/Branch_table">jump
+table</a>. Branch instructions can instead be expressed
+via <code>if</code> statements.
+</p>
 
-<!-- FIXME: more... -->
+<p>
+Note that a <code>switch</code> statement with a sparse set
+of <code>case</code> values can result in a large jump
+table. Programmers and code generators are therefore expected to be
+responsible for breaking up sparse value sets into
+multiple <code>switch</code> statements separated
+by <code>if</code>-guards if they wish to reduce the size of jump
+tables.
+</p>
 </div>
 
 <!--

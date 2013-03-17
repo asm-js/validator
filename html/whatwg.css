@@ -257,8 +257,8 @@ ul.domTree .t10 code { color: teal; }
 
 /*body:not(.statusEnabled) .head, body:not(.dfnEnabled) .head { background: bottom right url(http://hixie.ch/resources/images/spinner) no-repeat; }*/
 
-div.performance:before {
-    content: "Performance";
+div.compilation:before {
+    content: "Compilation";
     font: bold small sans-serif;
     /*float: left;*/
     position: absolute;
@@ -273,15 +273,15 @@ div.performance:before {
     border: thin solid #999;
     /*margin: -1.3em 0 0.3em -2.5em;*/
 }
-div.performance, pre.performance {
+div.compilation, pre.compilation {
     background: #F8FFDD;
     padding: 0.5em;
     margin: 1em 0;
     border: thin solid #999;
     position: relative;
 }
-pre.performance {
+pre.compilation {
     padding-top: 1.5em;
 }
-div.performance { color: #060 }
-pre.performance { color: #060 }
+div.compilation { color: #060 }
+pre.compilation { color: #060 }
