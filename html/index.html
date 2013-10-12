@@ -23,6 +23,12 @@ span.meta {
   font-size: 120%;
   margin: 0 0.2ex;
 }
+span.opt {
+  position: relative;
+  top: 0.5em;
+  font-size: 80%;
+  margin-left: -0.1em;
+}
 </style>
 
 </head><body class=draft>
@@ -30,7 +36,7 @@ span.meta {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-17-march-2013>Working Draft — 17 March 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-11-october-2013>Working Draft — 11 October 2013</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -65,10 +71,27 @@ valid asm.js code.
 </p><h2 class="no-num no-toc" id=status>Status</h2>
 
 <p>This specification is working towards a candidate draft for asm.js
-version 1. A prototype implementation of an optimizing backend for
-asm.js is in progress for Mozilla's SpiderMonkey engine.
+version 1. Mozilla's SpiderMonkey JavaScript engine provides an
+optimizing implementation of this draft.
 
-</p><h2 class="no-num no-toc" id=table-of-contents>Table of Contents</h2>
+</p><h3 class="no-num no-toc" id=changelog>Changelog</h3>
+
+<ul>
+<li><strong>11 October 2013</strong>
+  <ul>
+    <li><a href=#unsigned-0><code>unsigned</code></a> is not an <a href=#extern-0><code>extern</code></a> type
+    </li><li>added missing <code>!</code> operator to <em>UnaryExpression</em> operators
+    </li><li>added note about <code>~~</code> to <em>Unary Operators</em> section
+    </li><li>added note about parenthesis agnosticism to <em>Syntax</em> section
+    </li><li>added note about ASI to <em>Syntax</em> section
+    </li><li>added <code>-<em>NumericLiteral</em></code> cases everywhere
+    </li><li>function calls require explicit coercions
+    </li><li>eliminated type <code>unknown</code>, which is no longer needed
+    </li><li>return type of integer <code>%</code> is <a href=#intish-0><code>intish</code></a>
+  </li></ul>
+</li></ul>
+
+<h2 class="no-num no-toc" id=table-of-contents>Table of Contents</h2>
 
 
 <!--begin-toc-->
@@ -86,8 +109,7 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
      <li><a href=#fixnum><span class=secno>2.1.6 </span>fixnum</a></li>
      <li><a href=#intish><span class=secno>2.1.7 </span>intish</a></li>
      <li><a href=#doublish><span class=secno>2.1.8 </span>doublish</a></li>
-     <li><a href=#unknown><span class=secno>2.1.9 </span>unknown</a></li>
-     <li><a href=#extern><span class=secno>2.1.10 </span>extern</a></li></ol></li>
+     <li><a href=#extern><span class=secno>2.1.9 </span>extern</a></li></ol></li>
    <li><a href=#global-types><span class=secno>2.2 </span>Global Types</a></li></ol></li>
  <li><a href=#environments><span class=secno>3 </span>Environments</a>
   <ol>
@@ -131,18 +153,18 @@ asm.js is in progress for Mozilla's SpiderMonkey engine.
      <li><a href=#identifier><span class=secno>6.6.3 </span>Identifier</a></li>
      <li><a href=#memberexpression><span class=secno>6.6.4 </span>MemberExpression</a></li>
      <li><a href=#assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</a></li>
-     <li><a href=#callexpression><span class=secno>6.6.6 </span>CallExpression</a></li>
-     <li><a href=#unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</a></li>
-     <li><a href=#multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</a></li>
-     <li><a href=#additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</a></li>
-     <li><a href=#shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</a></li>
-     <li><a href=#relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</a></li>
-     <li><a href=#equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</a></li>
-     <li><a href=#bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</a></li>
-     <li><a href=#bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</a></li>
-     <li><a href=#bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</a></li>
-     <li><a href=#conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</a></li>
-     <li><a href=#parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</a></li></ol></li></ol></li>
+     <li><a href=#unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</a></li>
+     <li><a href=#multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</a></li>
+     <li><a href=#additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</a></li>
+     <li><a href=#shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</a></li>
+     <li><a href=#relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</a></li>
+     <li><a href=#equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</a></li>
+     <li><a href=#bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</a></li>
+     <li><a href=#bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</a></li>
+     <li><a href=#bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</a></li>
+     <li><a href=#conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</a></li>
+     <li><a href=#parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</a></li></ol></li>
+   <li><a href=#function-calls><span class=secno>6.7 </span>Function Calls</a></li></ol></li>
  <li><a href=#linking-0><span class=secno>7 </span>Linking</a></li>
  <li><a href=#operators><span class=secno>8 </span>Operators</a>
   <ol>
@@ -427,7 +449,7 @@ and integer arithmetic.
 relation, which can be represented pictorially:
 
 </p><figure class=diagrams>
-<a href=subtypes.png><img height=424 src=subtypes.png width=856></a>
+<a href=subtypes.png><img height=347 src=subtypes.png width=620></a>
 </figure>
 
 <p>The light boxes represent arbitrary JavaScript values that may flow
@@ -530,14 +552,7 @@ particular, reading out of bounds from a typed array
 produces <code>undefined</code>, and calling FFI functions may produce
 arbitrary JavaScript values.
 
-<h4 id=unknown><span class=secno>2.1.9 </span>unknown</h4>
-
-The <dfn id=unknown-0><code>unknown</code></dfn> type represents a value returned
-from an FFI call. Since asm.js does not allow general JavaScript
-values, the result must be immediately coerced to an integer or
-double.
-
-<h4 id=extern><span class=secno>2.1.10 </span>extern</h4>
+<h4 id=extern><span class=secno>2.1.9 </span>extern</h4>
 
 The abstract <dfn id=extern-0><code>extern</code></dfn> type represents the root
 of all types that can escape back into external JavaScript—in
@@ -630,6 +645,13 @@ module function parameter list, global variable declarations, asm.js
 function names, asm.js function parameters, or local variable
 declarations) may have the name <code>eval</code>
 or <code>arguments</code>.
+</li><li>Where it would otherwise parse equivalently in JavaScript,
+parentheses are meaningless. Even where the specification matches on
+specific productions of <em>Expression</em> such as literals, the
+source may contain extra meaningless parentheses without affecting
+validation.
+</li><li>Automatic semicolon insertion is respected. An asm.js source file
+may omit semicolons wherever JavaScript allows them to be ommitted.
 </li></ul>
 
 <p>These rules are otherwise left implicit in the rest of the
@@ -678,25 +700,27 @@ the second as type <a href=#double-0><code>double</code></a>.
 
 </p><h3 id=return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</h3>
 
-<p>An asm.js function's return type is determined by the last
-statement in the function body, which for non-<a href=#void-0><code>void</code></a>
-functions is required to be a <em>ReturnStatement</em>. This
-distinguished return statement may take one of four forms:
+<p>An asm.js function's <em>formal return type</em> is determined by
+the last statement in the function body, which for
+non-<a href=#void-0><code>void</code></a> functions is required to be
+a <em>ReturnStatement</em>. This distinguished return statement may
+take one of four forms:
 
 </p><div class=example>
 <code>return +</code><em>e:Expression</em><code>;</code><br>
 <code>return </code><em>e:Expression</em><code>|0;</code><br>
-<code>return </code><em>n:NumericLiteral</em><code>;</code><br>
+<code>return </code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>;</code><br>
 <code>return;</code>
 </div>
 
 <p>The first form has return type <a href=#double-0><code>double</code></a>. The second has
 type <a href=#signed-0><code>signed</code></a>. The third has return
-type <a href=#double-0><code>double</code></a> if <em>n</em> is a floating-point literal,
-i.e., a numeric literal with the character <code>.</code> in its
-source; alternatively, if <em>n</em> is an integer literal in the
-range [-2<sup>31</sup>, 2<sup>31</sup>), the return statement has
-return type <a href=#signed-0><code>signed</code></a>. The fourth form has return
+type <a href=#double-0><code>double</code></a> if <em>n</em> is composed of a floating-point
+literal, i.e., a numeric literal with the character <code>.</code> in
+its source; alternatively, if <em>n</em> is composed of an integer
+literal and has its value in the range [-2<sup>31</sup>,
+2<sup>31</sup>), the return statement has return
+type <a href=#signed-0><code>signed</code></a>. The fourth form has return
 type <a href=#void-0><code>void</code></a>.
 
 </p><p>If the last statement in the function body is not
@@ -712,7 +736,7 @@ Declarations</a>), the function's return type is <a href=#void-0><code>void</cod
 </p><div class=example>
 <code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>…<code>) {</code><br>
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
-<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
+<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><span class=meta>)</span><code>,</code>…<span class=meta>)</span>…<br>
 <code>    </code><em>body:Statement</em>…<br>
 <code>}</code>
 </div>
@@ -720,7 +744,7 @@ Declarations</a>), the function's return type is <a href=#void-0><code>void</cod
 <p>is (σ,…) → τ where σ,… are the
 types of the parameters, as provided by
 the <a href=#parameter-type-annotations>parameter type
-annotations</a>, and τ is the return type, as provided by
+annotations</a>, and τ is the formal return type, as provided by
 the <a href=#return-type-annotations>return type annotation</a>. The
 variable <em>f</em> is stored in
 the <a href=#global-environment>global environment</a> with
@@ -743,7 +767,7 @@ in one of several allowed forms.
 </p><p>A global program variable is initialized to a literal:
 
 </p><div class=example>
-<code>var</code> <em>x:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><code>;</code>
+<code>var</code> <em>x:Identifier</em> <code>=</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>;</code>
 </div>
 
 <p>The global variable <em>x</em> is stored in
@@ -917,7 +941,7 @@ a function type (σ,…) → τ.
 </p><div class=example>
 <code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em><code>,</code>…<code>) {</code><br>
 <code>    </code><span class=meta>(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class=meta>)</span>…<br>
-<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:NumericLiteral</em><span class=meta>)</span><code>,</code>…<code>;</code><span class=meta>)</span>…<br>
+<code>    </code><span class=meta>(</span><code>var </code><span class=meta>(</span><em>y:Identifier</em> <code>=</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><span class=meta>)</span><code>,</code>…<code>;</code><span class=meta>)</span>…<br>
 <code>    </code><em>body:Statement</em>…<br>
 <code>}</code>
 </div>
@@ -959,10 +983,19 @@ context as its containing term.
 <p>An <em>ExpressionStatement</em> node
 
 </p><div class=example>
+<em>cexpr:CallExpression</em> <code>;</code>
+</div>
+
+<p>is valid if <em>cexpr</em> is valid with actual return
+type <a href=#void-0><code>void</code></a>.
+
+</p><p>An <em>ExpressionStatement</em> node
+
+</p><div class=example>
 <em>expr:Expression</em> <code>;</code>
 </div>
 
-<p>is valid if <em>expr</em> is valid.
+<p>is valid if <em>expr</em> validates as some type σ.
 
 </p><h4 id=emptystatement><span class=secno>6.4.3 </span>EmptyStatement</h4>
 
@@ -1088,11 +1121,12 @@ valid.
 </li><li><em>default</em> is valid.
 </li></ul>
 
-<div class=compilation>
+<!--
+<div class="compilation">
 <p>
 A <code>switch</code> statement in asm.js is intended to be compiled
 unconditionally (i.e., regardless of its contents) to
-a <a href=http://en.wikipedia.org/wiki/Branch_table>jump
+a <a href="http://en.wikipedia.org/wiki/Branch_table">jump
 table</a>. Branch instructions can instead be expressed
 via <code>if</code> statements.
 </p>
@@ -1107,6 +1141,7 @@ by <code>if</code>-guards if they wish to reduce the size of jump
 tables.
 </p>
 </div>
+-->
 
 <!--
 <h3>Statement Lists</h3>
@@ -1165,7 +1200,7 @@ containing term.
 <p>A <em>CaseClause</em> node
 
 </p><div class=example>
-<code>case</code> <em>n:NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>…
+<code>case</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>…
 </div>
 
 <p>is valid if
@@ -1200,22 +1235,27 @@ the same context as its containing term.
 <p>An <em>Expression</em> node:
 
 </p><div class=example>
-<em>expr1:Expression</em> <code>,</code> <em>expr2:AssignmentExpression</em>
+<em>expr1:AssignmentExpression</em> <code>,</code> … <code>,</code> <em>exprn:AssignmentExpression</em>
 </div>
 
-<p>validates at type τ if <em>expr1</em> validates at some type
-σ and <em>expr2</em> validates at type τ.</p>
+<p>validates as type τ if for every <em>i</em>
+&lt; <em>n</em>, one of the following conditions holds:
 
-<h4 id=numericliteral><span class=secno>6.6.2 </span>NumericLiteral</h4>
+</p><ul>
+<li><em>expri</em> is a <em>CallExpression</em> and is valid with
+actual return type <a href=#void-0><code>void</code></a>; or
+</li><li><em>expri</em> validates as some type σ
+</li></ul>
+
+<p>and <em>exprn</em> validates as type τ.
+
+</p><h4 id=numericliteral><span class=secno>6.6.2 </span>NumericLiteral</h4>
 
 <p>For a <em>NumericLiteral</em> node:
 
 </p><ul>
 <li>if the source contains a <code>.</code> character, the expression
 validates as type <a href=#double-0><code>double</code></a>;
-</li><li>if the source does not contain a <code>.</code> character and its
-numeric value is in the range [-2<sup>31</sup>, 0), the expression
-validates as type <a href=#signed-0><code>signed</code></a>;
 </li><li>if the source does not contain a <code>.</code> character and its
 numeric value is in the range [0, 2<sup>31</sup>), the expression
 validates as type <a href=#fixnum-0><code>fixnum</code></a>;
@@ -1224,8 +1264,11 @@ numeric value is in the range [2<sup>31</sup>, 2<sup>32</sup>), the
 expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 </li></ul>
 
-<p>Note that integer literals outside the range [-2<sup>31</sup>,
-2<sup>32</sup>) are invalid, i.e., fail to validate.
+<p>Note that the case of negative integer constants is handled
+under <a href=#unaryexpression><em>UnaryExpression</em></a>.
+
+</p><p>Note that integer literals outside the range [0, 2<sup>32</sup>)
+are invalid, i.e., fail to validate.
 
 </p><h4 id=identifier><span class=secno>6.6.3 </span>Identifier</h4>
 
@@ -1242,7 +1285,7 @@ expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
 <p>A <em>MemberExpression</em> node
 
 </p><div class=example>
-<em>x:Identifier</em><code>[</code><em>n:NumericLiteral</em><code>]</code>
+<em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
 </div>
 
 <p>validates at type τ if:
@@ -1277,7 +1320,7 @@ type;
 <p>A <em>MemberExpression</em> node
 
 </p><div class=example>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:NumericLiteral</em><code>]</code>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
 </div>
 
 <p>validates at type τ if:
@@ -1292,6 +1335,12 @@ type;
 </li><li>the source of <em>n</em> does not contain a <code>.</code> character;
 </li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
 </li></ul>
+
+<!--
+<div class="compilation">
+<p><em>TODO: explain compilation model of heap access</em></p>
+</div>
+-->
 
 <h4 id=assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</h4>
 
@@ -1327,48 +1376,32 @@ subtype of τ.
 </div>
 -->
 
-</p><h4 id=callexpression><span class=secno>6.6.6 </span>CallExpression</h4>
+</p><h4 id=unaryexpression><span class=secno>6.6.6 </span>UnaryExpression</h4>
 
-<p>A <em>CallExpression</em> node
+<p>A <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
-<em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+<code>-</code><em>NumericLiteral</em>
 </div>
 
-<p>validates as type τ if <em>Lookup</em>(Δ,
-Γ, <em>f</em>) = … ∧ (σ,…) → τ
-∧ … and each <em>arg</em> validates as a subtype of its
-corresponding σ.
+<p>validates as type <a href=#signed-0><code>signed</code></a> if
+the <em>NumericLiteral</em> source does not contain a <code>.</code>
+character and the numeric value of the expression is in the range
+[-2<sup>31</sup>, 0).
 
-</p><p>Alternatively, the <em>CallExpression</em> node validates as
-type <a href=#unknown-0><code>unknown</code></a> if <em>Lookup</em>(Δ,
-Γ, <em>f</em>) = <code>Function</code> and each <em>arg</em>
-validates as a subtype of <a href=#extern-0><code>extern</code></a>.
-
-</p><p>A <em>CallExpression</em> node
+</p><p>A <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
-<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+<code>+</code><em>cexpr:CallExpression</em>
 </div>
 
-<p>validates as type τ if:
+<p>validates as type <a href=#double-0><code>double</code></a> if <em>cexpr</em> is valid
+with actual return type <a href=#double-0><code>double</code></a>.
 
-</p><ul>
-<li>the source of <em>n</em> does not contain a <code>.</code> character;
-</li><li><em>Lookup</em>(Δ,
-Γ, <em>x</em>) = ((σ,…) →
-τ)[<em>n+1</em>], <em>index</em> validates as a subtype
-of <a href=#intish-0><code>intish</code></a>;
-</li><li>each <em>arg</em> validates as a subtype of its corresponding σ.
-</li></ul>
-
-
-<h4 id=unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</h4>
-
-<p>A <em>UnaryExpression</em> node
+</p><p>A <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
-<em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>|</span><code>~</code><span class=meta>)</span><em>arg:UnaryExpression</em>
+<em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>|</span><code>~</code><span class=meta>|</span><code>!</code><span class=meta>)</span><em>arg:UnaryExpression</em>
 </div>
 
 <p>validates as type τ if the type of <em>op</em> is …
@@ -1384,7 +1417,7 @@ as a subtype of σ.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
 a subtype of <a href=#double-0><code>double</code></a>.
 
-</p><h4 id=multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</h4>
+</p><h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
 
 <p>A <em>MultiplicativeExpression</em> node
 
@@ -1401,8 +1434,8 @@ a subtype of <a href=#double-0><code>double</code></a>.
 </p><p>A <em>MultiplicativeExpression</em> node
 
 </p><div class=example>
-<em>expr:MultiplicativeExpression</em> <code>*</code> <em>n:NumericLiteral</em><br>
-<em>n:NumericLiteral</em> <code>*</code> <em>expr:UnaryExpression</em>
+<em>expr:MultiplicativeExpression</em> <code>*</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><br>
+<em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <code>*</code> <em>expr:UnaryExpression</em>
 </div>
 
 <p>validates as type <a href=#intish-0><code>intish</code></a> if the source of <em>n</em>
@@ -1410,7 +1443,7 @@ does not contain a <code>.</code> character and -2<sup>20</sup>
 &lt; <em>n</em> &lt; 2<sup>20</sup> and <em>expr</em> validates as a
 subtype of <a href=#int-0><code>int</code></a>.
 
-</p><h4 id=additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</h4>
+</p><h4 id=additiveexpression><span class=secno>6.6.8 </span>AdditiveExpression</h4>
 
 <p>An <em>AdditiveExpression</em> node
 
@@ -1436,7 +1469,7 @@ subtype of <a href=#int-0><code>int</code></a>.
 and <em>lhs</em> validates as a subtype of σ<sub>1</sub>
 and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 
-</p><h4 id=shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</h4>
+</p><h4 id=shiftexpression><span class=secno>6.6.9 </span>ShiftExpression</h4>
 
 <p>A <em>ShiftExpression</em> node
 
@@ -1455,7 +1488,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</h4>
+</p><h4 id=relationalexpression><span class=secno>6.6.10 </span>RelationalExpression</h4>
 
 <p>A <em>RelationalExpression</em> node
 
@@ -1475,7 +1508,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</h4>
+</p><h4 id=equalityexpression><span class=secno>6.6.11 </span>EqualityExpression</h4>
 
 <p>An <em>EqualityExpression</em> node
 
@@ -1493,7 +1526,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
 σ<sub>2</sub>.
 
-</p><h4 id=bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</h4>
+</p><h4 id=bitwiseandexpression><span class=secno>6.6.12 </span>BitwiseANDExpression</h4>
 
 <p>A <em>BitwiseANDExpression</em> node
 
@@ -1504,7 +1537,7 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</h4>
+</p><h4 id=bitwisexorexpression><span class=secno>6.6.13 </span>BitwiseXORExpression</h4>
 
 <p>A <em>BitwiseXORExpression</em> node
 
@@ -1515,9 +1548,18 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</h4>
+</p><h4 id=bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</h4>
 
 <p>A <em>BitwiseORExpression</em> node
+
+</p><div class=example>
+<em>cexpr:CallExpression</em> <code>|0</code><br>
+</div>
+
+<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>cexpr</em> is valid
+with actual return type <a href=#signed-0><code>signed</code></a>.
+
+</p><p>A <em>BitwiseORExpression</em> node
 
 </p><div class=example>
 <em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
@@ -1526,7 +1568,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
 and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</h4>
+</p><h4 id=conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</h4>
 
 <p>A <em>ConditionalExpression</em> node
 
@@ -1542,7 +1584,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 </li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
 </li></ul>
 
-<h4 id=parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</h4>
+<h4 id=parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</h4>
 
 <p>A parenthesized expression node
 
@@ -1553,7 +1595,79 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type τ if <em>expr</em> validates as type τ.
 
 
-</p><h2 id=linking-0><span class=secno>7 </span>Linking</h2>
+</p><h3 id=function-calls><span class=secno>6.7 </span>Function Calls</h3>
+
+<p>Each function call expression is validated in the context of a
+global environment Δ and a variable environment Γ, and
+validates against an <em>actual return type</em> τ, which was
+provided from the context in which the function call appears. A
+recursive validation of a subterm uses the same context as its
+containing term.
+
+</p><p>A <em>CallExpression</em> node
+
+</p><div class=example>
+<em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+</div>
+
+<p>is valid with actual return type τ if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = … ∧ (σ,…) → τ
+∧ … and each <em>arg</em> validates as a subtype of its
+corresponding σ.
+
+</p><p>Alternatively, the <em>CallExpression</em> node is valid with
+actual return type τ if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = <code>Function</code> and each <em>arg</em>
+validates as a subtype of <a href=#extern-0><code>extern</code></a>.
+
+<!--
+<div class="compilation">
+<p>
+Calls to local functions can be compiled to efficient code that enters
+the well-typed body of functions, skipping past the dynamic type
+coercions.
+</p>
+
+<p>
+Calls to <code>stdlib</code> functions can be similarly compiled to
+skip the dynamic type coercions of ECMAScript standard library
+functions.
+</p>
+
+<p>
+Calls to <code>foreign</code> functions, by contrast, require boxing
+the internal representation of values as standard dynamic values in
+whatever representation required by the JavaScript engine.
+</p>
+</div>
+-->
+
+</p><p>A <em>CallExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>…<code>)</code>
+</div>
+
+<p>is valid with actual return type τ if:
+
+</p><ul>
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li><em>Lookup</em>(Δ,
+Γ, <em>x</em>) = ((σ,…) →
+τ)[<em>n+1</em>];
+</li><li><em>index</em> validates as a subtype of <a href=#intish-0><code>intish</code></a>; and
+</li><li>each <em>arg</em> validates as a subtype of its corresponding σ.
+</li></ul>
+
+<!--
+<div class="compilation">
+<p>
+Calls to function pointers 
+</p>
+</div>
+-->
+
+<h2 id=linking-0><span class=secno>7 </span>Linking</h2>
 
 <p>An AOT implementation of asm.js must perform some internal dynamic
 checks at link time to be able to safely generate AOT-compiled
@@ -1618,7 +1732,11 @@ to an interpreted or JIT-compiled implementation.
 </tbody>
 </table>
 
-<h3 id=binary-operators><span class=secno>8.2 </span>Binary Operators</h3>
+<p>Note that the special combined operator <code>~~</code> may be used
+as a coercion from <a href=#double-0><code>double</code></a> to <a href=#signed-0><code>signed</code></a>;
+see <a href=#unaryexpression>Unary Expressions</a>.
+
+</p><h3 id=binary-operators><span class=secno>8.2 </span>Binary Operators</h3>
 
 <table>
 <tbody>
@@ -1649,8 +1767,8 @@ to an interpreted or JIT-compiled implementation.
 <tr>
   <td><code>%</code></td>
   <td>
-    (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
-    (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
     (<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
   </td>
 </tr>
@@ -1795,7 +1913,9 @@ to an interpreted or JIT-compiled implementation.
 <p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, and Vlad
 Vukićević for feedback and encouragement.</p>
 
-<p>Thanks to Michael Bebenita for improved diagrams.</p>
+<p>Thanks to Jesse Ruderman and C. Scott Ananian for bug reports.</p>
+
+<p>Thanks to Michael Bebenita for diagrams.</p>
 
 
 
