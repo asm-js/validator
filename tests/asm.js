@@ -4,7 +4,7 @@ var fail = require('../lib/fail');
 function explode(test) {
     var __EMPTY__ = [];
     var __PURE__ = ["var imul = stdlib.Math.imul, sin = stdlib.Math.sin;"];
-    var __ALL__ = __PURE__.concat(["var H32 = new stdlib.Int32Array(heap), HU32 = new stdlib.Uint32Array(heap);"]);
+    var __ALL__ = __PURE__.concat(["var H32 = new stdlib.Int32Array(heap), HU32 = new stdlib.Uint32Array(heap), HF64 = new stdlib.Float64Array(heap);"]);
 
     var SEP = "\n    ";
 
@@ -68,5 +68,11 @@ function asm(msg, f, expect) {
         }
     }
 }
+
+asm.one = function(msg, f, expect) {
+    return asm(msg,
+               "function one(stdlib, foreign, heap) {\n    'use asm';\n    __ALL__\n    " + f + "\n    return {};\n}",
+               expect);
+};
 
 module.exports = asm;

@@ -1,36 +1,63 @@
 var ty = require('../lib/types');
 var asm = require('./asm');
 
-exports.testParamTypes = asm(
+exports.testModuloIntish1 = asm.one(
+    "% doesn't return int",
+    function f() {
+        var x = 0, y = 0;
+        x = (x|0)%(y|0);
+    },
+    { pass: false });
+
+exports.testModuleIntish2 = asm.one(
+    "% returns intish",
+    function f() {
+        var x = 0, y = 0;
+        x = ((x|0)%(y|0))|0;
+    },
+    { pass: true });
+
+exports.testIntCoercionRequiresDouble1 = asm.one(
+    "~~ requires double",
+    function f() {
+        var x = 0.0, y = 0;
+        y = ~~HF64[0];
+    },
+    { pass: false });
+
+exports.testIntCoercionRequiresDouble2 = asm.one(
+    "~~ requires double",
+    function f() {
+        var x = 0.0, y = 0;
+        y = ~~+HF64[0];
+    },
+    { pass: true });
+
+exports.testNot = asm.one(
+    "! operator",
+    function f() {
+        var x = 0;
+        x = !((x|0) > 0);
+    },
+    { pass: true });
+
+exports.testParamTypes = asm.one(
     "different parameter types",
-    function paramTypes(stdlib, foreign, heap) {
-        "use asm";
-        __ALL__
-        function f(x, y) {
-            x = x|0;
-            y = +y;
-        }
-        function empty() { }
-        return empty;
+    function f(x, y) {
+        x = x|0;
+        y = +y;
     }, {
         pass: true,
         types: {
-            f: ty.Arrow([ty.Int, ty.Double], ty.Void),
-            empty: ty.Arrow([], ty.Void)
-        },
-        export: "empty"
+            f: ty.Arrow([ty.Int, ty.Double], ty.Void)
+        }
     });
 
-exports.testAdd = asm(
+exports.testAdd = asm.one(
     "addition",
-    function add(stdlib) {
-        "use asm";
-        __PURE__
-        function add1(x) {
-            x = x|0;
-            return ((x|0)+1)|0;
-        }
-        return add1;
+    function add1(x) {
+        x = x|0;
+        return ((x|0)+1)|0;
     }, {
         pass: true,
         types: {
@@ -38,31 +65,21 @@ exports.testAdd = asm(
         }
     });
 
-exports.testImul = asm(
-    "multiplication",
-    function imul(stdlib) {
-        "use asm";
-        __PURE__
-        function double(x) {
-            x = x|0;
-            return imul(x, 2)|0;
-        }
-        return double;
+exports.testImul = asm.one(
+    "Math.imul",
+    function double(x) {
+        x = x|0;
+        return imul(x, 2)|0;
     }, {
         pass: true,
         double: ty.Arrow([ty.Int], ty.Signed)
     });
 
-exports.testLoad = asm(
+exports.testLoad = asm.one(
     "heap load",
-    function load(stdlib, foreign, heap) {
-        "use asm";
-        __ALL__
-        function get(i) {
-            i = i|0;
-            return H32[i>>2]|0;
-        }
-        return get;
+    function get(i) {
+        i = i|0;
+        return H32[i>>2]|0;
     }, {
         pass: true,
         types: {
@@ -70,17 +87,12 @@ exports.testLoad = asm(
         }
     });
 
-exports.testStore = asm(
+exports.testStore = asm.one(
     "heap store",
-    function store(stdlib, foreign, heap) {
-        "use asm";
-        __ALL__
-        function set(i, x) {
-            i = i|0;
-            x = x|0;
+    function set(i, x) {
+        i = i|0;
+        x = x|0;
         H32[i>>2] = x|0;
-        }
-        return set;
     }, {
         pass: true,
         types: {
