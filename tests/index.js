@@ -100,6 +100,65 @@ exports.testStore = asm.one(
         }
     });
 
+exports.testCall1 = asm(
+    "function call",
+    function call(stdlib, foreign, heap) {
+        "use asm";
+        __ALL__
+        function f(x) {
+            x = +x;
+            return +(x + 1.0);
+        }
+        function g() {
+            var x = 0.0;
+            x = +f(x);
+            return +x;
+        }
+        return {};
+    }, { pass: true });
+
+exports.testCall2 = asm(
+    "function call",
+    function call(stdlib, foreign, heap) {
+        "use asm";
+        __ALL__
+        function f(x) {
+            x = x|0;
+            return (x + 1)|0;
+        }
+        function g() {
+            var x = 0.0;
+            x = +f(x);
+            return +x;
+        }
+        return {};
+    }, { pass: false });
+
+exports.testVoid1 = asm(
+    "void function call in expression statement",
+    function void_(stdlib) {
+        "use asm";
+        __PURE__
+        function f() { }
+        function g() {
+            f();
+        }
+        return {}
+    }, { pass: true });
+
+exports.testVoid2 = asm(
+    "void function call in comma expression",
+    function void_(stdlib) {
+        "use asm";
+        __PURE__
+        function f() { }
+        function g() {
+            var x = 0.0;
+            x = (f(), f(), 1.0);
+        }
+        return {};
+    }, { pass: true });
+
 exports.testEval1 = asm(
     "module named eval",
     function eval() {
