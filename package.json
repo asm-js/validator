@@ -2,7 +2,7 @@
   "name": "asm.js",
   "description": "Tools for the asm.js subset of JavaScript",
   "main": "lib/asm.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "node": ">=0.8.2"
   },
