@@ -1,5 +1,6 @@
-var validate = require('../lib/validate');
-var fail = require('../lib/fail');
+var asm = require('../lib/asm');
+var validate = asm.validate;
+var ValidationError = asm.ValidationError;
 
 function explode(test) {
     var __EMPTY__ = [];
@@ -13,7 +14,7 @@ function explode(test) {
                        .replace("__ALL__", __ALL__.join(SEP));
 }
 
-function asm(msg, f, expect) {
+function asmAssert(msg, f, expect) {
     f = explode(f);
     var hasOwn = {}.hasOwnProperty;
 
@@ -61,7 +62,7 @@ function asm(msg, f, expect) {
         return function(test) {
             test.throws(function() { validate(f); },
                         function(e) {
-                            return e instanceof fail.ValidationError;
+                            return e instanceof ValidationError;
                         },
                         msg + ": should fail to validate");
             test.done();
@@ -69,10 +70,10 @@ function asm(msg, f, expect) {
     }
 }
 
-asm.one = function(msg, f, expect) {
-    return asm(msg,
+asmAssert.one = function(msg, f, expect) {
+    return asmAssert(msg,
                "function one(stdlib, foreign, heap) {\n    'use asm';\n    __ALL__\n    " + f + "\n    return {};\n}",
                expect);
 };
 
-module.exports = asm;
+module.exports = asmAssert;
