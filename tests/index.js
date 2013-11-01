@@ -1,7 +1,7 @@
 var ty = require('../lib/types');
-var asm = require('./asm');
+var asmAssert = require('./asmAssert');
 
-exports.testModuloIntish1 = asm.one(
+exports.testModuloIntish1 = asmAssert.one(
     "% doesn't return int",
     function f() {
         var x = 0, y = 0;
@@ -9,7 +9,7 @@ exports.testModuloIntish1 = asm.one(
     },
     { pass: false });
 
-exports.testModuleIntish2 = asm.one(
+exports.testModuleIntish2 = asmAssert.one(
     "% returns intish",
     function f() {
         var x = 0, y = 0;
@@ -17,7 +17,7 @@ exports.testModuleIntish2 = asm.one(
     },
     { pass: true });
 
-exports.testIntCoercionRequiresDouble1 = asm.one(
+exports.testIntCoercionRequiresDouble1 = asmAssert.one(
     "~~ requires double",
     function f() {
         var x = 0.0, y = 0;
@@ -25,7 +25,7 @@ exports.testIntCoercionRequiresDouble1 = asm.one(
     },
     { pass: false });
 
-exports.testIntCoercionRequiresDouble2 = asm.one(
+exports.testIntCoercionRequiresDouble2 = asmAssert.one(
     "~~ requires double",
     function f() {
         var x = 0.0, y = 0;
@@ -33,7 +33,7 @@ exports.testIntCoercionRequiresDouble2 = asm.one(
     },
     { pass: true });
 
-exports.testNot = asm.one(
+exports.testNot = asmAssert.one(
     "! operator",
     function f() {
         var x = 0;
@@ -41,7 +41,7 @@ exports.testNot = asm.one(
     },
     { pass: true });
 
-exports.testParamTypes = asm.one(
+exports.testParamTypes = asmAssert.one(
     "different parameter types",
     function f(x, y) {
         x = x|0;
@@ -53,7 +53,7 @@ exports.testParamTypes = asm.one(
         }
     });
 
-exports.testAdd = asm.one(
+exports.testAdd = asmAssert.one(
     "addition",
     function add1(x) {
         x = x|0;
@@ -65,7 +65,7 @@ exports.testAdd = asm.one(
         }
     });
 
-exports.testImul = asm.one(
+exports.testImul = asmAssert.one(
     "Math.imul",
     function double(x) {
         x = x|0;
@@ -75,7 +75,7 @@ exports.testImul = asm.one(
         double: ty.Arrow([ty.Int], ty.Signed)
     });
 
-exports.testLoad = asm.one(
+exports.testLoad = asmAssert.one(
     "heap load",
     function get(i) {
         i = i|0;
@@ -87,7 +87,7 @@ exports.testLoad = asm.one(
         }
     });
 
-exports.testStore = asm.one(
+exports.testStore = asmAssert.one(
     "heap store",
     function set(i, x) {
         i = i|0;
@@ -100,7 +100,7 @@ exports.testStore = asm.one(
         }
     });
 
-exports.testCall1 = asm(
+exports.testCall1 = asmAssert(
     "function call",
     function call(stdlib, foreign, heap) {
         "use asm";
@@ -117,7 +117,7 @@ exports.testCall1 = asm(
         return {};
     }, { pass: true });
 
-exports.testCall2 = asm(
+exports.testCall2 = asmAssert(
     "function call",
     function call(stdlib, foreign, heap) {
         "use asm";
@@ -134,7 +134,7 @@ exports.testCall2 = asm(
         return {};
     }, { pass: false });
 
-exports.testVoid1 = asm(
+exports.testVoid1 = asmAssert(
     "void function call in expression statement",
     function void_(stdlib) {
         "use asm";
@@ -146,7 +146,7 @@ exports.testVoid1 = asm(
         return {}
     }, { pass: true });
 
-exports.testVoid2 = asm(
+exports.testVoid2 = asmAssert(
     "void function call in comma expression",
     function void_(stdlib) {
         "use asm";
@@ -159,7 +159,7 @@ exports.testVoid2 = asm(
         return {};
     }, { pass: true });
 
-exports.testEval1 = asm(
+exports.testEval1 = asmAssert(
     "module named eval",
     function eval() {
         "use asm";
@@ -168,7 +168,7 @@ exports.testEval1 = asm(
         return empty;
     }, { pass: false });
 
-exports.testEval2 = asm(
+exports.testEval2 = asmAssert(
     "function named eval",
     function() {
         "use asm";
@@ -177,7 +177,7 @@ exports.testEval2 = asm(
         return eval;
     }, { pass: false });
 
-exports.testEval3 = asm(
+exports.testEval3 = asmAssert(
     "local named eval",
     function() {
         "use asm";
