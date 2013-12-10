@@ -170,7 +170,7 @@ exports.testEval1 = asmAssert(
 
 exports.testEval2 = asmAssert(
     "function named eval",
-    function() {
+    function m() {
         "use asm";
         __PURE__
         function eval() { }
@@ -179,7 +179,7 @@ exports.testEval2 = asmAssert(
 
 exports.testEval3 = asmAssert(
     "local named eval",
-    function() {
+    function m() {
         "use asm";
         __PURE__
         function f() {
@@ -187,3 +187,15 @@ exports.testEval3 = asmAssert(
         }
         return f;
     }, { pass: false });
+
+exports.testAbs = asmAssert(
+    "abs returns signed",
+    function call(stdlib, foreign, heap) {
+        "use asm";
+        __PURE__
+        var abs = stdlib.Math.abs;
+        function f() {
+            return abs(1)|0;
+        }
+        return f;
+    }, { pass: true });
