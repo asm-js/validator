@@ -365,7 +365,7 @@ means of an explicit coercion on function entry:
 <pre>function diag(x, y) {
     x = +x; // x has type double
     y = +y; // y has type double
-    return +sqrt(square(x) + square(y));
+    return +sqrt(+square(x) + +square(y));
 }</pre>
 </div>
 
@@ -404,7 +404,7 @@ from <code>stdlib.Math.sqrt</code> is actually the original
     function diag(x, y) {
         x = +x;
         y = +y;
-        return +sqrt(square(x) + square(y));
+        return +sqrt(+square(x) + +square(y));
     }
 
     return { diag: diag };
