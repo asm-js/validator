@@ -62,7 +62,7 @@ span.opt {
 
 <p>This specification defines <strong>asm.js</strong>, a strict subset
 of JavaScript that can be used as a low-level, efficient target
-language for compilers. This sublanguage effectively describes a safe
+language for compilers. This sublanguage effectively describes a sandboxed
 virtual machine for memory-unsafe languages like C or C++. A
 combination of static and dynamic validation allows JavaScript engines
 to employ an ahead-of-time (AOT) optimizing compilation strategy for
@@ -655,7 +655,7 @@ specific productions of <em>Expression</em> such as literals, the
 source may contain extra meaningless parentheses without affecting
 validation.
 </li><li>Automatic semicolon insertion is respected. An asm.js source file
-may omit semicolons wherever JavaScript allows them to be ommitted.
+may omit semicolons wherever JavaScript allows them to be omitted.
 </li></ul>
 
 <p>These rules are otherwise left implicit in the rest of the
@@ -1577,7 +1577,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>A <em>ConditionalExpression</em> node
 
 </p><div class=example>
-<em>test:LogicalORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
+<em>test:BitwiseORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
 <p>validates as type τ if:
