@@ -36,7 +36,7 @@ span.opt {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-12-december-2013>Working Draft — 12 December 2013</h2>
+	<h2 class="no-num no-toc" id=working-draft-30-june-2014>Working Draft — 30 June 2014</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -77,7 +77,11 @@ optimizing implementation of this draft.
 </p><h3 class="no-num no-toc" id=changelog>Changelog</h3>
 
 <ul>
-<li><strong>12 December 2013</strong>
+<li><strong>30 June 2014</strong>
+  <ul>
+    <li>rename <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <code>float?</code>
+  </li></ul>
+</li><li><strong>12 December 2013</strong>
   <ul>
     <li>return type of <code>Math.abs</code> is <a href=#signed-0><code>signed</code></a>
   </li></ul>
@@ -112,7 +116,7 @@ optimizing implementation of this draft.
      <li><a href=#int><span class=secno>2.1.5 </span>int</a></li>
      <li><a href=#fixnum><span class=secno>2.1.6 </span>fixnum</a></li>
      <li><a href=#intish><span class=secno>2.1.7 </span>intish</a></li>
-     <li><a href=#doublish><span class=secno>2.1.8 </span>doublish</a></li>
+     <li><a href=#double-0><span class=secno>2.1.8 </span>double?</a></li>
      <li><a href=#extern><span class=secno>2.1.9 </span>extern</a></li></ol></li>
    <li><a href=#global-types><span class=secno>2.2 </span>Global Types</a></li></ol></li>
  <li><a href=#environments><span class=secno>3 </span>Environments</a>
@@ -453,7 +457,7 @@ and integer arithmetic.
 relation, which can be represented pictorially:
 
 </p><figure class=diagrams>
-<a href=subtypes.png><img src=subtypes.png height=347 width=620></a>
+<a href=subtypes.png><img src=subtypes.png height=348 width=779></a>
 </figure>
 
 <p>The light boxes represent arbitrary JavaScript values that may flow
@@ -477,7 +481,7 @@ type <a href=#void-0><code>void</code></a> can only be called for effect.
 
 </p><h4 id=double><span class=secno>2.1.2 </span>double</h4>
 
-<p>The <dfn id=double-0><code>double</code></dfn> type is the type of ordinary
+<p>The <dfn id=double-1><code>double</code></dfn> type is the type of ordinary
 JavaScript double-precision floating-point numbers.
 
 </p><h4 id=signed><span class=secno>2.1.3 </span>signed</h4>
@@ -545,16 +549,14 @@ function is recommended as the proper means of implementing integer
 multiplication.
 
 
-</p><h4 id=doublish><span class=secno>2.1.8 </span>doublish</h4>
+</p><h4 id=double-0><span class=secno>2.1.8 </span>double?</h4>
 
-Similar to <a href=#intish-0><code>intish</code></a>, the <dfn id=doublish-0><code>doublish</code></dfn>
-type represents operations that are expected to produce
-a <a href=#double-0><code>double</code></a> but may produce additional junk that must be
-coerced back to a number
-via <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.3><em>ToNumber</em></a>. In
-particular, reading out of bounds from a typed array
-produces <code>undefined</code>, and calling FFI functions may produce
-arbitrary JavaScript values.
+The <dfn id=double-2><code>double?</code></dfn> type represents operations that
+are expected to produce a <a href=#double-1><code>double</code></a> but may also produce
+<code>undefined</code>, and so much be coerced back to a number
+via <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.3><em>ToNumber</em></a>.
+Specifically, reading out of bounds from a typed array
+produces <code>undefined</code>.
 
 <h4 id=extern><span class=secno>2.1.9 </span>extern</h4>
 
@@ -655,7 +657,7 @@ specific productions of <em>Expression</em> such as literals, the
 source may contain extra meaningless parentheses without affecting
 validation.
 </li><li>Automatic semicolon insertion is respected. An asm.js source file
-may omit semicolons wherever JavaScript allows them to be omitted.
+may omit semicolons wherever JavaScript allows them to be ommitted.
 </li></ul>
 
 <p>These rules are otherwise left implicit in the rest of the
@@ -700,7 +702,7 @@ via implicit calls to <code>valueOf</code>).
 </div>
 
 <p>The first form annotates a parameter as type <a href=#int-0><code>int</code></a>, and
-the second as type <a href=#double-0><code>double</code></a>.
+the second as type <a href=#double-1><code>double</code></a>.
 
 </p><h3 id=return-type-annotations><span class=secno>5.2 </span>Return Type Annotations</h3>
 
@@ -717,9 +719,9 @@ take one of four forms:
 <code>return;</code>
 </div>
 
-<p>The first form has return type <a href=#double-0><code>double</code></a>. The second has
+<p>The first form has return type <a href=#double-1><code>double</code></a>. The second has
 type <a href=#signed-0><code>signed</code></a>. The third has return
-type <a href=#double-0><code>double</code></a> if <em>n</em> is composed of a floating-point
+type <a href=#double-1><code>double</code></a> if <em>n</em> is composed of a floating-point
 literal, i.e., a numeric literal with the character <code>.</code> in
 its source; alternatively, if <em>n</em> is composed of an integer
 literal and has its value in the range [-2<sup>31</sup>,
@@ -759,7 +761,7 @@ type <code>imm</code> (σ,…) → τ.
 <p>The types of variable declarations are determined by their
 initializer. A variable initializer may be a floating-point literal,
 which is any numeric literal with the character <code>.</code> in
-their source, and has type <a href=#double-0><code>double</code></a>. Alternatively, an
+their source, and has type <a href=#double-1><code>double</code></a>. Alternatively, an
 initializer may be an integer literal in the range [-2<sup>31</sup>,
 2<sup>32</sup>), which has type <a href=#int-0><code>int</code></a>.
 
@@ -1259,7 +1261,7 @@ actual return type <a href=#void-0><code>void</code></a>; or
 
 </p><ul>
 <li>if the source contains a <code>.</code> character, the expression
-validates as type <a href=#double-0><code>double</code></a>;
+validates as type <a href=#double-1><code>double</code></a>;
 </li><li>if the source does not contain a <code>.</code> character and its
 numeric value is in the range [0, 2<sup>31</sup>), the expression
 validates as type <a href=#fixnum-0><code>fixnum</code></a>;
@@ -1399,8 +1401,8 @@ character and the numeric value of the expression is in the range
 <code>+</code><em>cexpr:CallExpression</em>
 </div>
 
-<p>validates as type <a href=#double-0><code>double</code></a> if <em>cexpr</em> is valid
-with actual return type <a href=#double-0><code>double</code></a>.
+<p>validates as type <a href=#double-1><code>double</code></a> if <em>cexpr</em> is valid
+with actual return type <a href=#double-1><code>double</code></a>.
 
 </p><p>A <em>UnaryExpression</em> node of the form
 
@@ -1419,7 +1421,7 @@ as a subtype of σ.
 </div>
 
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
-a subtype of <a href=#double-0><code>double</code></a>.
+a subtype of <a href=#double-1><code>double</code></a>.
 
 </p><h4 id=multiplicativeexpression><span class=secno>6.6.7 </span>MultiplicativeExpression</h4>
 
@@ -1468,8 +1470,8 @@ subtype of <a href=#int-0><code>int</code></a>.
 <em>lhs:AdditiveExpression</em> <em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> <em>rhs:MultiplicativeExpression</em>
 </div>
 
-<p>validates as type <a href=#double-0><code>double</code></a> if the type of <em>op</em> is
-(σ<sub>1</sub>, σ<sub>2</sub>) → <a href=#double-0><code>double</code></a>
+<p>validates as type <a href=#double-1><code>double</code></a> if the type of <em>op</em> is
+(σ<sub>1</sub>, σ<sub>2</sub>) → <a href=#double-1><code>double</code></a>
 and <em>lhs</em> validates as a subtype of σ<sub>1</sub>
 and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 
@@ -1583,7 +1585,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type τ if:
 
 </p><ul>
-<li>τ = <a href=#int-0><code>int</code></a> or τ = <a href=#double-0><code>double</code></a>;
+<li>τ = <a href=#int-0><code>int</code></a> or τ = <a href=#double-1><code>double</code></a>;
 </li><li><em>test</em> validates as type <a href=#int-0><code>int</code></a>;
 </li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
 </li></ul>
@@ -1713,16 +1715,16 @@ to an interpreted or JIT-compiled implementation.
 <tr>
   <td><code>+</code></td>
   <td>
-    (<a href=#signed-0><code>signed</code></a>) → <a href=#double-0><code>double</code></a> ∧<br>
-    (<a href=#unsigned-0><code>unsigned</code></a>) → <a href=#double-0><code>double</code></a> ∧<br>
-    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
+    (<a href=#signed-0><code>signed</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>-</code></td>
   <td>
     (<a href=#int-0><code>int</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
-    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
@@ -1737,7 +1739,7 @@ to an interpreted or JIT-compiled implementation.
 </table>
 
 <p>Note that the special combined operator <code>~~</code> may be used
-as a coercion from <a href=#double-0><code>double</code></a> to <a href=#signed-0><code>signed</code></a>;
+as a coercion from <a href=#double-1><code>double</code></a> to <a href=#signed-0><code>signed</code></a>;
 see <a href=#unaryexpression>Unary Expressions</a>.
 
 </p><h3 id=binary-operators><span class=secno>8.2 </span>Binary Operators</h3>
@@ -1750,22 +1752,22 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 </tr>
 <tr>
   <td><code>+</code></td>
-  <td>(<a href=#double-0><code>double</code></a>, <a href=#double-0><code>double</code></a>) → <a href=#double-0><code>double</code></a></td>
+  <td>(<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>-</code></td>
-  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
+  <td>(<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>*</code></td>
-  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
+  <td>(<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>/</code></td>
   <td>
     (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
-    (<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
@@ -1773,7 +1775,7 @@ see <a href=#unaryexpression>Unary Expressions</a>.
   <td>
     (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
-    (<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
@@ -1789,7 +1791,7 @@ see <a href=#unaryexpression>Unary Expressions</a>.
   <td>
     (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
-    (<a href=#double-0><code>double</code></a>, <a href=#double-0><code>double</code></a>) → <a href=#int-0><code>int</code></a>
+    (<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#int-0><code>int</code></a>
   </td>
 </tr>
 </tbody>
@@ -1808,7 +1810,7 @@ see <a href=#unaryexpression>Unary Expressions</a>.
     <code>Infinity</code><br>
     <code>NaN</code>
   </td>
-  <td><a href=#double-0><code>double</code></a></td>
+  <td><a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td>
@@ -1824,13 +1826,13 @@ see <a href=#unaryexpression>Unary Expressions</a>.
     <code>Math.log</code><br>
     <code>Math.sqrt</code>
   </td>
-  <td>(<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
+  <td>(<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>Math.abs</code></td>
   <td>
     (<a href=#signed-0><code>signed</code></a>) → <a href=#signed-0><code>signed</code></a> ∧<br>
-    (<a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
@@ -1838,7 +1840,7 @@ see <a href=#unaryexpression>Unary Expressions</a>.
     <code>Math.atan2</code><br>
     <code>Math.pow</code>
   </td>
-  <td>(<a href=#doublish-0><code>doublish</code></a>, <a href=#doublish-0><code>doublish</code></a>) → <a href=#double-0><code>double</code></a></td>
+  <td>(<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
 </tr>
 <tr>
   <td><code>Math.imul</code></td>
@@ -1855,7 +1857,7 @@ see <a href=#unaryexpression>Unary Expressions</a>.
     <code>Math.SQRT1_2</code><br>
     <code>Math.SQRT2</code><br>
   </td>
-  <td><a href=#double-0><code>double</code></a></td>
+  <td><a href=#double-1><code>double</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -1902,12 +1904,12 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 <tr>
   <td><code>Float32Array</code></td>
   <td>4</td>
-  <td><a href=#doublish-0><code>doublish</code></a></td>
+  <td><a href=#double-2><code>double?</code></a></td>
 </tr>
 <tr>
   <td><code>Float64Array</code></td>
   <td>8</td>
-  <td><a href=#doublish-0><code>doublish</code></a></td>
+  <td><a href=#double-2><code>double?</code></a></td>
 </tr>
 </tbody>
 </table>

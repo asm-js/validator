@@ -80,6 +80,10 @@ optimizing implementation of this draft.
 <h3 class="no-num no-toc">Changelog</h2>
 
 <ul>
+<li><strong>30 June 2014</strong>
+  <ul>
+    <li>rename <code>doublish</code> to <code>double?</code> for symmetry with <code>float?</code>
+  </ul>
 <li><strong>12 December 2013</strong>
   <ul>
     <li>return type of <code>Math.abs</code> is <code>signed</code>
@@ -376,7 +380,7 @@ and integer arithmetic.
 relation, which can be represented pictorially:
 
 <figure class="diagrams">
-<a href="subtypes.png"><img src="subtypes.png" width="620" height="347"></a>
+<a href="subtypes.png"><img src="subtypes.png" width="779" height="348"></a>
 </figure>
 
 <p>The light boxes represent arbitrary JavaScript values that may flow
@@ -468,16 +472,14 @@ function is recommended as the proper means of implementing integer
 multiplication.
 
 
-<h4>doublish</h4>
+<h4>double?</h4>
 
-Similar to <code>intish</code>, the <dfn><code>doublish</code></dfn>
-type represents operations that are expected to produce
-a <code>double</code> but may produce additional junk that must be
-coerced back to a number
-via <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.3"><em>ToNumber</em></a>. In
-particular, reading out of bounds from a typed array
-produces <code>undefined</code>, and calling FFI functions may produce
-arbitrary JavaScript values.
+The <dfn><code>double?</code></dfn> type represents operations that
+are expected to produce a <code>double</code> but may also produce
+<code>undefined</code>, and so much be coerced back to a number
+via <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.3"><em>ToNumber</em></a>.
+Specifically, reading out of bounds from a typed array
+produces <code>undefined</code>.
 
 <h4>extern</h4>
 
@@ -1638,14 +1640,14 @@ to an interpreted or JIT-compiled implementation.
   <td>
     (<code>signed</code>) &rarr; <code>double</code> &and;<br>
     (<code>unsigned</code>) &rarr; <code>double</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
   <td><code>-</code></td>
   <td>
     (<code>int</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
@@ -1677,18 +1679,18 @@ see <a href="#unaryexpression">Unary Expressions</a>.
 </tr>
 <tr>
   <td><code>-</code></td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<code>double?</code>, <code>double?</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
   <td><code>*</code></td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<code>double?</code>, <code>double?</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
   <td><code>/</code></td>
   <td>
     (<code>signed</code>, <code>signed</code>) &rarr; <code>intish</code> &and;<br>
     (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
@@ -1696,7 +1698,7 @@ see <a href="#unaryexpression">Unary Expressions</a>.
   <td>
     (<code>signed</code>, <code>signed</code>) &rarr; <code>intish</code> &and;<br>
     (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code>
+    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
@@ -1747,13 +1749,13 @@ see <a href="#unaryexpression">Unary Expressions</a>.
     <code>Math.log</code><br>
     <code>Math.sqrt</code>
   </td>
-  <td>(<code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<code>double?</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
   <td><code>Math.abs</code></td>
   <td>
     (<code>signed</code>) &rarr; <code>signed</code> &and;<br>
-    (<code>doublish</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
@@ -1761,7 +1763,7 @@ see <a href="#unaryexpression">Unary Expressions</a>.
     <code>Math.atan2</code><br>
     <code>Math.pow</code>
   </td>
-  <td>(<code>doublish</code>, <code>doublish</code>) &rarr; <code>double</code></td>
+  <td>(<code>double?</code>, <code>double?</code>) &rarr; <code>double</code></td>
 </tr>
 <tr>
   <td><code>Math.imul</code></td>
@@ -1825,12 +1827,12 @@ see <a href="#unaryexpression">Unary Expressions</a>.
 <tr>
   <td><code>Float32Array</code></td>
   <td>4</td>
-  <td><code>doublish</code></td>
+  <td><code>double?</code></td>
 </tr>
 <tr>
   <td><code>Float64Array</code></td>
   <td>8</td>
-  <td><code>doublish</code></td>
+  <td><code>double?</code></td>
 </tr>
 </tbody>
 </table>
