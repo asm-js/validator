@@ -82,7 +82,8 @@ optimizing implementation of this draft.
 <ul>
 <li><strong>30 June 2014</strong>
   <ul>
-    <li>rename <code>doublish</code> to <code>double?</code> for symmetry with <code>float?</code>
+    <li>added 32-bit floating point types
+    <li>renamed <code>doublish</code> to <code>double?</code> for symmetry with <code>float?</code>
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -474,12 +475,49 @@ multiplication.
 
 <h4>double?</h4>
 
-The <dfn><code>double?</code></dfn> type represents operations that
+<p>The <dfn><code>double?</code></dfn> type represents operations that
 are expected to produce a <code>double</code> but may also produce
-<code>undefined</code>, and so much be coerced back to a number
+<code>undefined</code>, and so must be coerced back to a number
 via <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.3"><em>ToNumber</em></a>.
 Specifically, reading out of bounds from a typed array
 produces <code>undefined</code>.
+
+<h4>float</h4>
+
+<p>The <dfn><code>float</code></dfn> type is the type of 32-bit
+floating-point numbers.
+
+<h4>float?</h4>
+
+<p>The <dfn><code>float?</code></dfn> type represents operations that
+are expected to produce a <code>float</code> but, similar
+to <code>double?</code>, may also produce <code>undefined</code> and
+so must be coerced back to a 32-bit floating point number
+via <a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.fround"><em>fround</em></a>.
+Specifically, reading out of bounds from a typed array
+produces <code>undefined</code>.
+
+<h4>floatish</h4>
+
+<p>Similar to integers, JavaScript can almost support 32-bit
+floating-point arithmetic, but requires extra coercions to properly
+emulate the 32-bit semantics. As proved in
+<em><a href="http://dl.acm.org/citation.cfm?id=221334">When is double
+rounding innocuous?</a></em> (Figueroa 1995), both the 32- and 64-bit
+versions of standard arithmetic operations produce equivalent results
+when given 32-bit inputs and coerced to 32-bit outputs.
+
+<p>The <dfn><code>floatish</code></dfn> type,
+like <code>intish</code>, represents the result of a JavaScript 32-bit
+floating-point operations that must be coerced back to a 32-bit
+floating-point value with an
+explicit <a href="http://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.fround"><em>fround</em></a>
+coercion. Validation requires all <code>floatish</code> values to be
+immediately passed to an operator or standard library that performs
+the appropriate coercion or else dropped via an expression
+statement. This way, each 32-bit floating-point operation can be
+<a href="https://blog.mozilla.org/javascript/2013/11/07/efficient-float32-arithmetic-in-javascript/">compiled
+directly to machine operations</a>.
 
 <h4>extern</h4>
 

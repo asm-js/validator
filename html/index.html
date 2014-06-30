@@ -79,7 +79,7 @@ optimizing implementation of this draft.
 <ul>
 <li><strong>30 June 2014</strong>
   <ul>
-    <li>rename <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <code>float?</code>
+    <li>rename <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <a href=#float-2><code>float?</code></a>
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -117,7 +117,10 @@ optimizing implementation of this draft.
      <li><a href=#fixnum><span class=secno>2.1.6 </span>fixnum</a></li>
      <li><a href=#intish><span class=secno>2.1.7 </span>intish</a></li>
      <li><a href=#double-0><span class=secno>2.1.8 </span>double?</a></li>
-     <li><a href=#extern><span class=secno>2.1.9 </span>extern</a></li></ol></li>
+     <li><a href=#float><span class=secno>2.1.9 </span>float</a></li>
+     <li><a href=#float-0><span class=secno>2.1.10 </span>float?</a></li>
+     <li><a href=#floatish><span class=secno>2.1.11 </span>floatish</a></li>
+     <li><a href=#extern><span class=secno>2.1.12 </span>extern</a></li></ol></li>
    <li><a href=#global-types><span class=secno>2.2 </span>Global Types</a></li></ol></li>
  <li><a href=#environments><span class=secno>3 </span>Environments</a>
   <ol>
@@ -551,14 +554,51 @@ multiplication.
 
 </p><h4 id=double-0><span class=secno>2.1.8 </span>double?</h4>
 
-The <dfn id=double-2><code>double?</code></dfn> type represents operations that
+<p>The <dfn id=double-2><code>double?</code></dfn> type represents operations that
 are expected to produce a <a href=#double-1><code>double</code></a> but may also produce
-<code>undefined</code>, and so much be coerced back to a number
+<code>undefined</code>, and so must be coerced back to a number
 via <a href=http://ecma-international.org/ecma-262/5.1/#sec-9.3><em>ToNumber</em></a>.
 Specifically, reading out of bounds from a typed array
 produces <code>undefined</code>.
 
-<h4 id=extern><span class=secno>2.1.9 </span>extern</h4>
+</p><h4 id=float><span class=secno>2.1.9 </span>float</h4>
+
+<p>The <dfn id=float-1><code>float</code></dfn> type is the type of 32-bit
+floating-point numbers.
+
+</p><h4 id=float-0><span class=secno>2.1.10 </span>float?</h4>
+
+<p>The <dfn id=float-2><code>float?</code></dfn> type represents operations that
+are expected to produce a <a href=#float-1><code>float</code></a> but, similar
+to <a href=#double-2><code>double?</code></a>, may also produce <code>undefined</code> and
+so must be coerced back to a 32-bit floating point number
+via <a href=http://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.fround><em>fround</em></a>.
+Specifically, reading out of bounds from a typed array
+produces <code>undefined</code>.
+
+</p><h4 id=floatish><span class=secno>2.1.11 </span>floatish</h4>
+
+<p>Similar to integers, JavaScript can almost support 32-bit
+floating-point arithmetic, but requires extra coercions to properly
+emulate the 32-bit semantics. As proved in
+<em><a href="http://dl.acm.org/citation.cfm?id=221334">When is double
+rounding innocuous?</a></em> (Figueroa 1995), both the 32- and 64-bit
+versions of standard arithmetic operations produce equivalent results
+when given 32-bit inputs and coerced to 32-bit outputs.
+
+</p><p>The <dfn id=floatish-0><code>floatish</code></dfn> type,
+like <a href=#intish-0><code>intish</code></a>, represents the result of a JavaScript 32-bit
+floating-point operations that must be coerced back to a 32-bit
+floating-point value with an
+explicit <a href=http://people.mozilla.org/~jorendorff/es6-draft.html#sec-math.fround><em>fround</em></a>
+coercion. Validation requires all <a href=#floatish-0><code>floatish</code></a> values to be
+immediately passed to an operator or standard library that performs
+the appropriate coercion or else dropped via an expression
+statement. This way, each 32-bit floating-point operation can be
+<a href=https://blog.mozilla.org/javascript/2013/11/07/efficient-float32-arithmetic-in-javascript/>compiled
+directly to machine operations</a>.
+
+</p><h4 id=extern><span class=secno>2.1.12 </span>extern</h4>
 
 The abstract <dfn id=extern-0><code>extern</code></dfn> type represents the root
 of all types that can escape back into external JavaScript—in
