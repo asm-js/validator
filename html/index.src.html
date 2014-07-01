@@ -80,10 +80,12 @@ optimizing implementation of this draft.
 <h3 class="no-num no-toc">Changelog</h2>
 
 <ul>
-<li><strong>30 June 2014</strong>
+<li><strong>1 July 2014</strong>
   <ul>
     <li>added 32-bit floating point types
     <li>renamed <code>doublish</code> to <code>double?</code> for symmetry with <code>float?</code>
+    <li>separate heap access checking into a separate validation section
+    <li>separated load and store types for heap views
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -1249,65 +1251,9 @@ are invalid, i.e., fail to validate.
 
 <h4>MemberExpression</h4>
 
-<p>A <em>MemberExpression</em> node
-
-<div class="example">
-<em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
-</div>
-
-<p>validates at type &tau; if:
-
-<ul>
-<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em>
-where <em>view</em> is
-an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
-type;
-<li>the element type of <em>view</em> is &tau;;
-<li>the source of <em>n</em> does not contain a <code>.</code> character;
-<li>0 &leq; <em>n</em> &lt; 2<sup>32</sup>.
-</ul>
-
-<p>A <em>MemberExpression</em> node
-
-<div class="example">
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
-</div>
-
-<p>validates at type <code>intish</code> if:
-
-<ul>
-<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
-an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
-type;
-<li>the element size of <em>view</em> is 1;
-<li>the element type of <em>view</em> is <code>intish</code>;
-<li><em>expr</em> validates as type <code>int</code>.
-</ul>
-
-<p>A <em>MemberExpression</em> node
-
-<div class="example">
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
-</div>
-
-<p>validates at type &tau; if:
-
-<ul>
-<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
-an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
-type;
-<li>the element size of <em>view</em> is <em>bytes</em>;
-<li>the element type of <em>view</em> is &tau;;
-<li><em>expr</em> validates as type <code>intish</code>;
-<li>the source of <em>n</em> does not contain a <code>.</code> character;
-<li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
-</ul>
-
-<!--
-<div class="compilation">
-<p><em>TODO: explain compilation model of heap access</em></p>
-</div>
--->
+<p>A <em>MemberExpression</em> node validates as type &tau; if it
+validates as a <a href="#heap-accesses">heap access</a> with load type
+&tau;.
 
 <h4>AssignmentExpression</h4>
 
@@ -1331,9 +1277,8 @@ validates as type &tau; and one of the following two conditions holds:
 <em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
 </div>
 
-<p>validates as type &tau; if <em>lhs</em> validates as type
-&tau;, <em>rhs</em> validates as type &sigma;, and &sigma; is a
-subtype of &tau;.
+<p>validates as type &tau; if <em>rhs</em> validates as type &tau;
+and <em>lhs</em> validates with &tau; as one of its legal store types.
 
 <!--
 <div class="example">
@@ -1634,6 +1579,82 @@ Calls to function pointers
 </div>
 -->
 
+<h3>Heap Accesses</h3>
+
+Each heap access expression is validated in the context of a global
+environment &Delta; and a variable environment &Gamma;, and validation
+determines a <em>load type</em> as well as a set of legal <em>store
+types</em>. These types are determined by
+the <a href="#heap-view-types">heap view types</a> corresponding to
+each <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type.
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates as load type &sigma; and store types { &tau;, &hellip; } if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em>
+where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the load type of <em>view</em> is &sigma;;
+<li>the store types of <em>view</em> are { &tau;, &hellip; };
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li>0 &leq; <em>n</em> &lt; 2<sup>32</sup>.
+</ul>
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
+</div>
+
+<p>validates as load type type <code>intish</code> and store types
+{ <code>intish</code> } if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the element size of <em>view</em> is 1;
+<li>the load type of <em>view</em> is <code>intish</code>;
+<li>the store types of <em>view</em> are { <code>intish</code> };
+<li><em>expr</em> validates as type <code>int</code>.
+</ul>
+
+<p>A <em>MemberExpression</em> node
+
+<div class="example">
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates as load type &sigma; and store types { &tau;, &hellip; }
+if:
+
+<ul>
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a>
+type;
+<li>the element size of <em>view</em> is <em>bytes</em>;
+<li>the load type of <em>view</em> is &sigma;;
+<li>the store types of <em>view</em> are { &tau;, &hellip; };
+<li><em>expr</em> validates as type <code>intish</code>;
+<li>the source of <em>n</em> does not contain a <code>.</code> character;
+<li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
+</ul>
+
+<!--
+<div class="compilation">
+<p><em>TODO: explain compilation model of heap access</em></p>
+</div>
+-->
+
+
 <h2>Linking</h2>
 
 <p>An AOT implementation of asm.js must perform some internal dynamic
@@ -1830,47 +1851,56 @@ see <a href="#unaryexpression">Unary Expressions</a>.
 <tr>
   <th>View Type</th>
   <th>Element Size (Bytes)</th>
-  <th>Element Type</th>
+  <th>Load Type</th>
+  <th>Store Types</th>
 </tr>
 <tr>
   <td><code>Uint8Array</code></td>
   <td>1</td>
+  <td><code>intish</code></td>
   <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Int8Array</code></td>
   <td>1</td>
   <td><code>intish</code></td>
+  <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Uint16Array</code></td>
   <td>2</td>
+  <td><code>intish</code></td>
   <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Int16Array</code></td>
   <td>2</td>
   <td><code>intish</code></td>
+  <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Uint32Array</code></td>
   <td>4</td>
+  <td><code>intish</code></td>
   <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Int32Array</code></td>
   <td>4</td>
   <td><code>intish</code></td>
+  <td><code>intish</code></td>
 </tr>
 <tr>
   <td><code>Float32Array</code></td>
   <td>4</td>
-  <td><code>double?</code></td>
+  <td><code>float?</code></td>
+  <td><code>floatish</code>, <code>double?</code></td>
 </tr>
 <tr>
   <td><code>Float64Array</code></td>
   <td>8</td>
   <td><code>double?</code></td>
+  <td><code>float?</code>, <code>double?</code></td>
 </tr>
 </tbody>
 </table>
@@ -1882,7 +1912,7 @@ Vuki&cacute;evi&cacute; for feedback and encouragement.</p>
 
 <p>Thanks to Benjamin Bouvier, Douglas Crosher, and Dan Gohman for
 contributions to the design and implementation, particularly for
-float32.</p>
+<code>float</code>.</p>
 
 <p>Thanks to Jesse Ruderman and C. Scott Ananian for bug reports.</p>
 

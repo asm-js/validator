@@ -36,7 +36,7 @@ span.opt {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-30-june-2014>Working Draft — 30 June 2014</h2>
+	<h2 class="no-num no-toc" id=working-draft-1-july-2014>Working Draft — 1 July 2014</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -77,9 +77,12 @@ optimizing implementation of this draft.
 </p><h3 class="no-num no-toc" id=changelog>Changelog</h3>
 
 <ul>
-<li><strong>30 June 2014</strong>
+<li><strong>1 July 2014</strong>
   <ul>
-    <li>rename <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <a href=#float-2><code>float?</code></a>
+    <li>added 32-bit floating point types
+    </li><li>renamed <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <a href=#float-2><code>float?</code></a>
+    </li><li>separate heap access checking into a separate validation section
+    </li><li>separated load and store types for heap views
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -175,7 +178,8 @@ optimizing implementation of this draft.
      <li><a href=#bitwiseorexpression><span class=secno>6.6.14 </span>BitwiseORExpression</a></li>
      <li><a href=#conditionalexpression><span class=secno>6.6.15 </span>ConditionalExpression</a></li>
      <li><a href=#parenthesized-expression><span class=secno>6.6.16 </span>Parenthesized Expression</a></li></ol></li>
-   <li><a href=#function-calls><span class=secno>6.7 </span>Function Calls</a></li></ol></li>
+   <li><a href=#function-calls><span class=secno>6.7 </span>Function Calls</a></li>
+   <li><a href=#heap-accesses><span class=secno>6.8 </span>Heap Accesses</a></li></ol></li>
  <li><a href=#linking-0><span class=secno>7 </span>Linking</a></li>
  <li><a href=#operators><span class=secno>8 </span>Operators</a>
   <ol>
@@ -1328,67 +1332,11 @@ are invalid, i.e., fail to validate.
 
 </p><h4 id=memberexpression><span class=secno>6.6.4 </span>MemberExpression</h4>
 
-<p>A <em>MemberExpression</em> node
+<p>A <em>MemberExpression</em> node validates as type τ if it
+validates as a <a href=#heap-accesses>heap access</a> with load type
+τ.
 
-</p><div class=example>
-<em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
-</div>
-
-<p>validates at type τ if:
-
-</p><ul>
-<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em>
-where <em>view</em> is
-an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
-type;
-</li><li>the element type of <em>view</em> is τ;
-</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
-</li><li>0 ≤ <em>n</em> &lt; 2<sup>32</sup>.
-</li></ul>
-
-<p>A <em>MemberExpression</em> node
-
-</p><div class=example>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
-</div>
-
-<p>validates at type <a href=#intish-0><code>intish</code></a> if:
-
-</p><ul>
-<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
-an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
-type;
-</li><li>the element size of <em>view</em> is 1;
-</li><li>the element type of <em>view</em> is <a href=#intish-0><code>intish</code></a>;
-</li><li><em>expr</em> validates as type <a href=#int-0><code>int</code></a>.
-</li></ul>
-
-<p>A <em>MemberExpression</em> node
-
-</p><div class=example>
-<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
-</div>
-
-<p>validates at type τ if:
-
-</p><ul>
-<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
-an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
-type;
-</li><li>the element size of <em>view</em> is <em>bytes</em>;
-</li><li>the element type of <em>view</em> is τ;
-</li><li><em>expr</em> validates as type <a href=#intish-0><code>intish</code></a>;
-</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
-</li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
-</li></ul>
-
-<!--
-<div class="compilation">
-<p><em>TODO: explain compilation model of heap access</em></p>
-</div>
--->
-
-<h4 id=assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</h4>
+</p><h4 id=assignmentexpression><span class=secno>6.6.5 </span>AssignmentExpression</h4>
 
 <p>An <em>AssignmentExpression</em> node
 
@@ -1410,9 +1358,8 @@ validates as type τ and one of the following two conditions holds:
 <em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
 </div>
 
-<p>validates as type τ if <em>lhs</em> validates as type
-τ, <em>rhs</em> validates as type σ, and σ is a
-subtype of τ.
+<p>validates as type τ if <em>rhs</em> validates as type τ
+and <em>lhs</em> validates with τ as one of its legal store types.
 
 <!--
 <div class="example">
@@ -1713,6 +1660,82 @@ Calls to function pointers
 </div>
 -->
 
+<h3 id=heap-accesses><span class=secno>6.8 </span>Heap Accesses</h3>
+
+Each heap access expression is validated in the context of a global
+environment Δ and a variable environment Γ, and validation
+determines a <em>load type</em> as well as a set of legal <em>store
+types</em>. These types are determined by
+the <a href=#heap-view-types>heap view types</a> corresponding to
+each <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type.
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates as load type σ and store types { τ, … } if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em>
+where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the load type of <em>view</em> is σ;
+</li><li>the store types of <em>view</em> are { τ, … };
+</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li>0 ≤ <em>n</em> &lt; 2<sup>32</sup>.
+</li></ul>
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em><code>]</code>
+</div>
+
+<p>validates as load type type <a href=#intish-0><code>intish</code></a> and store types
+{ <a href=#intish-0><code>intish</code></a> } if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the element size of <em>view</em> is 1;
+</li><li>the load type of <em>view</em> is <a href=#intish-0><code>intish</code></a>;
+</li><li>the store types of <em>view</em> are { <a href=#intish-0><code>intish</code></a> };
+</li><li><em>expr</em> validates as type <a href=#int-0><code>int</code></a>.
+</li></ul>
+
+<p>A <em>MemberExpression</em> node
+
+</p><div class=example>
+<em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
+</div>
+
+<p>validates as load type σ and store types { τ, … }
+if:
+
+</p><ul>
+<li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em> where <em>view</em> is
+an <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
+type;
+</li><li>the element size of <em>view</em> is <em>bytes</em>;
+</li><li>the load type of <em>view</em> is σ;
+</li><li>the store types of <em>view</em> are { τ, … };
+</li><li><em>expr</em> validates as type <a href=#intish-0><code>intish</code></a>;
+</li><li>the source of <em>n</em> does not contain a <code>.</code> character;
+</li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
+</li></ul>
+
+<!--
+<div class="compilation">
+<p><em>TODO: explain compilation model of heap access</em></p>
+</div>
+-->
+
+
 <h2 id=linking-0><span class=secno>7 </span>Linking</h2>
 
 <p>An AOT implementation of asm.js must perform some internal dynamic
@@ -1909,47 +1932,56 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 <tr>
   <th>View Type</th>
   <th>Element Size (Bytes)</th>
-  <th>Element Type</th>
+  <th>Load Type</th>
+  <th>Store Types</th>
 </tr>
 <tr>
   <td><code>Uint8Array</code></td>
   <td>1</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
   <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Int8Array</code></td>
   <td>1</td>
   <td><a href=#intish-0><code>intish</code></a></td>
+  <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Uint16Array</code></td>
   <td>2</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
   <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Int16Array</code></td>
   <td>2</td>
   <td><a href=#intish-0><code>intish</code></a></td>
+  <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Uint32Array</code></td>
   <td>4</td>
+  <td><a href=#intish-0><code>intish</code></a></td>
   <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Int32Array</code></td>
   <td>4</td>
   <td><a href=#intish-0><code>intish</code></a></td>
+  <td><a href=#intish-0><code>intish</code></a></td>
 </tr>
 <tr>
   <td><code>Float32Array</code></td>
   <td>4</td>
-  <td><a href=#double-2><code>double?</code></a></td>
+  <td><a href=#float-2><code>float?</code></a></td>
+  <td><a href=#floatish-0><code>floatish</code></a>, <a href=#double-2><code>double?</code></a></td>
 </tr>
 <tr>
   <td><code>Float64Array</code></td>
   <td>8</td>
   <td><a href=#double-2><code>double?</code></a></td>
+  <td><a href=#float-2><code>float?</code></a>, <a href=#double-2><code>double?</code></a></td>
 </tr>
 </tbody>
 </table>
@@ -1958,6 +1990,10 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 
 <p>Thanks to Martin Best, Brendan Eich, Andrew McCreight, and Vlad
 Vukićević for feedback and encouragement.</p>
+
+<p>Thanks to Benjamin Bouvier, Douglas Crosher, and Dan Gohman for
+contributions to the design and implementation, particularly for
+<a href=#float-1><code>float</code></a>.</p>
 
 <p>Thanks to Jesse Ruderman and C. Scott Ananian for bug reports.</p>
 
