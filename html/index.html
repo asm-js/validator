@@ -83,6 +83,7 @@ optimizing implementation of this draft.
     </li><li>renamed <code>doublish</code> to <a href=#double-2><code>double?</code></a> for symmetry with <a href=#float-2><code>float?</code></a>
     </li><li>separate heap access checking into a separate validation section
     </li><li>separated load and store types for heap views
+    </li><li>added <code>Math.fround</code>
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -1908,6 +1909,15 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 <tr>
   <td><code>Math.imul</code></td>
   <td>(<a href=#int-0><code>int</code></a>, <a href=#int-0><code>int</code></a>) → <a href=#signed-0><code>signed</code></a></td>
+</tr>
+<tr>
+  <td><code>Math.fround</code></td>
+  <td>
+    (<a href=#floatish-0><code>floatish</code></a>) → <a href=#float-1><code>float</code></a> ∧<br>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#float-1><code>float</code></a> ∧<br>
+    (<a href=#signed-0><code>signed</code></a>) → <a href=#float-1><code>float</code></a> ∧<br>
+    (<a href=#unsigned-0><code>unsigned</code></a>) → <a href=#float-1><code>float</code></a>
+  </td>
 </tr>
 <tr>
   <td>

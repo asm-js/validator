@@ -86,6 +86,7 @@ optimizing implementation of this draft.
     <li>renamed <code>doublish</code> to <code>double?</code> for symmetry with <code>float?</code>
     <li>separate heap access checking into a separate validation section
     <li>separated load and store types for heap views
+    <li>added <code>Math.fround</code>
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -1827,6 +1828,15 @@ see <a href="#unaryexpression">Unary Expressions</a>.
 <tr>
   <td><code>Math.imul</code></td>
   <td>(<code>int</code>, <code>int</code>) &rarr; <code>signed</code></td>
+</tr>
+<tr>
+  <td><code>Math.fround</code></td>
+  <td>
+    (<code>floatish</code>) &rarr; <code>float</code> &and;<br>
+    (<code>double?</code>) &rarr; <code>float</code> &and;<br>
+    (<code>signed</code>) &rarr; <code>float</code> &and;<br>
+    (<code>unsigned</code>) &rarr; <code>float</code>
+  </td>
 </tr>
 <tr>
   <td>
