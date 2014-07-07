@@ -92,6 +92,8 @@ optimizing implementation of this draft.
     <li>added float coercions to initializers, return type annotations, and legal function calls
     <li>added restriction preventing float coercions of FFI calls
     <li>added <code>float</code> support for operators and <code>Math</code> functions
+    <li>added <code>float</code> to legal result types for <em>ConditionalExpression</em>
+    <li>added variadic <code>Math.min</code> and <code>Math.max</code>
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -1545,7 +1547,7 @@ and <em>rhs</em> validate as type <code>intish</code>.
 <p>validates as type &tau; if:
 
 <ul>
-<li>&tau; = <code>int</code> or &tau; = <code>double</code>;
+<li>&tau; is one of <code>int</code>, <code>double</code>, or <code>float</code>;
 <li><em>test</em> validates as type <code>int</code>;
 <li><em>cons</em> and <em>alt</em> validate as subtypes of &tau;.
 </ul>
@@ -1576,11 +1578,21 @@ containing term.
 <em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>&hellip;<code>)</code>
 </div>
 
-<p>is valid with actual return type &tau; if it is either a
-valid <a href="#float-coercions">float coercion</a> or
-else <em>Lookup</em>(&Delta;, &Gamma;, <em>f</em>) = &hellip; &and;
+<p>is valid with actual return type &tau; if one of the following
+conditions holds:
+
+<ul>
+<li>the node is a valid <a href="#float-coercions">float coercion</a>;
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>f</em>) = &hellip; &and;
 (&sigma;,&hellip;) &rarr; &tau; &and; &hellip; and each <em>arg</em>
-validates as a subtype of its corresponding &sigma;.
+validates as a subtype of its corresponding &sigma;; or
+<li><em>Lookup</em>(&Delta;, &Gamma;, <em>f</em>) = &hellip; &and;
+(&sigma;<sub>1</sub>,&hellip;,&sigma;<sub><em>n</em></sub>,&sigma;<code>&hellip;</code>)
+&rarr; &tau; &and; &hellip;, the
+first <em>n</em> <em>arg<sub>i</sub></em> expressions validate as a
+subtype of their corresponding &sigma;<sub><em>i</em></sub>, and the
+remaining <em>arg</em> expressions validate as subtypes of &sigma;.
+</ul>
 
 <p>Alternatively, the <em>CallExpression</em> node is valid with any
 actual return type &tau; other than <code>float</code>
@@ -1921,6 +1933,16 @@ Expressions</a>.
     (<code>signed</code>) &rarr; <code>signed</code> &and;<br>
     (<code>double?</code>) &rarr; <code>double</code> &and;<br>
     (<code>float?</code>) &rarr; <code>float</code>
+  </td>
+</tr>
+<tr>
+  <td>
+    <code>Math.min</code><br>
+    <code>Math.max</code>
+  </td>
+  <td>
+    (<code>int</code>, <code>int</code><code>&hellip;</code>) &rarr; <code>signed</code> &and;<br>
+    (<code>double</code>, <code>double</code><code>&hellip;</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>

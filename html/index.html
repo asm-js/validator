@@ -89,6 +89,8 @@ optimizing implementation of this draft.
     </li><li>added float coercions to initializers, return type annotations, and legal function calls
     </li><li>added restriction preventing float coercions of FFI calls
     </li><li>added <a href=#float-1><code>float</code></a> support for operators and <code>Math</code> functions
+    </li><li>added <a href=#float-1><code>float</code></a> to legal result types for <em>ConditionalExpression</em>
+    </li><li>added variadic <code>Math.min</code> and <code>Math.max</code>
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -1629,7 +1631,7 @@ and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
 <p>validates as type τ if:
 
 </p><ul>
-<li>τ = <a href=#int-0><code>int</code></a> or τ = <a href=#double-1><code>double</code></a>;
+<li>τ is one of <a href=#int-0><code>int</code></a>, <a href=#double-1><code>double</code></a>, or <a href=#float-1><code>float</code></a>;
 </li><li><em>test</em> validates as type <a href=#int-0><code>int</code></a>;
 </li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
 </li></ul>
@@ -1660,13 +1662,23 @@ containing term.
 <em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<p>is valid with actual return type τ if it is either a
-valid <a href=#float-coercions>float coercion</a> or
-else <em>Lookup</em>(Δ, Γ, <em>f</em>) = … ∧
-(σ,…) → τ ∧ … and each <em>arg</em>
-validates as a subtype of its corresponding σ.
+<p>is valid with actual return type τ if one of the following
+conditions holds:
 
-</p><p>Alternatively, the <em>CallExpression</em> node is valid with any
+</p><ul>
+<li>the node is a valid <a href=#float-coercions>float coercion</a>;
+</li><li><em>Lookup</em>(Δ, Γ, <em>f</em>) = … ∧
+(σ,…) → τ ∧ … and each <em>arg</em>
+validates as a subtype of its corresponding σ; or
+</li><li><em>Lookup</em>(Δ, Γ, <em>f</em>) = … ∧
+(σ<sub>1</sub>,…,σ<sub><em>n</em></sub>,σ<code>…</code>)
+→ τ ∧ …, the
+first <em>n</em> <em>arg<sub>i</sub></em> expressions validate as a
+subtype of their corresponding σ<sub><em>i</em></sub>, and the
+remaining <em>arg</em> expressions validate as subtypes of σ.
+</li></ul>
+
+<p>Alternatively, the <em>CallExpression</em> node is valid with any
 actual return type τ other than <a href=#float-1><code>float</code></a>
 if <em>Lookup</em>(Δ, Γ, <em>f</em>)
 = <code>Function</code> and each <em>arg</em> validates as a subtype
@@ -2005,6 +2017,16 @@ Expressions</a>.
     (<a href=#signed-0><code>signed</code></a>) → <a href=#signed-0><code>signed</code></a> ∧<br>
     (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
     (<a href=#float-2><code>float?</code></a>) → <a href=#float-1><code>float</code></a>
+  </td>
+</tr>
+<tr>
+  <td>
+    <code>Math.min</code><br>
+    <code>Math.max</code>
+  </td>
+  <td>
+    (<a href=#int-0><code>int</code></a>, <a href=#int-0><code>int</code></a><code>…</code>) → <a href=#signed-0><code>signed</code></a> ∧<br>
+    (<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a><code>…</code>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
