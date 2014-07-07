@@ -92,6 +92,7 @@ optimizing implementation of this draft.
     </li><li>added <a href=#float-1><code>float</code></a> to legal result types for <em>ConditionalExpression</em>
     </li><li>added variadic <code>Math.min</code> and <code>Math.max</code>
     </li><li>eliminated the allowance for 1-byte views to elide their index shift (to future-proof for large heaps)
+    </li><li>simplified and generalized link-time restrcitions on heap size
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -1827,9 +1828,12 @@ are:
 </p><ul>
 <li>control must reach the module's <code>return</code> statement without throwing;
 </li><li>the <em>heap</em> object (if provided) must be an instance of <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer><code>ArrayBuffer</code></a>;
-</li><li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 4096;
-</li><li>the <em>heap</em> object's <code>byteLength</code> must be a power of 2;
-</li><li>the <em>heap</em> object's <code>byteLength</code> must be no greater than 2<sup>31</sup> (assuming the engine even allows <code>ArrayBuffer</code>s that large);
+</li><li>the <em>heap</em> object's <code>byteLength</code> must be either 2<sup><em>n</em></sup> for <em>n</em> in [12, 24) or 2<sup>24</sup> · <em>n</em> for <em>n</em> ≥ 1;
+<!--
+<li>the <em>heap</em> object's <code>byteLength</code> must be a multiple of 4096;
+<li>the <em>heap</em> object's <code>byteLength</code> must be a power of 2;
+<li>the <em>heap</em> object's <code>byteLength</code> must be no greater than 2<sup>31</sup> (assuming the engine even allows <code>ArrayBuffer</code>s that large);
+-->
 </li><li>all view objects must be true instances of their
 respective <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView>typed
 array</a> types;
