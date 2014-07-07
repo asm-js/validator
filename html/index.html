@@ -88,6 +88,7 @@ optimizing implementation of this draft.
     </li><li>added uncoerced <em>CallExpression</em> nodes to <em>Expression</em> for float coercions
     </li><li>added float coercions to initializers, return type annotations, and legal function calls
     </li><li>added restriction preventing float coercions of FFI calls
+    </li><li>added <a href=#float-1><code>float</code></a> support for operators and <code>Math</code> functions
   </li></ul>
 </li><li><strong>12 December 2013</strong>
   <ul>
@@ -1464,7 +1465,7 @@ as a subtype of σ.
 </div>
 
 <p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
-a subtype of <a href=#double-1><code>double</code></a>.
+a subtype of either <a href=#double-1><code>double</code></a> or <a href=#float-2><code>float?</code></a>.
 
 </p><h4 id=multiplicativeexpression><span class=secno>6.7.8 </span>MultiplicativeExpression</h4>
 
@@ -1865,14 +1866,16 @@ to an interpreted or JIT-compiled implementation.
   <td>
     (<a href=#signed-0><code>signed</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
-    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>) → <a href=#double-1><code>double</code></a>
   </td>
 </tr>
 <tr>
   <td><code>-</code></td>
   <td>
     (<a href=#int-0><code>int</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
-    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>) → <a href=#floatish-0><code>floatish</code></a>
   </td>
 </tr>
 <tr>
@@ -1887,8 +1890,9 @@ to an interpreted or JIT-compiled implementation.
 </table>
 
 <p>Note that the special combined operator <code>~~</code> may be used
-as a coercion from <a href=#double-1><code>double</code></a> to <a href=#signed-0><code>signed</code></a>;
-see <a href=#unaryexpression>Unary Expressions</a>.
+as a coercion from <a href=#double-1><code>double</code></a> or <a href=#float-2><code>float?</code></a>
+to <a href=#signed-0><code>signed</code></a>; see <a href=#unaryexpression>Unary
+Expressions</a>.
 
 </p><h3 id=binary-operators><span class=secno>8.2 </span>Binary Operators</h3>
 
@@ -1900,22 +1904,32 @@ see <a href=#unaryexpression>Unary Expressions</a>.
 </tr>
 <tr>
   <td><code>+</code></td>
-  <td>(<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#double-1><code>double</code></a></td>
+  <td>
+    (<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>, <a href=#float-2><code>float?</code></a>) → <a href=#floatish-0><code>floatish</code></a>
+  </td>
 </tr>
 <tr>
   <td><code>-</code></td>
-  <td>(<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
+  <td>
+    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>, <a href=#float-2><code>float?</code></a>) → <a href=#floatish-0><code>floatish</code></a>
+  </td>
 </tr>
 <tr>
   <td><code>*</code></td>
-  <td>(<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
+  <td>
+    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>, <a href=#float-2><code>float?</code></a>) → <a href=#floatish-0><code>floatish</code></a>
+  </td>
 </tr>
 <tr>
   <td><code>/</code></td>
   <td>
     (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#intish-0><code>intish</code></a> ∧<br>
-    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>, <a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>, <a href=#float-2><code>float?</code></a>) → <a href=#floatish-0><code>floatish</code></a>
   </td>
 </tr>
 <tr>
@@ -1939,7 +1953,8 @@ see <a href=#unaryexpression>Unary Expressions</a>.
   <td>
     (<a href=#signed-0><code>signed</code></a>, <a href=#signed-0><code>signed</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
     (<a href=#unsigned-0><code>unsigned</code></a>, <a href=#unsigned-0><code>unsigned</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
-    (<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#int-0><code>int</code></a>
+    (<a href=#double-1><code>double</code></a>, <a href=#double-1><code>double</code></a>) → <a href=#int-0><code>int</code></a> ∧<br>
+    (<a href=#float-1><code>float</code></a>, <a href=#float-1><code>float</code></a>) → <a href=#int-0><code>int</code></a>
   </td>
 </tr>
 </tbody>
@@ -1968,19 +1983,28 @@ see <a href=#unaryexpression>Unary Expressions</a>.
     <code>Math.cos</code><br>
     <code>Math.sin</code><br>
     <code>Math.tan</code><br>
-    <code>Math.ceil</code><br>
-    <code>Math.floor</code><br>
     <code>Math.exp</code><br>
-    <code>Math.log</code><br>
-    <code>Math.sqrt</code>
+    <code>Math.log</code>
   </td>
   <td>(<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a></td>
+</tr>
+<tr>
+  <td>
+    <code>Math.ceil</code><br>
+    <code>Math.floor</code><br>
+    <code>Math.sqrt</code>
+  </td>
+  <td>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>) → <a href=#float-1><code>float</code></a>
+  </td>
 </tr>
 <tr>
   <td><code>Math.abs</code></td>
   <td>
     (<a href=#signed-0><code>signed</code></a>) → <a href=#signed-0><code>signed</code></a> ∧<br>
-    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a>
+    (<a href=#double-2><code>double?</code></a>) → <a href=#double-1><code>double</code></a> ∧<br>
+    (<a href=#float-2><code>float?</code></a>) → <a href=#float-1><code>float</code></a>
   </td>
 </tr>
 <tr>

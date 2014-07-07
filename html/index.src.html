@@ -91,6 +91,7 @@ optimizing implementation of this draft.
     <li>added uncoerced <em>CallExpression</em> nodes to <em>Expression</em> for float coercions
     <li>added float coercions to initializers, return type annotations, and legal function calls
     <li>added restriction preventing float coercions of FFI calls
+    <li>added <code>float</code> support for operators and <code>Math</code> functions
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -1380,7 +1381,7 @@ as a subtype of &sigma;.
 </div>
 
 <p>validates as type <code>signed</code> if <em>arg</em> validates as
-a subtype of <code>double</code>.
+a subtype of either <code>double</code> or <code>float?</code>.
 
 <h4>MultiplicativeExpression</h4>
 
@@ -1781,14 +1782,16 @@ to an interpreted or JIT-compiled implementation.
   <td>
     (<code>signed</code>) &rarr; <code>double</code> &and;<br>
     (<code>unsigned</code>) &rarr; <code>double</code> &and;<br>
-    (<code>double?</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>) &rarr; <code>double</code>
   </td>
 </tr>
 <tr>
   <td><code>-</code></td>
   <td>
     (<code>int</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>double?</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>) &rarr; <code>floatish</code>
   </td>
 </tr>
 <tr>
@@ -1803,8 +1806,9 @@ to an interpreted or JIT-compiled implementation.
 </table>
 
 <p>Note that the special combined operator <code>~~</code> may be used
-as a coercion from <code>double</code> to <code>signed</code>;
-see <a href="#unaryexpression">Unary Expressions</a>.
+as a coercion from <code>double</code> or <code>float?</code>
+to <code>signed</code>; see <a href="#unaryexpression">Unary
+Expressions</a>.
 
 <h3>Binary Operators</h3>
 
@@ -1816,22 +1820,32 @@ see <a href="#unaryexpression">Unary Expressions</a>.
 </tr>
 <tr>
   <td><code>+</code></td>
-  <td>(<code>double</code>, <code>double</code>) &rarr; <code>double</code></td>
+  <td>
+    (<code>double</code>, <code>double</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>, <code>float?</code>) &rarr; <code>floatish</code>
+  </td>
 </tr>
 <tr>
   <td><code>-</code></td>
-  <td>(<code>double?</code>, <code>double?</code>) &rarr; <code>double</code></td>
+  <td>
+    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>, <code>float?</code>) &rarr; <code>floatish</code>
+  </td>
 </tr>
 <tr>
   <td><code>*</code></td>
-  <td>(<code>double?</code>, <code>double?</code>) &rarr; <code>double</code></td>
+  <td>
+    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>, <code>float?</code>) &rarr; <code>floatish</code>
+  </td>
 </tr>
 <tr>
   <td><code>/</code></td>
   <td>
     (<code>signed</code>, <code>signed</code>) &rarr; <code>intish</code> &and;<br>
     (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>intish</code> &and;<br>
-    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code>
+    (<code>double?</code>, <code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>, <code>float?</code>) &rarr; <code>floatish</code>
   </td>
 </tr>
 <tr>
@@ -1855,7 +1869,8 @@ see <a href="#unaryexpression">Unary Expressions</a>.
   <td>
     (<code>signed</code>, <code>signed</code>) &rarr; <code>int</code> &and;<br>
     (<code>unsigned</code>, <code>unsigned</code>) &rarr; <code>int</code> &and;<br>
-    (<code>double</code>, <code>double</code>) &rarr; <code>int</code>
+    (<code>double</code>, <code>double</code>) &rarr; <code>int</code> &and;<br>
+    (<code>float</code>, <code>float</code>) &rarr; <code>int</code>
   </td>
 </tr>
 </tbody>
@@ -1884,19 +1899,28 @@ see <a href="#unaryexpression">Unary Expressions</a>.
     <code>Math.cos</code><br>
     <code>Math.sin</code><br>
     <code>Math.tan</code><br>
-    <code>Math.ceil</code><br>
-    <code>Math.floor</code><br>
     <code>Math.exp</code><br>
-    <code>Math.log</code><br>
-    <code>Math.sqrt</code>
+    <code>Math.log</code>
   </td>
   <td>(<code>double?</code>) &rarr; <code>double</code></td>
+</tr>
+<tr>
+  <td>
+    <code>Math.ceil</code><br>
+    <code>Math.floor</code><br>
+    <code>Math.sqrt</code>
+  </td>
+  <td>
+    (<code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>) &rarr; <code>float</code>
+  </td>
 </tr>
 <tr>
   <td><code>Math.abs</code></td>
   <td>
     (<code>signed</code>) &rarr; <code>signed</code> &and;<br>
-    (<code>double?</code>) &rarr; <code>double</code>
+    (<code>double?</code>) &rarr; <code>double</code> &and;<br>
+    (<code>float?</code>) &rarr; <code>float</code>
   </td>
 </tr>
 <tr>
