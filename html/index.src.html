@@ -80,6 +80,12 @@ optimizing implementation of this draft.
 <h3 class="no-num no-toc">Changelog</h2>
 
 <ul>
+<li><strong>8 July 2014</strong>
+  <ul>
+    <li>minor editorial bugfixes
+    <li>non-function foreign imports are <code>mut</code>
+    <li>tightened the language on linking restrictions
+  </ul>
 <li><strong>7 July 2014</strong>
   <ul>
     <li>added 32-bit floating point types
@@ -95,7 +101,7 @@ optimizing implementation of this draft.
     <li>added <code>float</code> to legal result types for <em>ConditionalExpression</em>
     <li>added variadic <code>Math.min</code> and <code>Math.max</code>
     <li>eliminated the allowance for 1-byte views to elide their index shift (to future-proof for large heaps)
-    <li>simplified and generalized link-time restrcitions on heap size
+    <li>simplified and generalized link-time restrictions on heap size
   </ul>
 <li><strong>12 December 2013</strong>
   <ul>
@@ -722,7 +728,7 @@ Declarations</a>), the function's return type is <code>void</code>.
 <div class="example">
 <code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em>&hellip;<code>) {</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <span class="meta">(</span><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <span class="meta">|</span> <em>Identifier</em><code>(</code><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>)</code> <span class="meta">|</span> <em>Identifier</em><span class="meta">)</span><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <span class="meta">(</span><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <span class="meta">|</span> <em>Identifier</em><code>(</code><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>)</code><span class="meta">)</span><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
 <code>}</code>
 </div>
@@ -811,8 +817,8 @@ the <a href="#standard-library">standard library types</a>.
 the <a href="#modules">module declaration</a>. The global
 variable <em>x</em> is stored in
 the <a href="#global-environment">global environment</a> with
-type <code>imm Function</code> for the first form, <code>imm
-int</code> for the second, and <code>imm double</code> for the third.
+type <code>imm Function</code> for the first form, <code>mut
+int</code> for the second, and <code>mut double</code> for the third.
 
 <p>A global heap view is of the following form:
 
@@ -917,9 +923,6 @@ mutually distinct;
 <li>and <em>exports</em> is valid in &Delta;.
 </ul>
 
-<h3>Global Declarations</h3>
-
-
 
 <h3>Export Declarations</h3>
 
@@ -963,7 +966,7 @@ a function type (&sigma;,&hellip;) &rarr; &tau;.
 <div class="example">
 <code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em><code>,</code>&hellip;<code>) {</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><em>x:Identifier</em> <code>=</code> <em>AssignmentExpression</em><code>;</code><span class="meta">)</span>&hellip;<br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <span class="meta">(</span><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <span class="meta">|</span> <em>Identifier</em><code>(</code><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>)</code> <span class="meta">|</span> <em>Identifier</em><span class="meta">)</span><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;</code><span class="meta">(</span><code>var </code><span class="meta">(</span><em>y:Identifier</em> <code>=</code> <span class="meta">(</span><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <span class="meta">|</span> <em>Identifier</em><code>(</code><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>)</code><span class="meta">)</span><span class="meta">)</span><code>,</code>&hellip;<span class="meta">)</span>&hellip;<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;</code><em>body:Statement</em>&hellip;<br>
 <code>}</code>
 </div>
@@ -974,9 +977,10 @@ a function type (&sigma;,&hellip;) &rarr; &tau;.
 <li>&Delta;(f) = <code>imm</code> (&sigma;,&hellip;) &rarr; &tau;;
 <li>the <em>x</em> and <em>y</em> variables are all mutually distinct;
 <li>the variable environment &Gamma; is constructed by mapping each
-parameter <em>x</em> to
-its <a href="#parameter-type-annotations">parameter type
-annotation</a> and each local variable <em>y</em> to
+parameter <em>x</em> to its
+corresponding <a href="#parameter-type-annotations">parameter type
+annotation</a> (annotations must appear in the same order as the
+parameters) and each local variable <em>y</em> to
 its <a href="#variable-type-annotations">variable type annotation</a>;
 <li>each <code>body</code> statement is valid in &Delta; and &Gamma;
 with expected return type &tau;.
@@ -1008,8 +1012,8 @@ context as its containing term.
 <em>cexpr:CallExpression</em> <code>;</code>
 </div>
 
-<p>is valid if <em>cexpr</em> is valid with actual return
-type <code>void</code>.
+<p>is valid if <em>cexpr</em> is a <a href="#function-calls">valid
+function call</a> with actual return type <code>void</code>.
 
 <p>An <em>ExpressionStatement</em> node
 
@@ -1365,8 +1369,9 @@ character and the numeric value of the expression is in the range
 <code>+</code><em>cexpr:CallExpression</em>
 </div>
 
-<p>validates as type <code>double</code> if <em>cexpr</em> is valid
-with actual return type <code>double</code>.
+<p>validates as type <code>double</code> if <em>cexpr</em> is
+a <a href="#function-calls">valid function call</a> with actual return
+type <code>double</code>.
 
 <p>A <em>UnaryExpression</em> node of the form
 
@@ -1526,8 +1531,9 @@ and <em>rhs</em> validate as type <code>intish</code>.
 <em>cexpr:CallExpression</em> <code>|0</code><br>
 </div>
 
-<p>validates as type <code>signed</code> if <em>cexpr</em> is valid
-with actual return type <code>signed</code>.
+<p>validates as type <code>signed</code> if <em>cexpr</em> is
+a <a href="#function-calls">valid function call</a> with actual return
+type <code>signed</code>.
 
 <p>A <em>BitwiseORExpression</em> node
 
@@ -1717,8 +1723,10 @@ context of a global environment &Delta; and a variable environment
 <em>f:Identifier</em><code>(</code><em>cexpr:CallExpression</em><code>)</code>
 </div>
 
-<p>validates as type <code>float</code> if <em>cexpr</em> is valid
-with actual return type <code>float</code>.
+<p>validates as type <code>float</code> if <em>Lookup</em>(&Delta;,
+&Gamma;, <em>f</em>) = <code>fround</code> and <em>cexpr</em> is
+a <a href="#function-calls">valid function call</a> with actual return
+type <code>float</code>.
 
 <p>Alternatively, a <em>CallExpression</em> node
 
@@ -1743,6 +1751,7 @@ are:
 
 <ul>
 <li>control must reach the module's <code>return</code> statement without throwing;
+<li>all property access must resolve to data properties;
 <li>the <em>heap</em> object (if provided) must be an instance of <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBuffer"><code>ArrayBuffer</code></a>;
 <li>the <em>heap</em> object's <code>byteLength</code> must be either 2<sup><em>n</em></sup> for <em>n</em> in [12, 24) or 2<sup>24</sup> &middot; <em>n</em> for <em>n</em> &geq; 1;
 <!--
@@ -1750,15 +1759,11 @@ are:
 <li>the <em>heap</em> object's <code>byteLength</code> must be a power of 2;
 <li>the <em>heap</em> object's <code>byteLength</code> must be no greater than 2<sup>31</sup> (assuming the engine even allows <code>ArrayBuffer</code>s that large);
 -->
-<li>all view objects must be true instances of their
-respective <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView">typed
-array</a> types;
-<li>all globals taken from the <em>stdlib</em> object must implement
-the semantics of the
-corresponding <a href="http://ecma-international.org/ecma-262/5.1/#sec-15">standard
-library</a> of the same name (in practice, they must be
+<li>all globals taken from the <em>stdlib</em> object must be
 the <a href="http://ecma-international.org/ecma-262/5.1/#sec-9.12">SameValue</a>
-as the specified library function or value).
+as the
+corresponding <a href="http://ecma-international.org/ecma-262/5.1/#sec-15">standard
+library</a> of the same name.
 </ul>
 
 <p>If any of these conditions is not met, it is generally unsafe to
