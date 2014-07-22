@@ -36,7 +36,7 @@ span.opt {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-8-july-2014>Working Draft — 8 July 2014</h2>
+	<h2 class="no-num no-toc" id=working-draft-22-july-2014>Working Draft — 22 July 2014</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -77,7 +77,15 @@ optimizing implementation of this draft.
 </p><h3 class="no-num no-toc" id=changelog>Changelog</h3>
 
 <ul>
-<li><strong>8 July 2014</strong>
+<li><strong>22 July 2014</strong>
+  <ul>
+    <li>clarified formal structure with explicit validation rule names
+    </li><li>moved function table validation from annotations section to validation section
+    </li><li>separated <code>case</code> and <code>default</code> validation rules
+    </li><li>eliminated unused expected case type parameter
+    </li><li>corrected type checks to subtype checks in <em>AdditiveExpression</em>, <em>BitwiseXORExpression</em>, <em>BitwiseANDExpression</em>, <em>BitwiseORExpression</em>, and <em>ConditionalExpression</em>
+  </li></ul>
+</li><li><strong>8 July 2014</strong>
   <ul>
     <li>minor editorial bugfixes
     </li><li>non-function foreign imports are <code>mut</code>
@@ -157,47 +165,46 @@ optimizing implementation of this draft.
    <li><a href=#function-table-types><span class=secno>5.6 </span>Function Table Types</a></li></ol></li>
  <li><a href=#validation-rules><span class=secno>6 </span>Validation Rules</a>
   <ol>
-   <li><a href=#modules><span class=secno>6.1 </span>Modules</a></li>
-   <li><a href=#export-declarations><span class=secno>6.2 </span>Export Declarations</a></li>
-   <li><a href=#function-declarations><span class=secno>6.3 </span>Function Declarations</a></li>
-   <li><a href=#statements><span class=secno>6.4 </span>Statements</a>
+   <li><a href=#validatemodule-f><span class=secno>6.1 </span><em>ValidateModule</em>(<em>f</em>)</a></li>
+   <li><a href=#validateexport-s><span class=secno>6.2 </span><em>ValidateExport</em>(Δ, <em>s</em>)</a></li>
+   <li><a href=#validatefunctiontable-s><span class=secno>6.3 </span><em>ValidateFunctionTable</em>(Δ, <em>s</em>)</a></li>
+   <li><a href=#validatefunction-f><span class=secno>6.4 </span><em>ValidateFunction</em>(Δ, <em>f</em>)</a></li>
+   <li><a href=#validatestatement-s><span class=secno>6.5 </span><em>ValidateStatement</em>(Δ, Γ, τ, <em>s</em>)</a>
     <ol>
-     <li><a href=#block><span class=secno>6.4.1 </span>Block</a></li>
-     <li><a href=#expressionstatement><span class=secno>6.4.2 </span>ExpressionStatement</a></li>
-     <li><a href=#emptystatement><span class=secno>6.4.3 </span>EmptyStatement</a></li>
-     <li><a href=#ifstatement><span class=secno>6.4.4 </span>IfStatement</a></li>
-     <li><a href=#returnstatement><span class=secno>6.4.5 </span>ReturnStatement</a></li>
-     <li><a href=#iterationstatement><span class=secno>6.4.6 </span>IterationStatement</a></li>
-     <li><a href=#breakstatement><span class=secno>6.4.7 </span>BreakStatement</a></li>
-     <li><a href=#continuestatement><span class=secno>6.4.8 </span>ContinueStatement</a></li>
-     <li><a href=#labelledstatement><span class=secno>6.4.9 </span>LabelledStatement</a></li>
-     <li><a href=#switchstatement><span class=secno>6.4.10 </span>SwitchStatement</a></li></ol></li>
-   <li><a href=#switch-cases><span class=secno>6.5 </span>Switch Cases</a>
+     <li><a href=#block><span class=secno>6.5.1 </span>Block</a></li>
+     <li><a href=#expressionstatement><span class=secno>6.5.2 </span>ExpressionStatement</a></li>
+     <li><a href=#emptystatement><span class=secno>6.5.3 </span>EmptyStatement</a></li>
+     <li><a href=#ifstatement><span class=secno>6.5.4 </span>IfStatement</a></li>
+     <li><a href=#returnstatement><span class=secno>6.5.5 </span>ReturnStatement</a></li>
+     <li><a href=#iterationstatement><span class=secno>6.5.6 </span>IterationStatement</a></li>
+     <li><a href=#breakstatement><span class=secno>6.5.7 </span>BreakStatement</a></li>
+     <li><a href=#continuestatement><span class=secno>6.5.8 </span>ContinueStatement</a></li>
+     <li><a href=#labelledstatement><span class=secno>6.5.9 </span>LabelledStatement</a></li>
+     <li><a href=#switchstatement><span class=secno>6.5.10 </span>SwitchStatement</a></li></ol></li>
+   <li><a href=#validatecase-c><span class=secno>6.6 </span><em>ValidateCase</em>(Δ, Γ, τ, <em>c</em>)</a></li>
+   <li><a href=#validatedefault-d><span class=secno>6.7 </span><em>ValidateDefault</em>(Δ, Γ, τ, <em>d</em>)</a></li>
+   <li><a href=#validateexpression-e><span class=secno>6.8 </span><em>ValidateExpression</em>(Δ, Γ, <em>e</em>)</a>
     <ol>
-     <li><a href=#caseclause><span class=secno>6.5.1 </span>CaseClause</a></li>
-     <li><a href=#defaultclause><span class=secno>6.5.2 </span>DefaultClause</a></li></ol></li>
-   <li><a href=#expressions><span class=secno>6.6 </span>Expressions</a>
-    <ol>
-     <li><a href=#expression><span class=secno>6.6.1 </span>Expression</a></li>
-     <li><a href=#numericliteral><span class=secno>6.6.2 </span>NumericLiteral</a></li>
-     <li><a href=#identifier><span class=secno>6.6.3 </span>Identifier</a></li>
-     <li><a href=#callexpression><span class=secno>6.6.4 </span>CallExpression</a></li>
-     <li><a href=#memberexpression><span class=secno>6.6.5 </span>MemberExpression</a></li>
-     <li><a href=#assignmentexpression><span class=secno>6.6.6 </span>AssignmentExpression</a></li>
-     <li><a href=#unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</a></li>
-     <li><a href=#multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</a></li>
-     <li><a href=#additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</a></li>
-     <li><a href=#shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</a></li>
-     <li><a href=#relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</a></li>
-     <li><a href=#equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</a></li>
-     <li><a href=#bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</a></li>
-     <li><a href=#bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</a></li>
-     <li><a href=#bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</a></li>
-     <li><a href=#conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</a></li>
-     <li><a href=#parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</a></li></ol></li>
-   <li><a href=#function-calls><span class=secno>6.7 </span>Function Calls</a></li>
-   <li><a href=#heap-accesses><span class=secno>6.8 </span>Heap Accesses</a></li>
-   <li><a href=#float-coercions><span class=secno>6.9 </span>Float Coercions</a></li></ol></li>
+     <li><a href=#expression><span class=secno>6.8.1 </span>Expression</a></li>
+     <li><a href=#numericliteral><span class=secno>6.8.2 </span>NumericLiteral</a></li>
+     <li><a href=#identifier><span class=secno>6.8.3 </span>Identifier</a></li>
+     <li><a href=#callexpression><span class=secno>6.8.4 </span>CallExpression</a></li>
+     <li><a href=#memberexpression><span class=secno>6.8.5 </span>MemberExpression</a></li>
+     <li><a href=#assignmentexpression><span class=secno>6.8.6 </span>AssignmentExpression</a></li>
+     <li><a href=#unaryexpression><span class=secno>6.8.7 </span>UnaryExpression</a></li>
+     <li><a href=#multiplicativeexpression><span class=secno>6.8.8 </span>MultiplicativeExpression</a></li>
+     <li><a href=#additiveexpression><span class=secno>6.8.9 </span>AdditiveExpression</a></li>
+     <li><a href=#shiftexpression><span class=secno>6.8.10 </span>ShiftExpression</a></li>
+     <li><a href=#relationalexpression><span class=secno>6.8.11 </span>RelationalExpression</a></li>
+     <li><a href=#equalityexpression><span class=secno>6.8.12 </span>EqualityExpression</a></li>
+     <li><a href=#bitwiseandexpression><span class=secno>6.8.13 </span>BitwiseANDExpression</a></li>
+     <li><a href=#bitwisexorexpression><span class=secno>6.8.14 </span>BitwiseXORExpression</a></li>
+     <li><a href=#bitwiseorexpression><span class=secno>6.8.15 </span>BitwiseORExpression</a></li>
+     <li><a href=#conditionalexpression><span class=secno>6.8.16 </span>ConditionalExpression</a></li>
+     <li><a href=#parenthesized-expression><span class=secno>6.8.17 </span>Parenthesized Expression</a></li></ol></li>
+   <li><a href=#validatecall-e><span class=secno>6.9 </span><em>ValidateCall</em>(Δ, Γ, τ, <em>e</em>)</a></li>
+   <li><a href=#validateheapaccess-e><span class=secno>6.10 </span><em>ValidateHeapAccess</em>(Δ, Γ, <em>e</em>)</a></li>
+   <li><a href=#validatefloatcoercion-e><span class=secno>6.11 </span><em>ValidateFloatCoercion</em>(Δ, Γ, <em>e</em>)</a></li></ol></li>
  <li><a href=#linking-0><span class=secno>7 </span>Linking</a></li>
  <li><a href=#operators><span class=secno>8 </span>Operators</a>
   <ol>
@@ -924,16 +931,24 @@ type <code>imm</code>
 <p>A function table is a <em>VariableStatement</em> of the form:
 
 </p><div class=example>
-<code>var</code> <em>x:Identifier</em><code> = [</code><em>f:Identifier</em><code>,</code>…<code>];</code>
+<code>var</code> <em>x:Identifier</em><code> = [</code><em>f<sub>0</sub>:Identifier</em><code>,</code> <em>f:Identifier</em><code>,</code>…<code>];</code>
 </div>
 
+<p>The function table <em>x</em> is stored in
+the <a href=#global-environment>global environment</a> with
+type <code>imm</code> ((σ,…) → τ)[<em>n</em>]
+where (σ,…) → τ is the type of <em>f</em> in the
+global environment and <em>n</em> is the length of the array literal.
+
+<!--
 <p>The length of the array literal must be a power of two and all the
 identifiers <em>f</em> must map to the same type <code>imm</code>
-(σ,…) → τ in
-the <a href=#global-environment>global environment</a>. The function
+(&sigma;,&hellip;) &rarr; &tau; in
+the <a href="#global-environment">global environment</a>. The function
 table <em>x</em> is stored in the global environment with
-type <code>imm</code> ((σ,…) → τ)[<em>n</em>]
+type <code>imm</code> ((&sigma;,&hellip;) &rarr; &tau;)[<em>n</em>]
 where <em>n</em> is the length of the array literal.
+-->
 
 </p><h2 id=validation-rules><span class=secno>6 </span>Validation Rules</h2>
 
@@ -946,18 +961,18 @@ the <a href=http://ecma-international.org/ecma-262/5.1/#sec-A>ECMAScript
 grammar</a>, but note that the asm.js validator only accepts a subset
 of legal JavaScript programs.
 
-</p><h3 id=modules><span class=secno>6.1 </span>Modules</h3>
+</p><p>The result of a validation operation is either
+a <dfn id=success>success</dfn>, indicating that a parse node is statically valid
+asm.js, or a <dfn id=failure>failure</dfn>, indicating that the parse node is
+statically invalid asm.js.
 
-<p>An asm.js module is a <em>FunctionDeclaration</em>
-or <em>FunctionExpression</em> node with the following form:
+</p><h3 id=validatemodule-f><span class=secno>6.1 </span><em>ValidateModule</em>(<em>f</em>)</h3>
 
-<!--
-<div class="example">
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>() { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>stdlib:Identifier</em><code>) { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
-<code>function</code> <em>Identifier<sub>opt</sub></em><code>(</code><em>stdlib:Identifier</em><code>,</code> <em>foreign:Identifier</em><code>) { "use asm";</code> <em>decl:SourceElement</em>&hellip; <em>ReturnStatement</em> <code>}</code><br>
-</div>
--->
+<p>The <em>ValidateModule</em> rule validates an asm.js module, which
+is either a <em>FunctionDeclaration</em>
+or <em>FunctionExpression</em> node.
+
+</p><p>Validating a module of the form
 
 </p><div class=example>
 <code>function</code> <em>f:Identifier<sub>opt</sub></em><code>(</code><span class=meta>(</span><em>stdlib:Identifier</em><code><span class=meta>(</span>,</code> <em>foreign:Identifier</em><span class=meta>(</span><code>,</code> <em>heap:Identifier</em><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><span class=meta>)</span><sub><em>opt</em></sub><code>) {<br>
@@ -972,7 +987,7 @@ or <em>FunctionExpression</em> node with the following form:
 <code>}</code>
 </div>
 
-<p>A module is valid if:
+<p>succeeds if:
 
 </p><ul>
 <li><em>f</em>, <em>stdlib</em>, <em>foreign</em>, <em>heap</em>, and
@@ -1001,50 +1016,66 @@ mutually distinct;
   Δ<sub>2</sub> to produce the completed global type environment
   Δ.
   </li></ol>
-</li><li>each <em>fun</em> declaration is valid in Δ;
-</li><li>each <em>table</em> declaration is valid in Δ;
-</li><li>and <em>exports</em> is valid in Δ.
+</li><li>for each <em>fun</em> declaration, <a href=#validatefunction-f><em>ValidateFunction</em></a> succeeds with environment Δ;
+</li><li>for each <em>table</em> declaration, <a href=#validatefunctiontable-s><em>ValidateFunctionTable</em></a> succeeds with environment Δ; and
+</li><li><a href=#validateexport-s><em>ValidateExport</em></a> succeeds for <em>exports</em> with environment Δ.
 </li></ul>
 
 
-<h3 id=export-declarations><span class=secno>6.2 </span>Export Declarations</h3>
+<h3 id=validateexport-s><span class=secno>6.2 </span><em>ValidateExport</em>(Δ, <em>s</em>)</h3>
 
-<p>An asm.js module's export declaration is a <em>ReturnStatement</em>
-returning either a single asm.js function or an object literal
-exporting multiple asm.js functions.
+<p>The <em>ValidateExport</em> rule validates an asm.js module's
+export declaration. An export declaration is
+a <em>ReturnStatement</em> returning either a single asm.js function
+or an object literal exporting multiple asm.js functions.
 
-</p><p>An export declaration node
+</p><p>Validating an export declaration node
 
 </p><div class=example>
 <code>return</code> <code>{</code> <span class=meta>(</span><em>x:Identifier</em> <code>:</code> <em>f:Identifier</em><span class=meta>)</span><code>,</code>… <code> };</code>
 </div>
 
-<p>is valid if for each <em>f</em>, Δ(f) = <code>imm</code>
+<p>succeeds if for each <em>f</em>, Δ(f) = <code>imm</code>
 γ where γ is a function type (σ,…) →
 τ.
 
-</p><p>An export declaration node
+</p><p>Validating an export declaration node
 
 </p><div class=example>
 <code>return</code> <em>f:Identifier</em><code>;</code>
 </div>
 
-<p>is valid if Δ(f) = <code>imm</code> γ where γ is
-a function type (σ,…) → τ.
+<p>succeeds if Δ(<em>f</em>) = <code>imm</code> γ where
+γ is a function type (σ,…) → τ.
 
-</p><h3 id=function-declarations><span class=secno>6.3 </span>Function Declarations</h3>
+</p><h3 id=validatefunctiontable-s><span class=secno>6.3 </span><em>ValidateFunctionTable</em>(Δ, <em>s</em>)</h3>
 
-<!--
-<div class="example">
-<em>SourceElement</em> : <code>function</code> <em>Identifier</em><code>(</code><span class="seq"><em>x</em></span><code>) {</code> <span class="seq"><em>x</em> <code>=</code> <em>AsmAnnotation<sub>x</sub></em><code>;</code></span> <em>AsmFunctionBody</em> <code>}</code>
+<p>The <em>ValidateFunctionTable</em> rule validates an asm.js
+module's function table declaration. A function table declaration is
+a <em>VariableStatement</em> binding an identifier to an array
+literal.
+
+</p><p>Validating a function table of the form
+
+</p><div class=example>
+<code>var</code> <em>x:Identifier</em><code> = [</code><em>f:Identifier</em><code>,</code>…<code>];</code>
 </div>
 
-<div class="example">
-<em>SourceElement</em> : <code>function</code> <em>Identifier</em><code>(</code><em>FormalParameterList<sub>opt</sub></em><code>) {</code> <em>AsmAnnotationList<sub>opt</sub></em> <em>List</em>&lt;<em>VariableStatement</em>&gt; <em>List</em>&lt;<em>Statement</em>&gt; <code>}</code>
-</div>
--->
+<p>succeeds if:
 
-<p>An asm.js function declaration is a <em>FunctionDeclaration</em> node
+</p><ul>
+<li>the length <em>n</em> of the array literal is 2<sup><em>m</em></sup> for some <em>m</em> ≥ 0;
+</li><li>Δ(<em>x</em>) = <code>imm</code> ((σ,…) → τ)[<em>n</em>]; and
+</li><li>for each <em>f</em>, Δ(<em>f</em>) = (σ,…) → τ.
+</li></ul>
+
+
+<h3 id=validatefunction-f><span class=secno>6.4 </span><em>ValidateFunction</em>(Δ, <em>f</em>)</h3>
+
+<p>The <em>ValidateFunction</em> rule validates an asm.js function
+declaration, which is a <em>FunctionDeclaration</em> node.
+
+</p><p>Validating a function declaration of the form
 
 </p><div class=example>
 <code>function</code> <em>f:Identifier</em><code>(</code><em>x:Identifier</em><code>,</code>…<code>) {</code><br>
@@ -1054,7 +1085,7 @@ a function type (σ,…) → τ.
 <code>}</code>
 </div>
 
-<p>A function declaration is valid if:
+<p>succeeds if:
 
 </p><ul>
 <li>Δ(f) = <code>imm</code> (σ,…) → τ;
@@ -1065,169 +1096,199 @@ corresponding <a href=#parameter-type-annotations>parameter type
 annotation</a> (annotations must appear in the same order as the
 parameters) and each local variable <em>y</em> to
 its <a href=#variable-type-annotations>variable type annotation</a>;
-</li><li>each <code>body</code> statement is valid in Δ and Γ
-with expected return type τ.
+</li><li>for each <em>body</em>
+statement, <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds with environments Δ and Γ and expected return
+type τ.
 </li></ul>
 
-<h3 id=statements><span class=secno>6.4 </span>Statements</h3>
+<h3 id=validatestatement-s><span class=secno>6.5 </span><em>ValidateStatement</em>(Δ, Γ, τ, <em>s</em>)</h3>
 
-<p>Each statement is validated in the context of a <a href=#global-environment-0>global
+<p>The <em>ValidateStatement</em> rule validates an asm.js statement.
+Each statement is validated in the context of a <a href=#global-environment-0>global
 environment</a> Δ, a <a href=#variable-environment-0>variable environment</a>
 Γ, and an expected return type τ. Unless otherwise
 explicitly stated, a recursive validation of a subterm uses the same
 context as its containing term.
 
-</p><h4 id=block><span class=secno>6.4.1 </span>Block</h4>
+</p><h4 id=block><span class=secno>6.5.1 </span>Block</h4>
 
-<p>A <em>Block</em> statement node
+<p>Validating a <em>Block</em> statement node
 
 </p><div class=example>
 <code>{</code> <em>stmt:Statement</em>… <code>}</code>
 </div>
 
-<p>is valid if each <em>stmt</em> is valid.
+<p>succeeds
+if <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for each <em>stmt</em>.
 
-</p><h4 id=expressionstatement><span class=secno>6.4.2 </span>ExpressionStatement</h4>
+</p><h4 id=expressionstatement><span class=secno>6.5.2 </span>ExpressionStatement</h4>
 
-<p>An <em>ExpressionStatement</em> node
+<p>Validating an <em>ExpressionStatement</em> node
 
 </p><div class=example>
 <em>cexpr:CallExpression</em> <code>;</code>
 </div>
 
-<p>is valid if <em>cexpr</em> is a <a href=#function-calls>valid
-function call</a> with actual return type <a href=#void-0><code>void</code></a>.
+<p>succeeds if <a href=#validatecall-e><em>ValidateCall</em></a>
+succeeds for <em>cexpr</em> with actual return type <a href=#void-0><code>void</code></a>.
 
-</p><p>An <em>ExpressionStatement</em> node
+</p><p>Validating an <em>ExpressionStatement</em> node
 
 </p><div class=example>
 <em>expr:Expression</em> <code>;</code>
 </div>
 
-<p>is valid if <em>expr</em> validates as some type σ.
+<p>succeeds
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with some type σ.
 
-</p><h4 id=emptystatement><span class=secno>6.4.3 </span>EmptyStatement</h4>
+</p><h4 id=emptystatement><span class=secno>6.5.3 </span>EmptyStatement</h4>
 
-<p>An <em>EmptyStatement</em> node is always valid.
+<p>Validating an <em>EmptyStatement</em> node always succeeds.
 
-</p><h4 id=ifstatement><span class=secno>6.4.4 </span>IfStatement</h4>
+</p><h4 id=ifstatement><span class=secno>6.5.4 </span>IfStatement</h4>
 
-<p>An <em>IfStatement</em> node
+<p>Validating an <em>IfStatement</em> node
 
 </p><div class=example>
 <code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt1:Statement</em> <code>else</code> <em>stmt2:Statement</em>
 </div>
 
-<p>is valid if <em>expr</em> validates as a subtype
-of <a href=#int-0><code>int</code></a> and <em>stmt1</em> and <em>stmt2</em> are both
-valid.
+<p>succeeds
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with a subtype of <a href=#int-0><code>int</code></a>
+and <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>stmt1</em> and <em>stmt2</em>.
 
-</p><p>An <em>IfStatement</em> node
+</p><p>Validating an <em>IfStatement</em> node
 
 </p><div class=example>
 <code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt:Statement</em>
 </div>
 
-<p>is valid if <em>expr</em> validates as a subtype
-of <a href=#int-0><code>int</code></a> and <em>stmt</em> is valid.
+<p>succeeds
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with a subtype of <a href=#int-0><code>int</code></a>
+and <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>stmt</em>.
 
-</p><h4 id=returnstatement><span class=secno>6.4.5 </span>ReturnStatement</h4>
+</p><h4 id=returnstatement><span class=secno>6.5.5 </span>ReturnStatement</h4>
 
-<p>A <em>ReturnStatement</em> node
+<p>Validating a <em>ReturnStatement</em> node
 
 </p><div class=example>
 <code>return</code> <em>expr:Expression</em> <code>;</code>
 </div>
 
-<p>is valid if <em>expr</em> validates as a subtype of the expected
-return type τ.
+<p>succeeds
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with a subtype of the expected return type
+τ.
 
-</p><p>A <em>ReturnStatement</em> node
+</p><p>Validating a <em>ReturnStatement</em> node
 
 </p><div class=example>
 <code>return ;</code>
 </div>
 
-<p>is valid if the expected return type τ is <a href=#void-0><code>void</code></a>.
+<p>succeeds if the expected return type τ is <a href=#void-0><code>void</code></a>.
 
 
-</p><h4 id=iterationstatement><span class=secno>6.4.6 </span>IterationStatement</h4>
+</p><h4 id=iterationstatement><span class=secno>6.5.6 </span>IterationStatement</h4>
 
-<p>An <em>IterationStatement</em> node
+<p>Validating an <em>IterationStatement</em> node
 
 </p><div class=example>
 <code>while (</code> <em>expr:Expression</em> <code>)</code> <em>stmt:Statement</em>
 </div>
 
-<p>is valid if <em>expr</em> validates as a subtype
-of <a href=#int-0><code>int</code></a> and <em>stmt</em> is valid.
+<p>succeeds
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with a subtype of <a href=#int-0><code>int</code></a>
+and <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>stmt</em>.
 
-</p><p>An <em>IterationStatement</em> node
+</p><p>Validating an <em>IterationStatement</em> node
 
 </p><div class=example>
 <code>do</code> <em>stmt:Statement</em> <code>while (</code> <em>expr:Expression</em> <code>) ;</code>
 </div>
 
-<p>is valid if <em>stmt</em> is valid and <em>expr</em> validates as a
-subtype of <a href=#int-0><code>int</code></a>.
+<p>succeeds
+if <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>stmt</em>
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with a subtype of <a href=#int-0><code>int</code></a>.
 
-</p><p>An <em>IterationStatement</em> node
+</p><p>Validate an <em>IterationStatement</em> node
 
 </p><div class=example>
 <code>for (</code> <em>init:ExpressionNoIn<sub>opt</sub></em> <code>;</code> <em>test:Expression<sub>opt</sub></em> <code>;</code> <em>update:Expression<sub>opt</sub></em> <code>)</code> <em>body:Statement</em>
 </div>
 
-<p>is valid if <em>init</em> validates (if present),
-<em>test</em> validates as a subtype of <a href=#int-0><code>int</code></a> (if
-present), <em>update</em> validates (if present), and <em>body</em> is
-valid.
+<p>succeeds if:
 
-</p><h4 id=breakstatement><span class=secno>6.4.7 </span>BreakStatement</h4>
+</p><ul>
+<li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for <em>init</em> (if present);
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>test</em> with a subtype of <a href=#int-0><code>int</code></a> (if
+present);
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>update</em> (if present); and
+</li><li><a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>body</em>.
+</li></ul>
 
-<p>A <em>BreakStatement</em> node
+<h4 id=breakstatement><span class=secno>6.5.7 </span>BreakStatement</h4>
+
+<p>Validating a <em>BreakStatement</em> node
 
 </p><div class=example>
 <code>break</code> <em>Identifier<sub>opt</sub></em> <code>;</code>
 </div>
 
-<p>is always valid.
+<p>always succeeds.
 
-</p><h4 id=continuestatement><span class=secno>6.4.8 </span>ContinueStatement</h4>
+</p><h4 id=continuestatement><span class=secno>6.5.8 </span>ContinueStatement</h4>
 
-<p>A <em>ContinueStatement</em> node
+<p>Validating a <em>ContinueStatement</em> node
 
 </p><div class=example>
 <code>continue</code> <em>Identifier<sub>opt</sub></em> <code>;</code>
 </div>
 
-<p>is always valid.
+<p>always succeeds.
 
-</p><h4 id=labelledstatement><span class=secno>6.4.9 </span>LabelledStatement</h4>
+</p><h4 id=labelledstatement><span class=secno>6.5.9 </span>LabelledStatement</h4>
 
-<p>A <em>LabelledStatement</em> node
+<p>Validating a <em>LabelledStatement</em> node
 
 </p><div class=example>
 <em>Identifier</em> <code>:</code> <em>body:Statement</em>
 </div>
 
-<p>is valid if <em>body</em> is valid.
+<p>succeeds
+if <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for <em>body</em>.
 
-</p><h4 id=switchstatement><span class=secno>6.4.10 </span>SwitchStatement</h4>
+</p><h4 id=switchstatement><span class=secno>6.5.10 </span>SwitchStatement</h4>
 
-<p>A <em>SwitchStatement</em> node
+<p>Validating a <em>SwitchStatement</em> node
 
 </p><div class=example>
 <code>switch (</code> <em>test:Expression</em> <code>)</code> <code>{</code> <em>case:CaseClause</em>… <em>default:DefaultClause<sub>opt</sub></em> <code>}</code>
 </div>
 
-<p>is valid if
+<p>succeeds if
 
 </p><ul>
-<li><em>test</em> validates as a subtype of <a href=#signed-0><code>signed</code></a>;
-</li><li>each <em>case</em> validates with expected case type <a href=#signed-0><code>signed</code></a>;
+<li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for <em>test</em> with a subtype of <a href=#signed-0><code>signed</code></a>;
+</li><li><a href=#validatecase-c><em>ValidateCase</em></a> succeeds for each <em>case</em>;
 </li><li>each <em>case</em> value is distinct;
-</li><li>the difference between the maximum and minimum <em>case</em> values is less than 2<sup>31</sup>;
-</li><li><em>default</em> is valid.
+</li><li>the difference between the maximum and minimum <em>case</em> values is less than 2<sup>31</sup>; and
+</li><li><a href=#validatedefault-d><em>ValidateDefault</em></a> succeeds for <em>default</em>.
 </li></ul>
 
 <!--
@@ -1271,14 +1332,13 @@ the same context as its containing term.
 -->
 
 
-<h3 id=switch-cases><span class=secno>6.5 </span>Switch Cases</h3>
+<h3 id=validatecase-c><span class=secno>6.6 </span><em>ValidateCase</em>(Δ, Γ, τ, <em>c</em>)</h3>
 
 <p>Cases in a <code>switch</code> block are validated in the context
 of a <a href=#global-environment-0>global environment</a> Δ, a <a href=#variable-environment-0>variable
-environment</a> Γ, an expected return type τ, and an
-expected case type σ. Unless otherwise explicitly stated, a
-recursive validation of a subterm uses the same context as its
-containing term.
+environment</a> Γ, and an expected return type τ. Unless
+otherwise explicitly stated, a recursive validation of a subterm uses
+the same context as its containing term.
 
 <!--
 <h4>CaseBlock</h4>
@@ -1304,73 +1364,86 @@ containing term.
 <p>is valid if the <em>CaseClauses</em> (if any) are valid and the <em>CaseClause</em> is valid.
 -->
 
-</p><h4 id=caseclause><span class=secno>6.5.1 </span>CaseClause</h4>
+<!--
+<h4>CaseClause</h4>
+-->
 
-<p>A <em>CaseClause</em> node
+</p><p>Validating a <em>CaseClause</em> node
 
 </p><div class=example>
 <code>case</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <code>:</code> <em>stmt:Statement</em>…
 </div>
 
-<p>is valid if
+<p>succeeds if
 
 </p><ul>
 <li>the source of <em>n</em> does not contain a <code>.</code> character;
-</li><li><em>n</em> is in the range [-2<sup>31</sup>, 2<sup>31</sup>);
-</li><li>each <em>stmt</em> is valid.
+</li><li><em>n</em> is in the range [-2<sup>31</sup>, 2<sup>31</sup>); and
+</li><li><a href=#validatestatement-s><em>ValidateStatement</em></a> succeeds for each <em>stmt</em>.
 </li></ul>
 
-<h4 id=defaultclause><span class=secno>6.5.2 </span>DefaultClause</h4>
+<h3 id=validatedefault-d><span class=secno>6.7 </span><em>ValidateDefault</em>(Δ, Γ, τ, <em>d</em>)</h3>
 
-<p>A <em>DefaultClause</em> node
+<p>The default case in a <code>switch</code> block is validated in the
+context of a <a href=#global-environment-0>global environment</a> Δ, a <a href=#variable-environment-0>variable
+environment</a> Γ, and an expected return type τ. Unless
+otherwise explicitly stated, a recursive validation of a subterm uses
+the same context as its containing term.
+
+<!--
+<h4>DefaultClause</h4>
+-->
+
+</p><p>Validating a <em>DefaultClause</em> node
 
 </p><div class=example>
 <code>default :</code> <em>stmt:Statement</em>…
 </div>
 
-<p>is valid if each <em>stmt</em> is valid.
+<p>succeeds
+if <a href=#validatestatement-s><em>ValidateStatement</em></a>
+succeeds for each <em>stmt</em>.
 
 
-</p><h3 id=expressions><span class=secno>6.6 </span>Expressions</h3>
+</p><h3 id=validateexpression-e><span class=secno>6.8 </span><em>ValidateExpression</em>(Δ, Γ, <em>e</em>)</h3>
 
 <p>Each expression is validated in the context of a <a href=#global-environment-0>global
 environment</a> Δ and a <a href=#variable-environment-0>variable environment</a>
-Γ, and validation determines the type of the expression. Unless
-otherwise explicitly stated, a recursive validation of a subterm uses
-the same context as its containing term.
+Γ, and validation produces the type of the expression as a
+result. Unless otherwise explicitly stated, a recursive validation of
+a subterm uses the same context as its containing term.
 
-</p><h4 id=expression><span class=secno>6.6.1 </span>Expression</h4>
+</p><h4 id=expression><span class=secno>6.8.1 </span>Expression</h4>
 
-<p>An <em>Expression</em> node:
+<p>Validating an <em>Expression</em> node
 
 </p><div class=example>
 <em>expr1:AssignmentExpression</em> <code>,</code> … <code>,</code> <em>exprn:AssignmentExpression</em>
 </div>
 
-<p>validates as type τ if for every <em>i</em>
+<p>succeeds with type τ if for every <em>i</em>
 &lt; <em>n</em>, one of the following conditions holds:
 
 </p><ul>
-<li><em>expri</em> is a <em>CallExpression</em> and is valid with
-actual return type <a href=#void-0><code>void</code></a>; or
-</li><li><em>expri</em> validates as some type σ
+<li><em>expri</em> is a <em>CallExpression</em>
+and <a href=#validatecall-e><em>ValidateCall</em></a> succeeds
+with actual return type <a href=#void-0><code>void</code></a>; or
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expri</em> with some type σ;
 </li></ul>
 
-<p>and <em>exprn</em> validates as type τ.
+<p>and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>exprn</em> with type τ.
 
-</p><h4 id=numericliteral><span class=secno>6.6.2 </span>NumericLiteral</h4>
+</p><h4 id=numericliteral><span class=secno>6.8.2 </span>NumericLiteral</h4>
 
-<p>For a <em>NumericLiteral</em> node:
+<p>Validating a <em>NumericLiteral</em> node
 
 </p><ul>
-<li>if the source contains a <code>.</code> character, the expression
+<li>succeeds with type <a href=#double-1><code>double</code></a> if the source contains a <code>.</code> character; or
 validates as type <a href=#double-1><code>double</code></a>;
-</li><li>if the source does not contain a <code>.</code> character and its
-numeric value is in the range [0, 2<sup>31</sup>), the expression
-validates as type <a href=#fixnum-0><code>fixnum</code></a>;
-</li><li>if the source does not contain a <code>.</code> character and its
-numeric value is in the range [2<sup>31</sup>, 2<sup>32</sup>), the
-expression validates as type <a href=#unsigned-0><code>unsigned</code></a>.
+</li><li>succeeds with type <a href=#fixnum-0><code>fixnum</code></a> if the source does not contain a <code>.</code> character and its numeric value is in the range [0, 2<sup>31</sup>); or
+</li><li>succeeds with type <a href=#unsigned-0><code>unsigned</code></a> if the source does not contain a <code>.</code> character and its numeric value is in the range [2<sup>31</sup>, 2<sup>32</sup>).
 </li></ul>
 
 <p>Note that the case of negative integer constants is handled
@@ -1379,51 +1452,59 @@ under <a href=#unaryexpression><em>UnaryExpression</em></a>.
 </p><p>Note that integer literals outside the range [0, 2<sup>32</sup>)
 are invalid, i.e., fail to validate.
 
-</p><h4 id=identifier><span class=secno>6.6.3 </span>Identifier</h4>
+</p><h4 id=identifier><span class=secno>6.8.3 </span>Identifier</h4>
 
-<p>An <em>Identifier</em> node
+<p>Validating an <em>Identifier</em> node
 
 </p><div class=example>
 <em>x:Identifier</em>
 </div>
 
-<p>validates as <em>Lookup</em>(Δ, Γ, <em>x</em>).
+<p>succeeds with type τ if <em>Lookup</em>(Δ, Γ, <em>x</em>) = τ.
 
-</p><h4 id=callexpression><span class=secno>6.6.4 </span>CallExpression</h4>
+</p><h4 id=callexpression><span class=secno>6.8.4 </span>CallExpression</h4>
 
-<p>A <em>CallExpression</em> node validates as type <a href=#float-1><code>float</code></a>
-if it is a valid <a href=#float-coercions>float coercion</a>.
+<p>Validating a <em>CallExpression</em> node succeeds with
+type <a href=#float-1><code>float</code></a>
+if <a href=#validatefloatcoercion-e><em>ValidateFloatCoercion</em></a>
+succeeds.
 
-</p><h4 id=memberexpression><span class=secno>6.6.5 </span>MemberExpression</h4>
+</p><h4 id=memberexpression><span class=secno>6.8.5 </span>MemberExpression</h4>
 
-<p>A <em>MemberExpression</em> node validates as type τ if it
-validates as a <a href=#heap-accesses>heap access</a> with load type
-τ.
+<p>Validating a <em>MemberExpression</em> node succeeds with type
+τ
+if <a href=#validateheapaccess-e><em>ValidateHeapAccess</em></a>
+succeeds with load type τ.
 
-</p><h4 id=assignmentexpression><span class=secno>6.6.6 </span>AssignmentExpression</h4>
+</p><h4 id=assignmentexpression><span class=secno>6.8.6 </span>AssignmentExpression</h4>
 
-<p>An <em>AssignmentExpression</em> node
+<p>Validating an <em>AssignmentExpression</em> node
 
 </p><div class=example>
 <em>x:Identifier</em> <code>=</code> <em>expr:AssignmentExpression</em>
 </div>
 
-<p>validates as type τ if the nested <em>AssignmentExpression</em>
-validates as type τ and one of the following two conditions holds:
+<p>succeeds with type τ
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for the nested <em>AssignmentExpression</em> with type τ
+and one of the following two conditions holds:
 
 </p><ul>
 <li><em>x</em> is bound in Γ as a supertype of τ; or
 </li><li><em>x</em> is not bound in Γ and is bound to a mutable supertype of τ in Δ.
 </li></ul>
 
-<p>An <em>AssignmentExpression</em> node
+<p>Validating an <em>AssignmentExpression</em> node
 
 </p><div class=example>
 <em>lhs:MemberExpression</em> <code>=</code> <em>rhs:AssignmentExpression</em>
 </div>
 
-<p>validates as type τ if <em>rhs</em> validates as type τ
-and <em>lhs</em> validates with τ as one of its legal store types.
+<p>succeeds with type τ
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with type τ
+and <a href=#validateheapaccess-e><em>ValidateHeapAccess</em></a>
+succeeds for <em>lhs</em> with τ as one of its legal store types.
 
 <!--
 <div class="example">
@@ -1433,103 +1514,119 @@ and <em>lhs</em> validates with τ as one of its legal store types.
 </div>
 -->
 
-</p><h4 id=unaryexpression><span class=secno>6.6.7 </span>UnaryExpression</h4>
+</p><h4 id=unaryexpression><span class=secno>6.8.7 </span>UnaryExpression</h4>
 
-<p>A <em>UnaryExpression</em> node of the form
+<p>Validating a <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
 <code>-</code><em>NumericLiteral</em>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if
+<p>succeeds with type <a href=#signed-0><code>signed</code></a> if
 the <em>NumericLiteral</em> source does not contain a <code>.</code>
 character and the numeric value of the expression is in the range
 [-2<sup>31</sup>, 0).
 
-</p><p>A <em>UnaryExpression</em> node of the form
+</p><p>Validating a <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
 <code>+</code><em>cexpr:CallExpression</em>
 </div>
 
-<p>validates as type <a href=#double-1><code>double</code></a> if <em>cexpr</em> is
-a <a href=#function-calls>valid function call</a> with actual return
-type <a href=#double-1><code>double</code></a>.
+<p>succeeds with type <a href=#double-1><code>double</code></a>
+if <a href=#validatecall-e><em>ValidateCall</em></a> succeeds
+for <em>cexpr</em> with actual return type <a href=#double-1><code>double</code></a>.
 
-</p><p>A <em>UnaryExpression</em> node of the form
+</p><p>Validating a <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
 <em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>|</span><code>~</code><span class=meta>|</span><code>!</code><span class=meta>)</span><em>arg:UnaryExpression</em>
 </div>
 
-<p>validates as type τ if the type of <em>op</em> is …
-∧ (σ) → τ ∧ … and <em>arg</em> validates
-as a subtype of σ.
+<p>succeeds with type τ if the type of <em>op</em> is …
+∧ (σ) → τ ∧ …
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds with a subtype of σ.
 
-</p><p>A <em>UnaryExpression</em> node of the form
+</p><p>Validating a <em>UnaryExpression</em> node of the form
 
 </p><div class=example>
 <code>~~</code><em>arg:UnaryExpression</em>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>arg</em> validates as
-a subtype of either <a href=#double-1><code>double</code></a> or <a href=#float-2><code>float?</code></a>.
+<p>succeeds with type <a href=#signed-0><code>signed</code></a>
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>arg</em> with a subtype of either <a href=#double-1><code>double</code></a>
+or <a href=#float-2><code>float?</code></a>.
 
-</p><h4 id=multiplicativeexpression><span class=secno>6.6.8 </span>MultiplicativeExpression</h4>
+</p><h4 id=multiplicativeexpression><span class=secno>6.8.8 </span>MultiplicativeExpression</h4>
 
-<p>A <em>MultiplicativeExpression</em> node
+<p>Validating a <em>MultiplicativeExpression</em> node
 
 </p><div class=example>
 <em>lhs:MultiplicativeExpression</em> <em>op:</em><span class=meta>(</span><code>*</code><span class=meta>|</span><code>/</code><span class=meta>|</span><code>%</code><span class=meta>)</span> <em>rhs:UnaryExpression</em>
 </div>
 
-<p>validates as type τ if the type of <em>op</em> is …
-∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
-… and <em>lhs</em> validates as a subtype of
-σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
-σ<sub>2</sub>.
+<p>succeeds with type τ if:
 
-</p><p>A <em>MultiplicativeExpression</em> node
+</p><ul>
+<li>the <a href=#binary-operators>binary operator type</a>
+of <em>op</em> is … ∧ (σ<sub>1</sub>,
+σ<sub>2</sub>) → τ ∧ …;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> with a subtype of σ<sub>1</sub>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with a subtype of σ<sub>2</sub>.
+</li></ul>
+
+<p>Validating a <em>MultiplicativeExpression</em> node
 
 </p><div class=example>
 <em>expr:MultiplicativeExpression</em> <code>*</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><br>
 <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em> <code>*</code> <em>expr:UnaryExpression</em>
 </div>
 
-<p>validates as type <a href=#intish-0><code>intish</code></a> if the source of <em>n</em>
+<p>succeeds with type <a href=#intish-0><code>intish</code></a> if the source of <em>n</em>
 does not contain a <code>.</code> character and -2<sup>20</sup>
-&lt; <em>n</em> &lt; 2<sup>20</sup> and <em>expr</em> validates as a
-subtype of <a href=#int-0><code>int</code></a>.
+&lt; <em>n</em> &lt; 2<sup>20</sup>
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>expr with a subtype of <a href=#int-0><code>int</code></a>.
 
-</p><h4 id=additiveexpression><span class=secno>6.6.9 </span>AdditiveExpression</h4>
+</p><h4 id=additiveexpression><span class=secno>6.8.9 </span>AdditiveExpression</h4>
 
-<p>An <em>AdditiveExpression</em> node
+<p>Validating an <em>AdditiveExpression</em> node
 
 </p><div class=example>
 <em>expr<sub>1</sub></em> <span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> … <span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> <em>expr<sub>n</sub></em>
 </div>
 
-<p>validates as type <a href=#intish-0><code>intish</code></a> if:
+<p>succeeds with type <a href=#intish-0><code>intish</code></a> if:
 
 </p><ul>
-<li>each <em>expr<sub>i</sub></em> validates as type <a href=#int-0><code>int</code></a>;
+<li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for each <em>expr<sub>i</sub></em> with a subtype of <a href=#int-0><code>int</code></a>;
 </li><li><em>n</em> ≤ 2<sup>20</sup>.
 </li></ul>
 
-<p>Otherwise, an <em>AdditiveExpression</em> node
+<p>Otherwise, validating an <em>AdditiveExpression</em> node
 
 </p><div class=example>
 <em>lhs:AdditiveExpression</em> <em>op:</em><span class=meta>(</span><code>+</code><span class=meta>|</span><code>-</code><span class=meta>)</span> <em>rhs:MultiplicativeExpression</em>
 </div>
 
-<p>validates as type <a href=#double-1><code>double</code></a> if the type of <em>op</em> is
-(σ<sub>1</sub>, σ<sub>2</sub>) → <a href=#double-1><code>double</code></a>
-and <em>lhs</em> validates as a subtype of σ<sub>1</sub>
-and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
+<p>succeeds with type <a href=#double-1><code>double</code></a> if:
 
-</p><h4 id=shiftexpression><span class=secno>6.6.10 </span>ShiftExpression</h4>
+</p><ul>
+<li>the <a href=#binary-operators>binary operator type</a>
+of <em>op</em> is (σ<sub>1</sub>, σ<sub>2</sub>)
+→ <a href=#double-1><code>double</code></a>;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> with a subtype of σ<sub>1</sub>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with a subtype of σ<sub>2</sub>.
+</li></ul>
 
-<p>A <em>ShiftExpression</em> node
+<h4 id=shiftexpression><span class=secno>6.8.10 </span>ShiftExpression</h4>
+
+<p>Validating a <em>ShiftExpression</em> node
 
 </p><div class=example>
 <em>lhs:ShiftExpression</em> <em>op:</em><span class=meta>(</span><code>&lt;&lt;</code><span class=meta>|</span><code>&gt;&gt;</code><span class=meta>|</span><code>&gt;&gt;&gt;</code><span class=meta>)</span> <em>rhs:AdditiveExpression</em>
@@ -1540,15 +1637,21 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 -->
 </div>
 
-<p>validates as type τ if the type of <em>op</em> is …
-∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
-… and <em>lhs</em> validates as a subtype of
-σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
-σ<sub>2</sub>.
+<p>succeeds with type τ if
 
-</p><h4 id=relationalexpression><span class=secno>6.6.11 </span>RelationalExpression</h4>
+</p><ul>
+<li>the <a href=#binary-operators>binary operator type</a>
+of <em>op</em> is … ∧ (σ<sub>1</sub>,
+σ<sub>2</sub>) → τ ∧ …;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> with a subtype of σ<sub>1</sub>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with a subtype of σ<sub>2</sub>.
+</li></ul>
 
-<p>A <em>RelationalExpression</em> node
+<h4 id=relationalexpression><span class=secno>6.8.11 </span>RelationalExpression</h4>
+
+<p>Validating a <em>RelationalExpression</em> node
 
 </p><div class=example>
 <em>lhs:RelationalExpression</em> <em>op:</em><span class=meta>(</span><code>&lt;</code><span class=meta>|</span><code>&gt;</code><span class=meta>|</span><code>&lt;=</code><span class=meta>|</span><code>&gt;=</code><span class=meta>)</span> <em>rhs:ShiftExpression</em>
@@ -1560,15 +1663,21 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 -->
 </div>
 
-<p>validates as type τ if the type of <em>op</em> is …
-∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
-… and <em>lhs</em> validates as a subtype of
-σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
-σ<sub>2</sub>.
+<p>succeeds with type τ if
 
-</p><h4 id=equalityexpression><span class=secno>6.6.12 </span>EqualityExpression</h4>
+</p><ul>
+<li>the <a href=#binary-operators>binary operator type</a>
+of <em>op</em> is … ∧ (σ<sub>1</sub>,
+σ<sub>2</sub>) → τ ∧ …;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> with a subtype of σ<sub>1</sub>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with a subtype of σ<sub>2</sub>.
+</li></ul>
 
-<p>An <em>EqualityExpression</em> node
+<h4 id=equalityexpression><span class=secno>6.8.12 </span>EqualityExpression</h4>
+
+<p>Validating an <em>EqualityExpression</em> node
 
 </p><div class=example>
 <em>lhs:EqualityExpression</em> <em>op:</em><span class=meta>(</span><code>==</code><span class=meta>|</span><code>!=</code><span class=meta>)</span> <em>rhs:RelationalExpression</em>
@@ -1578,83 +1687,97 @@ and <em>rhs</em> validates as a subtype of σ<sub>2</sub>.
 -->
 </div>
 
-<p>validates as type τ if the type of <em>op</em> is …
-∧ (σ<sub>1</sub>, σ<sub>2</sub>) → τ ∧
-… and <em>lhs</em> validates as a subtype of
-σ<sub>1</sub> and <em>rhs</em> validates as a subtype of
-σ<sub>2</sub>.
+<p>succeeds with type τ if
 
-</p><h4 id=bitwiseandexpression><span class=secno>6.6.13 </span>BitwiseANDExpression</h4>
+</p><ul>
+<li>the <a href=#binary-operators>binary operator type</a>
+of <em>op</em> is … ∧ (σ<sub>1</sub>,
+σ<sub>2</sub>) → τ ∧ …;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> with a subtype of σ<sub>1</sub>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>rhs</em> with a subtype of σ<sub>2</sub>.
+</li></ul>
 
-<p>A <em>BitwiseANDExpression</em> node
+<h4 id=bitwiseandexpression><span class=secno>6.8.13 </span>BitwiseANDExpression</h4>
+
+<p>Validating a <em>BitwiseANDExpression</em> node
 
 </p><div class=example>
 <em>lhs:BitwiseANDExpression</em> <code>&amp;</code> <em>rhs:EqualityExpression</em><br>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
-and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
+<p>succeeds with type <a href=#signed-0><code>signed</code></a>
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> and <em>rhs</em> with
+a subtype of <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwisexorexpression><span class=secno>6.6.14 </span>BitwiseXORExpression</h4>
+</p><h4 id=bitwisexorexpression><span class=secno>6.8.14 </span>BitwiseXORExpression</h4>
 
-<p>A <em>BitwiseXORExpression</em> node
+<p>Validating a <em>BitwiseXORExpression</em> node
 
 </p><div class=example>
 <em>lhs:BitwiseXORExpression</em> <code>^</code> <em>rhs:BitwiseANDExpression</em><br>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
-and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
+<p>succeeds with type <a href=#signed-0><code>signed</code></a>
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> and <em>rhs</em> with
+a subtype of <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=bitwiseorexpression><span class=secno>6.6.15 </span>BitwiseORExpression</h4>
+</p><h4 id=bitwiseorexpression><span class=secno>6.8.15 </span>BitwiseORExpression</h4>
 
-<p>A <em>BitwiseORExpression</em> node
+<p>Validating a <em>BitwiseORExpression</em> node
 
 </p><div class=example>
 <em>cexpr:CallExpression</em> <code>|0</code><br>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>cexpr</em> is
-a <a href=#function-calls>valid function call</a> with actual return
-type <a href=#signed-0><code>signed</code></a>.
+<p>succeeds with type <a href=#signed-0><code>signed</code></a>
+if <a href=#validatecall-e><em>ValidateCall</em></a> succeeds
+for <em>cexpr</em> with actual return type <a href=#signed-0><code>signed</code></a>.
 
-</p><p>A <em>BitwiseORExpression</em> node
+</p><p>Validating a <em>BitwiseORExpression</em> node
 
 </p><div class=example>
 <em>lhs:BitwiseORExpression</em> <code>|</code> <em>rhs:BitwiseXORExpression</em><br>
 </div>
 
-<p>validates as type <a href=#signed-0><code>signed</code></a> if <em>lhs</em>
-and <em>rhs</em> validate as type <a href=#intish-0><code>intish</code></a>.
+<p>succeeds with type <a href=#signed-0><code>signed</code></a>
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>lhs</em> and <em>rhs</em> with
+a subtype of <a href=#intish-0><code>intish</code></a>.
 
-</p><h4 id=conditionalexpression><span class=secno>6.6.16 </span>ConditionalExpression</h4>
+</p><h4 id=conditionalexpression><span class=secno>6.8.16 </span>ConditionalExpression</h4>
 
-<p>A <em>ConditionalExpression</em> node
+<p>Validating a <em>ConditionalExpression</em> node
 
 </p><div class=example>
 <em>test:BitwiseORExpression</em> <code>?</code> <em>cons:AssignmentExpression</em> <code>:</code> <em>alt:AssignmentExpression</em>
 </div>
 
-<p>validates as type τ if:
+<p>succeeds with type τ if:
 
 </p><ul>
 <li>τ is one of <a href=#int-0><code>int</code></a>, <a href=#double-1><code>double</code></a>, or <a href=#float-1><code>float</code></a>;
-</li><li><em>test</em> validates as type <a href=#int-0><code>int</code></a>;
-</li><li><em>cons</em> and <em>alt</em> validate as subtypes of τ.
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for <em>test</em> with a subtype of <a href=#int-0><code>int</code></a>;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for <em>cons</em> and <em>alt</em> with subtypes of τ.
 </li></ul>
 
-<h4 id=parenthesized-expression><span class=secno>6.6.17 </span>Parenthesized Expression</h4>
+<h4 id=parenthesized-expression><span class=secno>6.8.17 </span>Parenthesized Expression</h4>
 
-<p>A parenthesized expression node
+<p>Validating a parenthesized expression node
 
 </p><div class=example>
 <code>(</code> <em>expr:Expression</em> <code>)</code>
 </div>
 
-<p>validates as type τ if <em>expr</em> validates as type τ.
+<p>succeeds with type τ
+if <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>expr</em> with type τ.
 
 
-</p><h3 id=function-calls><span class=secno>6.7 </span>Function Calls</h3>
+</p><h3 id=validatecall-e><span class=secno>6.9 </span><em>ValidateCall</em>(Δ, Γ, τ, <em>e</em>)</h3>
 
 <p>Each function call expression is validated in the context of a
 global environment Δ and a variable environment Γ, and
@@ -1663,33 +1786,38 @@ provided from the context in which the function call appears. A
 recursive validation of a subterm uses the same context as its
 containing term.
 
-</p><p>A <em>CallExpression</em> node
+</p><p>Validating a <em>CallExpression</em> node
 
 </p><div class=example>
 <em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<p>is valid with actual return type τ if one of the following
+<p>with actual return type τ succeeds if one of the following
 conditions holds:
 
 </p><ul>
-<li>the node is a valid <a href=#float-coercions>float coercion</a>;
+<li><a href=#validatefloatcoercion-e><em>ValidateFloatCoercion</em></a>
+succeeds for the node;
 </li><li><em>Lookup</em>(Δ, Γ, <em>f</em>) = … ∧
-(σ,…) → τ ∧ … and each <em>arg</em>
-validates as a subtype of its corresponding σ; or
+(σ,…) → τ ∧ …
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for each <em>arg</em> with a subtype of its corresponding
+σ; or
 </li><li><em>Lookup</em>(Δ, Γ, <em>f</em>) = … ∧
 (σ<sub>1</sub>,…,σ<sub><em>n</em></sub>,σ<code>…</code>)
-→ τ ∧ …, the
-first <em>n</em> <em>arg<sub>i</sub></em> expressions validate as a
-subtype of their corresponding σ<sub><em>i</em></sub>, and the
-remaining <em>arg</em> expressions validate as subtypes of σ.
+→ τ ∧ …
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for the first <em>n</em> <em>arg<sub>i</sub></em> expressions
+with subtypes of their corresponding σ<sub><em>i</em></sub> and
+the remaining <em>arg</em> expressions with subtypes of σ.
 </li></ul>
 
-<p>Alternatively, the <em>CallExpression</em> node is valid with any
-actual return type τ other than <a href=#float-1><code>float</code></a>
+<p>Alternatively, validating the <em>CallExpression</em> succeeds with
+any actual return type τ other than <a href=#float-1><code>float</code></a>
 if <em>Lookup</em>(Δ, Γ, <em>f</em>)
-= <code>Function</code> and each <em>arg</em> validates as a subtype
-of <a href=#extern-0><code>extern</code></a>.
+= <code>Function</code>
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for each <em>arg</em> with a subtype of <a href=#extern-0><code>extern</code></a>.
 
 <!--
 <div class="compilation">
@@ -1713,21 +1841,24 @@ whatever representation required by the JavaScript engine.
 </div>
 -->
 
-</p><p>A <em>CallExpression</em> node
+</p><p>Validating a <em>CallExpression</em> node
 
 </p><div class=example>
 <em>x:Identifier</em><code>[</code><em>index:Expression</em><code> &amp; </code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>](</code><em>arg:Expression</em><code>,</code>…<code>)</code>
 </div>
 
-<p>is valid with actual return type τ if:
+<p>succeeds with actual return type τ if:
 
 </p><ul>
 <li>the source of <em>n</em> does not contain a <code>.</code> character;
 </li><li><em>Lookup</em>(Δ,
 Γ, <em>x</em>) = ((σ,…) →
 τ)[<em>n+1</em>];
-</li><li><em>index</em> validates as a subtype of <a href=#intish-0><code>intish</code></a>; and
-</li><li>each <em>arg</em> validates as a subtype of its corresponding σ.
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>index</em> with a subtype of <a href=#intish-0><code>intish</code></a>; and
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for each <em>arg</em> with a subtype of its corresponding
+σ.
 </li></ul>
 
 <!--
@@ -1738,23 +1869,23 @@ Calls to function pointers
 </div>
 -->
 
-<h3 id=heap-accesses><span class=secno>6.8 </span>Heap Accesses</h3>
+<h3 id=validateheapaccess-e><span class=secno>6.10 </span><em>ValidateHeapAccess</em>(Δ, Γ, <em>e</em>)</h3>
 
 <p>Each heap access expression is validated in the context of a global
 environment Δ and a variable environment Γ, and validation
-determines a <em>load type</em> as well as a set of legal <em>store
-types</em>. These types are determined by
+produces a <em>load type</em> as well as a set of legal <em>store
+types</em> as a result. These types are determined by
 the <a href=#heap-view-types>heap view types</a> corresponding to
 each <a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a>
 type.
 
-</p><p>A <em>MemberExpression</em> node
+</p><p>Validating a <em>MemberExpression</em> node
 
 </p><div class=example>
 <em>x:Identifier</em><code>[</code><em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
 </div>
 
-<p>validates as load type σ and store types { τ, … } if:
+<p>succeeds with load type σ and store types { τ, … } if:
 
 </p><ul>
 <li><em>Lookup</em>(Δ, Γ, <em>x</em>) = <em>view</em>
@@ -1767,13 +1898,13 @@ type;
 </li><li>0 ≤ <em>n</em> &lt; 2<sup>32</sup>.
 </li></ul>
 
-<p>A <em>MemberExpression</em> node
+<p>Validating a <em>MemberExpression</em> node
 
 </p><div class=example>
 <em>x:Identifier</em><code>[</code><em>expr:Expression</em> <code>&gt;&gt;</code> <em>n:</em><code>-</code><span class="meta opt">?</span><em>NumericLiteral</em><code>]</code>
 </div>
 
-<p>validates as load type σ and store types { τ, … }
+<p>succeeds with load type σ and store types { τ, … }
 if:
 
 </p><ul>
@@ -1783,7 +1914,7 @@ type;
 </li><li>the element size of <em>view</em> is <em>bytes</em>;
 </li><li>the load type of <em>view</em> is σ;
 </li><li>the store types of <em>view</em> are { τ, … };
-</li><li><em>expr</em> validates as type <a href=#intish-0><code>intish</code></a>;
+</li><li><a href=#validateexpression-e><em>ValidateExpression</em></a> succeeds for <em>expr</em> with type <a href=#intish-0><code>intish</code></a>;
 </li><li>the source of <em>n</em> does not contain a <code>.</code> character;
 </li><li><em>n</em> = log<sub>2</sub>(<em>bytes</em>).
 </li></ul>
@@ -1794,32 +1925,32 @@ type;
 </div>
 -->
 
-<h3 id=float-coercions><span class=secno>6.9 </span>Float Coercions</h3>
+<h3 id=validatefloatcoercion-e><span class=secno>6.11 </span><em>ValidateFloatCoercion</em>(Δ, Γ, <em>e</em>)</h3>
 
 <p>A call to the <code>fround</code> coercion is validated in the
 context of a global environment Δ and a variable environment
 Γ and validates as the type <a href=#float-1><code>float</code></a>.
 
-</p><p>A <em>CallExpression</em> node
+</p><p>Validating a <em>CallExpression</em> node
 
 </p><div class=example>
 <em>f:Identifier</em><code>(</code><em>cexpr:CallExpression</em><code>)</code>
 </div>
 
-<p>validates as type <a href=#float-1><code>float</code></a> if <em>Lookup</em>(Δ,
-Γ, <em>f</em>) = <code>fround</code> and <em>cexpr</em> is
-a <a href=#function-calls>valid function call</a> with actual return
-type <a href=#float-1><code>float</code></a>.
+<p>succeeds with type <a href=#float-1><code>float</code></a> if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = <code>fround</code> and <a href=#validatecall-e><em>ValidateCall</em></a> succeeds for
+<em>cexpr</em> with actual return type <a href=#float-1><code>float</code></a>.
 
-</p><p>Alternatively, a <em>CallExpression</em> node
+</p><p>Alternatively, validating a <em>CallExpression</em> node
 
 </p><div class=example>
 <em>f:Identifier</em><code>(</code><em>arg:Expression</em><code>)</code>
 </div>
 
-<p>validates as type <a href=#float-1><code>float</code></a> if <em>Lookup</em>(Δ,
-Γ, <em>f</em>) = <code>fround</code> and <em>arg</em> validates
-as type τ, where τ is a subtype
+<p>succeeds with type <a href=#float-1><code>float</code></a> if <em>Lookup</em>(Δ,
+Γ, <em>f</em>) = <code>fround</code>
+and <a href=#validateexpression-e><em>ValidateExpression</em></a>
+succeeds for <em>arg</em> with type τ, where τ is a subtype
 of <a href=#floatish-0><code>floatish</code></a>, <a href=#double-2><code>double?</code></a>, <a href=#signed-0><code>signed</code></a>,
 or <a href=#unsigned-0><code>unsigned</code></a>.
 
