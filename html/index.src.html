@@ -80,6 +80,11 @@ optimizing implementation of this draft.
 <h3 class="no-num no-toc">Changelog</h2>
 
 <ul>
+<li><strong>23 July 2014</strong>
+  <ul>
+    <li>formatting cleanups
+    <li>added variadic function types to the Global Types section
+  </ul>
 <li><strong>22 July 2014</strong>
   <ul>
     <li>clarified formal structure with explicit validation rule names
@@ -561,6 +566,7 @@ the <a href="#value-types">value types</a>. These include:
 <li>value types &tau;;
 <li><a href="https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView"><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
 <li>function types ((&sigma;, &hellip;) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &hellip;) &rarr; &tau;&prime;);
+<li>variadic function types ((&sigma;, &sigma;<code>&hellip;</code>) &rarr; &tau;) &and; &hellip; &and; ((&sigma;&prime;, &sigma;&prime;<code>&hellip;</code>) &rarr; &tau;&prime;);
 <li>function table types ((&sigma;, &hellip;) &rarr; &tau;)[<em>n</em>];
 <li>the special type <code>fround</code> of <code>Math.fround</code>; and
 <li>the FFI function type <code>Function</code>.
@@ -1071,14 +1077,14 @@ succeeds for <em>expr</em> with some type &sigma;.
 <p>Validating an <em>IfStatement</em> node
 
 <div class="example">
-<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt1:Statement</em> <code>else</code> <em>stmt2:Statement</em>
+<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt<sub>1</sub>:Statement</em> <code>else</code> <em>stmt<sub>2</sub>:Statement</em>
 </div>
 
 <p>succeeds
 if <a href="#validateexpression-e"><em>ValidateExpression</em></a>
 succeeds for <em>expr</em> with a subtype of <code>int</code>
 and <a href="#validatestatement-s"><em>ValidateStatement</em></a>
-succeeds for <em>stmt1</em> and <em>stmt2</em>.
+succeeds for <em>stmt<sub>1</sub></em> and <em>stmt<sub>2</sub></em>.
 
 <p>Validating an <em>IfStatement</em> node
 
@@ -1336,22 +1342,22 @@ a subterm uses the same context as its containing term.
 <p>Validating an <em>Expression</em> node
 
 <div class="example">
-<em>expr1:AssignmentExpression</em> <code>,</code> &hellip; <code>,</code> <em>exprn:AssignmentExpression</em>
+<em>expr<sub>1</sub>:AssignmentExpression</em> <code>,</code> &hellip; <code>,</code> <em>expr<sub>n</sub>:AssignmentExpression</em>
 </div>
 
 <p>succeeds with type &tau; if for every <em>i</em>
 &lt; <em>n</em>, one of the following conditions holds:
 
 <ul>
-<li><em>expri</em> is a <em>CallExpression</em>
+<li><em>expr<sub>i</sub></em> is a <em>CallExpression</em>
 and <a href="#validatecall-e"><em>ValidateCall</em></a> succeeds
 with actual return type <code>void</code>; or
 <li><a href="#validateexpression-e"><em>ValidateExpression</em></a>
-succeeds for <em>expri</em> with some type &sigma;;
+succeeds for <em>expr<sub>i</sub></em> with some type &sigma;;
 </ul>
 
 <p>and <a href="#validateexpression-e"><em>ValidateExpression</em></a>
-succeeds for <em>exprn</em> with type &tau;.
+succeeds for <em>expr<sub>n</sub></em> with type &tau;.
 
 <h4>NumericLiteral</h4>
 

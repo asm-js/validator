@@ -36,7 +36,7 @@ span.opt {
 <div class=head>
 	<h1>asm.js</h1>
 	
-	<h2 class="no-num no-toc" id=working-draft-22-july-2014>Working Draft — 22 July 2014</h2>
+	<h2 class="no-num no-toc" id=working-draft-23-july-2014>Working Draft — 23 July 2014</h2>
 	
 	<dl>
 		<dt>Latest version:
@@ -77,7 +77,12 @@ optimizing implementation of this draft.
 </p><h3 class="no-num no-toc" id=changelog>Changelog</h3>
 
 <ul>
-<li><strong>22 July 2014</strong>
+<li><strong>23 July 2014</strong>
+  <ul>
+    <li>formatting cleanups
+    </li><li>added variadic function types to the Global Types section
+  </li></ul>
+</li><li><strong>22 July 2014</strong>
   <ul>
     <li>clarified formal structure with explicit validation rule names
     </li><li>moved function table validation from annotations section to validation section
@@ -643,6 +648,7 @@ the <a href=#value-types>value types</a>. These include:
 <li>value types τ;
 </li><li><a href=https://developer.mozilla.org/en-US/docs/JavaScript/Typed_arrays/ArrayBufferView><code>ArrayBufferView</code></a> types <code>Int<em>n</em>Array</code>, <code>Uint<em>n</em>Array</code>, and <code>Float<em>n</em>Array</code>;
 </li><li>function types ((σ, …) → τ) ∧ … ∧ ((σ′, …) → τ′);
+</li><li>variadic function types ((σ, σ<code>…</code>) → τ) ∧ … ∧ ((σ′, σ′<code>…</code>) → τ′);
 </li><li>function table types ((σ, …) → τ)[<em>n</em>];
 </li><li>the special type <code>fround</code> of <code>Math.fround</code>; and
 </li><li>the FFI function type <code>Function</code>.
@@ -1153,14 +1159,14 @@ succeeds for <em>expr</em> with some type σ.
 <p>Validating an <em>IfStatement</em> node
 
 </p><div class=example>
-<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt1:Statement</em> <code>else</code> <em>stmt2:Statement</em>
+<code>if (</code> <em>expr:Expression</em> <code>)</code> <em>stmt<sub>1</sub>:Statement</em> <code>else</code> <em>stmt<sub>2</sub>:Statement</em>
 </div>
 
 <p>succeeds
 if <a href=#validateexpression-e><em>ValidateExpression</em></a>
 succeeds for <em>expr</em> with a subtype of <a href=#int-0><code>int</code></a>
 and <a href=#validatestatement-s><em>ValidateStatement</em></a>
-succeeds for <em>stmt1</em> and <em>stmt2</em>.
+succeeds for <em>stmt<sub>1</sub></em> and <em>stmt<sub>2</sub></em>.
 
 </p><p>Validating an <em>IfStatement</em> node
 
@@ -1418,22 +1424,22 @@ a subterm uses the same context as its containing term.
 <p>Validating an <em>Expression</em> node
 
 </p><div class=example>
-<em>expr1:AssignmentExpression</em> <code>,</code> … <code>,</code> <em>exprn:AssignmentExpression</em>
+<em>expr<sub>1</sub>:AssignmentExpression</em> <code>,</code> … <code>,</code> <em>expr<sub>n</sub>:AssignmentExpression</em>
 </div>
 
 <p>succeeds with type τ if for every <em>i</em>
 &lt; <em>n</em>, one of the following conditions holds:
 
 </p><ul>
-<li><em>expri</em> is a <em>CallExpression</em>
+<li><em>expr<sub>i</sub></em> is a <em>CallExpression</em>
 and <a href=#validatecall-e><em>ValidateCall</em></a> succeeds
 with actual return type <a href=#void-0><code>void</code></a>; or
 </li><li><a href=#validateexpression-e><em>ValidateExpression</em></a>
-succeeds for <em>expri</em> with some type σ;
+succeeds for <em>expr<sub>i</sub></em> with some type σ;
 </li></ul>
 
 <p>and <a href=#validateexpression-e><em>ValidateExpression</em></a>
-succeeds for <em>exprn</em> with type τ.
+succeeds for <em>expr<sub>n</sub></em> with type τ.
 
 </p><h4 id=numericliteral><span class=secno>6.8.2 </span>NumericLiteral</h4>
 
