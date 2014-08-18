@@ -80,6 +80,10 @@ optimizing implementation of this draft.
 <h3 class="no-num no-toc">Changelog</h2>
 
 <ul>
+<li><strong>18 August 2014</strong>
+  <ul>
+    <li>better "putting it all together" example
+  </ul>
 <li><strong>23 July 2014</strong>
   <ul>
     <li>formatting cleanups
@@ -321,11 +325,18 @@ call into asm.js.
 means of an explicit coercion on function entry:
 
 <div class="example">
+<pre>function geometricMean(start, end) {
+  start = start|0; // start has type int
+  end = end|0;     // end has type int
+  return +exp(+logSum(start, end) / +((end - start)|0));
+}</pre>
+<!--
 <pre>function diag(x, y) {
     x = +x; // x has type double
     y = +y; // y has type double
     return +sqrt(+square(x) + +square(y));
 }</pre>
+-->
 </div>
 
 <p>These annotations serve two purposes: first, to provide the
@@ -339,37 +350,70 @@ body never needs any runtime type checks.
 
 <h3 class="no-num no-toc">Putting It All Together</h3>
 
-<p>The following is a simple but complete example of an asm.js module.
-
-<!--
-<p>As a simple example, the following module imports the
-standard <code>Math.sqrt</code> library function. At link time, the
-engine must verify that the function extracted
-from <code>stdlib.Math.sqrt</code> is actually the original
-<code>Math.sqrt</code> function of the JavaScript standard library:
--->
+<p>The following is a small but complete example of an asm.js module.
 
 <div class="example">
-<pre>function DiagModule(stdlib) {
-    "use asm";
+<pre>function GeometricMean(stdlib, foreign, buffer) {
+  "use asm";
 
-    var sqrt = stdlib.Math.sqrt;
+  var exp = stdlib.Math.exp;
+  var log = stdlib.Math.log;
+  var values = new stdlib.Float64Array(buffer);
 
-    function square(x) {
-        x = +x;
-        return +(x*x);
+  function logSum(start, end) {
+    start = start|0;
+    end = end|0;
+
+    var sum = 0.0, p = 0, q = 0;
+
+    // asm.js forces byte addressing of the heap by requiring shifting by 3
+    for (p = start << 3, q = end << 3; (p|0) < (q|0); p = (p + 8)|0) {
+      sum = sum + +log(values[p>>3]);
     }
 
-    function diag(x, y) {
-        x = +x;
-        y = +y;
-        return +sqrt(+square(x) + +square(y));
-    }
+    return +sum;
+  }
 
-    return { diag: diag };
+  function geometricMean(start, end) {
+    start = start|0;
+    end = end|0;
+
+    return +exp(+logSum(start, end) / +((end - start)|0));
+  }
+
+  return { geometricMean: geometricMean };
 }</pre>
 </div>
 
+<p>In a JavaScript engine that supports AOT compilation of asm.js,
+calling the module on a proper global object and heap buffer would
+link the exports object to use the statically compiled functions.
+
+<div class="example">
+<pre>var heap = new ArrayBuffer(0x10000);          // 64k heap
+init(heap, START, END);                       // fill a region with input values
+var fast = GeometricMean(window, null, heap); // produce exports object linked to AOT-compiled code
+fast.geometricMean(START, END);               // computes geometric mean of input values</pre>
+</div>
+
+<p>By contrast, calling the module on a standard library object
+containing something other than the true <code>Math.exp</code> or
+<code>Math.log</code> would fail to produce AOT-compiled code:
+
+<div class="example">
+<pre>var bogusGlobal = {
+  Math: {
+    exp: function(x) { return x; },
+    log: function(x) { return x; }
+  },
+  Float64Array: Float64Array
+};
+
+var slow = GeometricMean(bogusGlobal, null, heap); // produces purely-interpreted/JITted version
+console.log(slow.geometricMean(START, END));       // computes bizarro-geometric mean thanks to bogusGlobal</pre>
+</div>
+
+<!--
 <p>In a JavaScript engine that supports AOT compilation of asm.js,
 calling the module on a true global object would produce a fully
 compiled exports object:
@@ -393,7 +437,7 @@ fail to produce compiled code:
 var slow = DiagModule(bogusGlobal); // produces purely-interpreted version
 console.log(slow.diag(3, 4));       // 50</pre>
 </div>
-
+-->
 
 <h2>Types</h2>
 
