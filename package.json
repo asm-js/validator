@@ -6,7 +6,9 @@
   "engines": {
     "node": ">=0.8.2"
   },
-  "author": "Dave Herman",
+  "author": {
+    "name": "Dave Herman"
+  },
   "license": "MIT",
   "dependencies": {
     "esprima": "1.0.4",
