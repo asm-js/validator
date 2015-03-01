@@ -228,3 +228,27 @@ exports.testEmpty = asmAssert(
         }
         return f;
     }, { pass: true });
+
+exports.testMinMax = asmAssert(
+    "min and max validate",
+    function m(stdlib, foreign, heap) {
+        "use asm";
+        var max = stdlib.Math.max;
+        var min = stdlib.Math.max;
+        function f(i0, i1, d0, d1) {
+            i0 = i0|0;
+            i1 = i1|0;
+            d0 = +d0;
+            d1 = +d1;
+            var ia = 0;
+            var ib = 0;
+            var da = 0.0;
+            var db = 0.0;
+            ia = max(i0, i1)|0;
+            ib = min(i0, i1)|0;
+            da = +max(d0, d1);
+            db = +min(d0, d1);
+            return +(+(+(ia + ib|0) + d0) + d1);
+        }
+        return f;
+    }, { pass: true });
