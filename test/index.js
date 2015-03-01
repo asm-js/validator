@@ -213,3 +213,18 @@ exports.testIf = asmAssert(
         }
         return f;
     }, { pass: true });
+
+exports.testEmpty = asmAssert(
+    "if condition is Int",
+    function m(){
+        "use asm";
+        function f() {
+            ;
+            ;
+            ;
+            {};
+            if (0);
+            if (0) {};
+        }
+        return f;
+    }, { pass: true });
