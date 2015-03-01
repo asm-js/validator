@@ -30,5 +30,8 @@
     "javascript",
     "asm.js",
     "validator"
-  ]
+  ],
+  "scripts": {
+    "test": "nodeunit"
+  }
 }

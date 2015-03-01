@@ -1,5 +1,5 @@
 var ty = require('../lib/types');
-var asmAssert = require('./asmAssert');
+var asmAssert = require('../lib/asmAssert');
 
 exports.testModuloIntish1 = asmAssert.one(
     "% doesn't return int",
