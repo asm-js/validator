@@ -215,7 +215,7 @@ exports.testIf = asmAssert(
     }, { pass: true });
 
 exports.testEmpty = asmAssert(
-    "if condition is Int",
+    "empty statements",
     function m(){
         "use asm";
         function f() {
