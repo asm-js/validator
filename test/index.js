@@ -199,3 +199,17 @@ exports.testAbs = asmAssert(
         }
         return f;
     }, { pass: true });
+
+exports.testIf = asmAssert(
+    "if condition is Int",
+    function m(){
+        "use asm";
+        function f(x,y) {
+            x = x|0;
+            y = y|0;
+            if (x) {
+                y = 3;
+            }
+        }
+        return f;
+    }, { pass: true });
