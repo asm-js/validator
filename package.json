@@ -9,7 +9,7 @@
   "author": {
     "name": "Dave Herman"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "dependencies": {
     "esprima": "1.0.4",
     "dict": "1.4.0",
