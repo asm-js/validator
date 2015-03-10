@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var argv = require('minimist')(process.argv.slice(2));
+var colors = require('colors/safe');
+var asm = require('../lib/asm.js');
+var fs = require('fs');
+
+var exitCode = 0;
+
+if (argv.help || argv._.length === 0) {
+    return fs.createReadStream(__dirname + '/usage.txt')
+        .pipe(process.stdout)
+        .on('close', function () {
+            process.exit(1);
+        })
+    ;
+}
+
+var files = argv._;
+
+if (files.length === 0) {
+    exitCode = 1;
+    console.error(colors.red('No matching files found'));
+}
+
+files.forEach(function (file) {
+    process.stdout.write('Validating ' + file + '...');
+    var module = require(path.resolve(process.cwd(), file));
+    if (typeof module !== 'function') {
+        console.error(colors.red(' Error!'));
+        console.error(colors.red(file + ' needs to export a single function'));
+        exitCode = 1;
+        return;
+    }
+    var source = String(module);
+    try {
+        asm.validate(source);
+        console.log(colors.green(' Success!'));
+    } catch (error) {
+        console.log(colors.red(' Error!'));
+        console.error(colors.red(error.stack));
+        exitCode = 1;
+    }
+});
+
+if (exitCode === 0) {
+    console.log(colors.grey('---'));
+    console.log(colors.green('No validation errors found'));
+}
+
+process.exit(exitCode);
