@@ -291,3 +291,13 @@ exports.testMaxWrongReturnType = asmAssert(
         }
         return f;
     }, { pass: false });
+
+exports.testFunctionTables = asmAssert(
+    "function tables",
+    function m(stdlib, foreign, heap) {
+        "use asm"
+        function f() {}
+        function g() {}
+        var x = [f], y = [g], z = [f, g]
+        return f;
+    }, { pass: true });
