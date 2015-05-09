@@ -11,9 +11,11 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "esprima": "1.0.4",
-    "dict": "1.4.0",
     "array-extended": "0.0.4",
+    "colors": "^1.0.3",
+    "dict": "1.4.0",
+    "esprima": "1.0.4",
+    "minimist": "^1.1.0",
     "pattern-match": "0.3.0"
   },
   "devDependencies": {
@@ -21,6 +23,9 @@
   },
   "directories": {
     "lib": "./lib"
+  },
+  "bin": {
+    "asmjs": "./bin/asmjs"
   },
   "repository": {
     "type": "git",
@@ -32,6 +37,7 @@
     "validator"
   ],
   "scripts": {
-    "test": "nodeunit"
-  }
+    "test": "nodeunit && ./test/asmjs.sh"
+  },
+  "preferGlobal": true
 }

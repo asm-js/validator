@@ -1,0 +1,7 @@
+Usage: asmjs [entry files] {OPTIONS}
+
+Standard Options:
+
+    --help, -h  Show this message
+
+Specify a parameter.
