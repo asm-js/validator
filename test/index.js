@@ -354,3 +354,11 @@ exports.testForWithoutUpdate = asmAssert.one(
         }
     },
     { pass: true });
+
+exports.testCompoundAssignment = asmAssert.one(
+    "compound assignment operations such as += are disallowed",
+    function f() {
+        var x = 0;
+        x += 1;
+    },
+    { pass: false });
