@@ -301,3 +301,24 @@ exports.testFunctionTables = asmAssert(
         var x = [f], y = [g], z = [f, g]
         return f;
     }, { pass: true });
+
+exports.testConditionalExpression = asmAssert.one(
+    "conditional expression",
+    function f() {
+        return (1 ? 2 : 3)|0;
+    },
+    { pass: true });
+
+exports.testConditionalExpressionMismatchedTypes = asmAssert.one(
+    "conditional with consequent and alternate of differing types",
+    function f() {
+        return (1 ? 0.5 : 3)|0;
+    },
+    { pass: false });
+
+exports.testConditionalExpressionDifferentSubtypes = asmAssert.one(
+    "conditional with different subtypes of int",
+    function f() {
+        return (1 ? (2 < 3) : 4)|0;
+    },
+    { pass: true });
