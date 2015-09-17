@@ -322,3 +322,35 @@ exports.testConditionalExpressionDifferentSubtypes = asmAssert.one(
         return (1 ? (2 < 3) : 4)|0;
     },
     { pass: true });
+
+exports.testForWithoutInit = asmAssert.one(
+    "for statement without an init clause",
+    function f() {
+        var i = 0, j = 0;
+        for (; i|0 < 10; i = i|0 + 1) {
+            j = j|0 + i;
+        }
+    },
+    { pass: true });
+
+exports.testForWithoutTest = asmAssert.one(
+    "for statement without a test clause",
+    function f() {
+        var i = 0, j = 0;
+        for (i = 0; ; i = i|0 + 1) {
+            if (i|0 >= 10) break;
+            j = j|0 + i;
+        }
+    },
+    { pass: true });
+
+exports.testForWithoutUpdate = asmAssert.one(
+    "for statement without an update clause",
+    function f() {
+        var i = 0, j = 0;
+        for (i = 0; i|0 < 10;) {
+            j = j|0 + i;
+            i = i|0 + 1;
+        }
+    },
+    { pass: true });
