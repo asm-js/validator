@@ -279,6 +279,32 @@ exports.testMaxWrongArgumentType = asmAssert(
         return f;
     }, { pass: false });
 
+exports.testMinWrongArgumentType2 = asmAssert(
+    "unsigned is not a subtype of signed",
+    function m(stdlib, foreign, heap) {
+        "use asm";
+        var min = stdlib.Math.min;
+        function f(i0, i1) {
+            i0 = i0|0;
+            i1 = i1|0;
+            min(i0>>>0, i1>>>0)|0;
+        }
+        return f;
+    }, { pass: false });
+
+exports.testMaxWrongArgumentType2 = asmAssert(
+    "unsigned is not a subtype of signed",
+    function m(stdlib, foreign, heap) {
+        "use asm";
+        var max = stdlib.Math.max;
+        function f(i0, i1) {
+            i0 = i0|0;
+            i1 = i1|0;
+            max(i0>>>0, i1>>>0)|0;
+        }
+        return f;
+    }, { pass: false });
+
 exports.testMaxWrongReturnType = asmAssert(
     "min argument types don't match",
     function m(stdlib, foreign, heap) {
