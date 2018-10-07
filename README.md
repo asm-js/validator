@@ -2,13 +2,12 @@
 
 A Mozilla Research project to specify and develop the extremely optimizable subset of JS targeted by compilers like Emscripten, Mandreel, and LLJS.
 
-Discussion of the asm.js spec now takes place on Specifiction
-[here](http://discourse.specifiction.org/c/asm-js).
+~Discussion of the asm.js spec now takes place on Specifiction [here](http://discourse.specifiction.org/c/asm-js).~
 
-As of this update, this repo hosts the source for
+The [spec repo](https://github.com/asm-js/spec) hosts the source for
 [the current asm.js Working Draft](http://asmjs.org/spec/latest/).
 
-This repo also hosts JS source code which performs asm.js validation, however
+This repo hosts JS source code which performs asm.js validation, however
 as of this update, this code is not up to date with the latest working draft and is
 not extensively tested. Patches to update it or fix bugs are welcome though.
 
