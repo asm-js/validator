@@ -354,3 +354,31 @@ exports.testForWithoutUpdate = asmAssert.one(
         }
     },
     { pass: true });
+
+exports.testNegativeIntReturn = asmAssert.one(
+    "negative integer literal as return value",
+    function f() {
+        return -42;
+    },
+    { pass: true });
+
+exports.testNegativeDoubleReturn = asmAssert.one(
+    "negative double literal as return value",
+    function f() {
+        return -42.1;
+    },
+    { pass: true });
+
+exports.testNegativeIntVar = asmAssert.one(
+    "negative integer literal as variable declaration",
+    function f() {
+        var i = -42;
+    },
+    { pass: true });
+
+exports.testNegativeDoubleVar = asmAssert.one(
+    "negative double literal as variable declaration",
+    function f() {
+        var i = -42.1;
+    },
+    { pass: true });
